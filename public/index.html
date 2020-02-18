@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no">
+        <title>WikiStreets</title>
+        <script type="text/javascript" src="/static/js/jquery/jquery.min.js"></script>
+        <script type="text/javascript" src="/static/js/bootstrap/bootstrap.min.js"></script>
+        <script type="text/javascript" src="/static/js/global.js"></script>    
+        <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
+        <link rel="stylesheet" type="text/css" href="/static/css/bootstrap/bootstrap.min.css" />
+        </head>
+    <body>
+        <h1 class="logo display-4">WikiStreets</h1>
+        <section class="issue-map">
+            <div id="map">loading map...</div>
+            <div class="control-add-issue">
+                <img src="/static/images/material_design_icons/add_circle_outline-24px.svg" />
+            </div>
+            <div class="personal-location-marker hide">
+                <img src="/static/images/material_design_icons/directions_walk-24px.svg" />
+            </div>
+        </section>
+
+        <section class="info-window">
+            <img class="close-icon" src="/static/images/material_design_icons/close-24px.svg" />
+            <section class="info-window-content row">
+                    Welcome!  
+            </section>
+        </section>
+
+        <article class="info-window-default-content hide">
+            Default content!
+        </article>
+        
+        <div class="issue-form-trigger hide">
+            <div class="row col-12">
+                    <p class="col-12 col-md-6 alert alert-danger street-address mx-auto">The address will appear here</p>
+            </div>
+            <div class="row col-12">
+                    <button class="col-12 col-md-6 btn btn-primary mx-auto">Report This AAddress</button>
+            </div>
+        </div>
+
+        <div class="issue-form-container hide">
+            <div class="row">
+                    <p class="alert alert-danger">Drag the person in the map to the exact location of the issue.</p>
+                    <h1 class="col-12">Report an issue <span class="street-address"></span></h1>
+            </div>
+            <form action="/new" method="POST" enctype="multipart/form-data" >
+                <input type="hidden" name="address" id="address" />
+                <input type="hidden" name="lat" id="lat" />
+                <input type="hidden" name="long" id="long" />
+
+
+                <div class="row">
+                    <section class="col-12 col-md-6 col-lg-4">
+                        <h2>Sidewalk issues</h2>
+                        <p>Select any that apply:</p>
+                        <input type="checkbox" name="sidewalk_issues" value="missing" id="sidewalk_issue_1" /><label for="sidewalk_issue_1">Missing sidewalk</label><br />
+                        <input type="checkbox" name="sidewalk_issues" value="uplift" id="sidewalk_issue_2" /><label for="sidewalk_issue_2">Uplift / vertical height difference</label><br />
+                        <input type="checkbox" name="sidewalk_issues" value="cars" id="sidewalk_issue_3" /><label for="sidewalk_issue_3">Cars regularly parked on sidewalk</label><br />
+                        <input type="checkbox" name="sidewalk_issues" value="cracked" id="sidewalk_issue_4" /><label for="sidewalk_issue_4">Cracked surface</label><br />
+                        <input type="checkbox" name="sidewalk_issues" value="ramp" id="sidewalk_issue_5" /><label for="sidewalk_issue_5">No curb ramp</label><br />
+                        <input type="checkbox" name="sidewalk_issues" value="vegetation" id="sidewalk_issue_6" /><label for="sidewalk_issue_6">Overhanging vegetation</label><br />
+                        <input type="checkbox" name="sidewalk_issues" value="sloping" id="sidewalk_issue_7" /><label for="sidewalk_issue_7">Cross sloping</label><br />
+                        <input type="checkbox" name="sidewalk_issues" value="crosswalk" id="sidewalk_issue_8" /><label for="sidewalk_issue_8">Crosswalk problems</label><br />
+                        <input type="checkbox" name="sidewalk_issues" value="cars" id="sidewalk_issue_9" /><label for="sidewalk_issue_9">Cars regularly parked on sidewalk</label><br />
+                        <input type="checkbox" name="sidewalk_issues" value="obstacle" id="sidewalk_issue_10" /><label for="sidewalk_issue_10">Other obstacle in sidewalk</label><br />
+                    </section>
+
+                    <section class="col-12 col-md-6 col-lg-4">
+                        <h2>Road issues</h2>
+                        <p>Select any that apply:</p>
+                        <input type="checkbox" name="road_issues" value="hole" id="road_issue_1" /><label for="road_issue_1">Pot hole</label><br />
+                        <input type="checkbox" name="road_issues" value="cracked" id="road_issue_2" /><label for="road_issue_2">Cracked surface</label><br />
+                        <input type="checkbox" name="road_issues" value="obstacle" id="road_issue_3" /><label for="road_issue_3">Obstacle in road</label><br />
+                        <input type="checkbox" name="road_issues" value="uplift" id="road_issue_4" /><label for="road_issue_4">Uplift / vertical height difference</label><br />
+                        <input type="checkbox" name="road_issues" value="cracked" id="road_issue_5" /><label for="road_issue_5">Other road surface issue</label><br />
+                        <input type="checkbox" name="road_issues" value="sewer" id="road_issue_6" /><label for="road_issue_6">Dangerous sewer grate</label><br />
+                    </section>
+
+                    <section class="col-12 col-md-6 col-lg-4">
+                        <h2>Photos</h2>
+                        <input id="files" name="files" type="file" multiple />
+                        <br />
+                        <br />
+                        <h2>Comments</h2>
+                        <textarea class="col-12" name="comments" placeholder="Any additional important details"></textarea>
+                        <br />
+                        <br />
+                        <h2>Ready to submit?</h2>
+                        <input class="btn btn-primary" type="submit" value="Submit!" />
+                    </section>
+                </div>
+
+            </form>
+            
+        </div>
+                
+        <!-- Google Maps API Scripts -->
+        <script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyADajAi4t5UajrNOikURhipU3JmOwpQT8s&callback=initMap" async defer></script>
+
+    </body>
+</html>

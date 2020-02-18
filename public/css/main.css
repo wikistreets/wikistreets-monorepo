@@ -1,0 +1,121 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+h1.logo {
+    font-size: 18px;
+    border-radius: 10px;
+    text-transform: lowercase;
+    text-align: center;
+    width: 100px;
+    margin: 0 auto;
+    position: fixed;
+    z-index: 10;
+    background-color: white;
+    padding-top: 10px;
+    top: -10px;
+    left: 50%;
+    margin-left: -50px; /* half the width */
+    border: 1px solid black;
+}
+
+#map {
+    border: 1px solid black;
+    position: relative;    
+}
+.report-issue #map {
+    height: 200px;
+}
+.issue-map {
+    position: relative;
+}
+
+.issue-map, #map {
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.personal-location-marker {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+}
+
+.personal-location-marker img {
+    width: 50px;
+    height: 50px;
+}
+
+.info-window {
+    display: none;
+    position: fixed;
+    overflow: auto;
+    bottom: 0;
+    width: 100%;
+    height: 0;
+    background-color: white;
+    border-top: 1px solid black;
+    padding: 40px;
+}
+
+.info-window-content .card {
+    padding-top: 10px;
+}
+
+
+.info-window .close-icon {
+    position: absolute;
+    display: block;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    z-index: 12;
+}
+
+/* image inside Google Maps InfoWindow */
+.info-window-content img {
+    max-width: 100%;
+}
+
+.info-window-content h2 {
+    font-size: 14pt;
+}
+
+.hide {
+    display: none;
+}
+
+section {
+    margin-bottom: 20px;
+}
+
+label {
+    padding-left: 10px;
+}
+
+input[type='text'], select {
+    width: 300px;
+}
+
+ul {
+    margin-left: 0;
+    padding-left: 0;
+    list-style-position: inside;
+}
+
+/* custom map control */
+.control-add-issue {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    cursor: pointer;
+}
+.control-add-issue img {
+    width: 50px;
+    height: 50px;
+}
