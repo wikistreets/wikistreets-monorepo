@@ -203,7 +203,7 @@ const showInfoWindow = (map, marker, data) => {
         contentString += `
 <div class="card col-12 col-md-5">
     <div class="card-body">
-        <h5 class="card-title">${data.address}</h5>
+        <h2 class="card-title">${data.address}</h2>
     </div>
     <img class="card-img-top" src="/static/uploads/${val.filename}" />
     <div class="card-body">
