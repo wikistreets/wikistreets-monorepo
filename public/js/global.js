@@ -11,7 +11,8 @@ const globals = {
     myCoords: {
         lat: 41.1974622, 
         lng: -73.8802434
-    }
+    },
+    browserGeolocationEnabled: false
 };
 
 function initMap() {
@@ -37,15 +38,15 @@ function initMap() {
         // get the browser's geolocation
         getBrowserGeolocation()
         .then( position => { 
-            // console.log('starting');
+            // package up the user's personal geolocation nicely
             return { lat: position.coords.latitude, lng: position.coords.longitude } 
         })
         .then( coords => {
-            // store these globally
-            globals.myCoords = coords;
+            gpsAvailable(coords); // make sure the control icon shows available GPC
         })
         .catch( err => {
-            console.error(err);
+            // error getting GPS coordinates
+            gpsDisabled(err); // make sure control shows disactive GPS icon
         });
     }
     
@@ -58,18 +59,31 @@ function initMap() {
     // pop open issue form when control icon clicked
     $('.control-add-issue').click( openIssueForm );
 
-    // close any open infowindow on click
+    // pop open issue form when control icon clicked
+    $('.control-find-location').click( panToPersonalLocation );
+
     google.maps.event.addListener(globals.map, 'click', function(event){
+        // close any open infowindow except the issue form
         console.log('click')
         if (!globals.issueFormOpen) collapseInfoWindow();
     });
 
+    google.maps.event.addListener(globals.map, 'zoom_changed', function(event){
+        // if we had previous been centered on user's personal location, change icon now
+        if (globals.browserGeolocationEnabled)
+            gpsAvailable(null); // this will change the icon to 'availabe' but not 'active'
+    });
+
     // minimize any open infowindow while dragging
     globals.map.addListener('dragstart', () => {
+        // close any open infowindow
         if (globals.infoWindow != null) {
             // console.log('dragstart');
             collapseInfoWindow();
         }
+        // if we had previous been centered on user's personal location, change icon now
+        if (globals.browserGeolocationEnabled)
+            gpsAvailable(null); // this will change the icon to 'availabe' but not 'active'
     });
 
     // minimize any open infowindow while dragging
@@ -78,9 +92,9 @@ function initMap() {
     });
 }
 
-// Google Maps 
+// on page load....
 $(function() {
-
+    // the google maps script tag in the HTML has a callback to the initMap function
 });
 
 
@@ -362,6 +376,43 @@ const removePersonalLocationMarker = () => {
     }
 }
 
+const gpsAvailable = (coords=null) => {
+    if (coords) {
+        console.log(`GPS available: ${coords.lat}, ${coords.lng}`);
+        globals.myCoords = coords; // store the user's geolocation globally
+    }
+    globals.browserGeolocationEnabled = true; // remember that
+    $('.control-find-location img').attr('src', '/static/images/material_design_icons/gps_not_fixed-24px.svg');
+}
+
+const gpsActive = (coords) => {
+    console.log(`GPS active: ${coords.lat}, ${coords.lng}`);
+    globals.browserGeolocationEnabled = true; // remember that
+    globals.myCoords = coords; // store the user's geolocation globally
+    $('.control-find-location img').attr('src', '/static/images/material_design_icons/gps_fixed-24px.svg');
+}
+
+const gpsDisabled = (err) => {
+    console.error(`GPS error: ${err}`);
+    globals.browserGeolocationEnabled = false; // remember that
+    $('.control-find-location img').attr('src', '/static/images/material_design_icons/gps_off-24px.svg');
+}
+
+const panToPersonalLocation = () => {
+    getBrowserGeolocation()
+        .then( res => {
+            // parse browser's geolocation coordinates
+            const coords = {
+                lat: res.coords.latitude,
+                lng: res.coords.longitude
+            }
+            gpsActive(coords); // make sure the control icon shows active GPC
+            globals.map.panTo(coords); // pan map to personal location
+        })
+        .catch( err => {
+            gpsDisabled(err); // make sure the control icon shows inactive GPC
+        })
+}
 
 /**
  * Retrieve browser geolocation... or not.

@@ -7,6 +7,7 @@ const multer = require('multer'); // middleware for uploading files - parses mul
 const cors = require('cors'); // middleware for enabling CORS (Cross-Origin Resource Sharing) requests.
 const morgan = require('morgan'); // middleware for logging HTTP requests.
 const _ = require('lodash'); // utility functions for arrays, numbers, objects, strings, etc.
+const path = require('path');
 
 // database
 const mongoose = require('mongoose');
@@ -21,14 +22,13 @@ db.once('open', function() {
 const issueSchema = require('./issueSchema'); //
 const Issue = mongoose.model('Issue', issueSchema);
 
-
 // enable file uploads... set storage options
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'public/uploads')
   },
   filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now())
+    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`)
   }
 }); 
 var upload = multer({ storage: storage });
@@ -48,7 +48,7 @@ app.get('/', (req, res) => {
 });
 
 // route for HTTP POST requests for /new
-app.post('/new', upload.array('files', 12), async (req, res, next) => {
+app.post('/new', upload.array('files', 3), async (req, res, next) => {
 
   const data = {
     position: {
@@ -74,13 +74,9 @@ app.post('/new', upload.array('files', 12), async (req, res, next) => {
       });
     }
     else {
-      //return response
-      res.send({
-        status: true,
-        message: 'success',
-        data: data
-      });
-  }
+      //redirect to main screen
+      res.redirect(`/`);
+    }
   });
 
 });
