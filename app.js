@@ -97,7 +97,7 @@ app.get('/data/kml', (req, res) => {
     if (!err){ 
         //console.log(docs);
         const kmlGenerator = require('./kml-generator');
-        const kmlDoc = kmlGenerator(docs, `${req.headers.host}/static/uploads`); // generate kml from this data
+        const kmlDoc = kmlGenerator(docs, `${req.protocol}://${req.headers.host}/static/uploads`); // generate kml from this data
         // trigger browser download, if possible
         res.set('Content-Disposition', 'attachment; filename="wikistreets.kml"');
         res.set('Content-Type', 'text/xml');
