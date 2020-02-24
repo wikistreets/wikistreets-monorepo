@@ -48,7 +48,7 @@ app.get('/', (req, res) => {
 });
 
 // route for HTTP POST requests for /new
-app.post('/new', upload.array('files', 3), async (req, res, next) => {
+app.post('/create', upload.array('files', 3), async (req, res, next) => {
 
   const data = {
     position: {
@@ -82,16 +82,31 @@ app.post('/new', upload.array('files', 3), async (req, res, next) => {
 });
 
 // route for HTTP GET requests to the map JSON dataa
-app.get('/data/map', (req, res) => {
+app.get('/data/json', (req, res) => {
   const data = Issue.find({ }, (err, docs) => {
     if (!err){ 
         //console.log(docs);
         res.json(docs);
     } else {throw err;}
   });
-
 });
 
+// route for HTTP GET requests to the map JSON dataa
+app.get('/data/kml', (req, res) => {
+  const data = Issue.find({ }, (err, docs) => {
+    if (!err){ 
+        //console.log(docs);
+        const kmlGenerator = require('./kml-generator');
+        const kmlDoc = kmlGenerator(docs, `${req.headers.host}/static/uploads`); // generate kml from this data
+        // trigger browser download, if possible
+        res.set('Content-Disposition', 'attachment; filename="wikistreets.kml"');
+        res.set('Content-Type', 'text/xml');
+        res.send(kmlDoc);
+    } else {
+      console.log(err);
+    }
+  });
+});
 
 
 module.exports = app;

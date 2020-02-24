@@ -11,6 +11,7 @@
         <link rel="stylesheet" type="text/css" href="/static/css/bootstrap/bootstrap.min.css" />
         </head>
     <body>
+
         <h1 class="logo display-4">WikiStreets</h1>
         <section class="issue-map">
             <div id="map">loading map...</div>
@@ -20,44 +21,40 @@
             <div class="control-find-location">
                 <img alt="Center map on your current location" src="/static/images/material_design_icons/gps_off-24px.svg" />
             </div>
-            <div class="personal-location-marker hide">
-                <img src="/static/images/material_design_icons/directions_walk-24px.svg" />
+            <div class="control-search-address">
+                <img alt="Search by address" src="/static/images/material_design_icons/search-24px.svg" />
             </div>
         </section>
+
 
         <section class="info-window">
 
             <!-- info window icons -->
-            <img class="close-icon" src="/static/images/material_design_icons/close-24px.svg" />
-            <img class="edit-icon" src="/static/images/material_design_icons/edit-24px.svg" />
+            <!-- <img class="close-icon" src="/static/images/material_design_icons/close-24px.svg" /> -->
 
-            <section class="info-window-content row">
-                    Welcome!  
+            <address class="instructions street-address alert alert-info" role="alert">
+                Welcome!
+            </address>
+
+            <section class="info-window-content">
             </section>
         </section>
 
-        <article class="info-window-default-content hide">
-            Default content!
-        </article>
-        
-        <div class="issue-form-trigger hide">
-            <div class="row col-12">
-                    <p class="col-12 col-md-6 alert alert-danger street-address mx-auto">The address will appear here</p>
-            </div>
-            <div class="row col-12">
-                    <button class="col-12 col-md-6 btn btn-primary mx-auto">Report This AAddress</button>
-            </div>
+        <div class="search-address-form-container hide">
+            <form action="/search" method="POST" class="row">
+                <input class="col-12 col-md-8" type="text" name="searchterm" id="searchterm" placeholder='Enter address' />
+                <input class="col-12 col-md-4 btn btn-primary" type="submit" />
+            </form>
         </div>
 
         <div class="issue-form-container hide">
-            <div class="row">
-                    <h2 class="col-12">Report an issue <span class="street-address"></span></h2>
-                    <p class="alert alert-danger">Drag the person in the map to the exact location of the issue.</p>
-            </div>
-            <form action="/new" method="POST" enctype="multipart/form-data" >
-                <input type="hidden" name="address" id="address" />
-                <input type="hidden" name="lat" id="lat" />
-                <input type="hidden" name="long" id="long" />
+            <!-- <div class="row">
+                <h2 class="col-12">Report an issue at <span class="street-address"></span></h2>
+            </div> -->
+            <form action="/create" method="POST" enctype="multipart/form-data" >
+                <input type="hidden" name="address" class="address" />
+                <input type="hidden" name="lat" class="lat" />
+                <input type="hidden" name="long" class="long" />
 
 
                 <div class="row">
