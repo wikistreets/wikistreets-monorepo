@@ -596,7 +596,7 @@ const openGeopositionUnavailableForm = () => {
     }
     
     // show instructions
-    $('.info-window .instructions').html('Geoposition unavailable');
+    $('.info-window .instructions').html('Geoposition currently unavailable');
 
     // copy the search address form into the infowindow
     const infoWindowHTML = $('.geoposition-error-container').html();
