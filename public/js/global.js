@@ -140,7 +140,7 @@ app.browserGeolocation.update = async () => {
         app.browserGeolocation.enabled = false;
         // update interface
         app.controls.gps.setState('disabled');
-        return err;
+        throw err;
     });    
 
 }
@@ -261,12 +261,19 @@ async function initMap() {
     // pop open issue form when control icon clicked
     $('.control-find-location').click( async () => {
         // center on browser's geoposition
-        const coords = await panToPersonalLocation();
-        // move the me marker, if available
-        if (app.mode = 'issuelocate' && app.markers.me) {
-            console.log('moving me');
-            app.markers.me.setPosition(coords);
-        }
+        panToPersonalLocation()
+        .then( coords => {
+            // move the me marker, if available
+            if (app.mode = 'issuelocate' && app.markers.me) {
+                // console.log('moving me');
+                app.markers.me.setPosition(coords);
+            }
+        })
+        .catch( err => {
+            console.log('opening');
+            openGeopositionUnavailableForm();
+            throw err;
+        });
     });
 
     // pop open issue form when control icon clicked
@@ -347,8 +354,8 @@ const getStreetAddress = async (coords) => {
     })
     .catch( err => {
         console.log(err)
-        return err;
-        })
+        throw err;
+    })
 };
 
 const getMatchingAddresses = async address => {
@@ -435,7 +442,8 @@ const showInfoWindow = (marker, data) => {
     // show it if it's not yet shown
     if ($('.info-window').css('display') != 'block') {
         // console.log('opening infowindow');
-        expandInfoWindow();
+        expandInfoWindow().then( () => {
+        })
     }
 
     // center the map on the selected marker
@@ -451,6 +459,9 @@ const expandInfoWindow = async (infoWindowHeight=60, mapHeight=40) => {
     $('.issue-map, #map').animate( {
         height: `${mapHeight}vh`
     }, () => 'finished');
+
+    $('.info-window').scrollTop(0);
+
 }
 
 const collapseInfoWindow = async e => {
@@ -525,7 +536,6 @@ const openIssueForm = () => {
 
     // open the info window
     expandInfoWindow(40, 60).then( async () => {
-
     });
     
 }
@@ -568,9 +578,33 @@ const openSearchAddressForm = () => {
 
     // open the info window
     expandInfoWindow(40, 60).then( async () => {
-
     });
     
+}
+
+const openGeopositionUnavailableForm = () => {
+    // keep track
+    app.mode = 'geopositionerror';
+    console.log(`mode=${app.mode}`);
+
+    //deactivate all markers
+    app.markers.deactivate();
+
+    // remove any previous me marker
+    if (app.markers.me) {
+        app.markers.wipeMe();
+    }
+    
+    // show instructions
+    $('.info-window .instructions').html('Geoposition unavailable');
+
+    // copy the search address form into the infowindow
+    const infoWindowHTML = $('.geoposition-error-container').html();
+    $('.info-window-content').html(infoWindowHTML);
+
+    // open the info window
+    expandInfoWindow(40, 60).then( async () => {
+    });
 }
 
 const panToPersonalLocation = () => {
@@ -582,8 +616,8 @@ const panToPersonalLocation = () => {
         return coords;
     })
     .catch( err => {
-        app.controls.gps.setState('disabled');
-        console.log(err);
+        // console.log(err);
+        throw err;
     })
 }
 

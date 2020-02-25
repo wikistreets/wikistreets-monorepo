@@ -52,6 +52,13 @@
             </form>
         </div>
 
+        <div class="geoposition-error-container hide">
+            <h2>Could not locate you</h2>
+            <p>
+                This is usually because you have disabled geolocation sharing in your web browser.  You are welcome to manually drag the map to your location instead.
+            </p>
+        </div>
+
         <div class="issue-form-container hide">
             <!-- <div class="row">
                 <h2 class="col-12">Report an issue at <span class="street-address"></span></h2>
@@ -61,13 +68,12 @@
                 <input type="hidden" name="lat" class="lat" />
                 <input type="hidden" name="long" class="long" />
 
-
                 <div class="row">
                     <section class="col-12 col-md-6 col-lg-4">
                         <h2>Sidewalk issues</h2>
                         <p>Select any that apply:</p>
                         <input type="checkbox" name="sidewalk_issues" value="missing" id="sidewalk_issue_1" /><label for="sidewalk_issue_1">Missing sidewalk</label><br />
-                        <input type="checkbox" name="sidewalk_issues" value="uplift" id="sidewalk_issue_2" /><label for="sidewalk_issue_2">Uplift / vertical height difference</label><br />
+                        <input type="checkbox" name="sidewalk_issues" value="upheave" id="sidewalk_issue_2" /><label for="sidewalk_issue_2">Upheave / vertical height difference</label><br />
                         <input type="checkbox" name="sidewalk_issues" value="cars" id="sidewalk_issue_3" /><label for="sidewalk_issue_3">Cars regularly parked on sidewalk</label><br />
                         <input type="checkbox" name="sidewalk_issues" value="cracked" id="sidewalk_issue_4" /><label for="sidewalk_issue_4">Cracked surface</label><br />
                         <input type="checkbox" name="sidewalk_issues" value="ramp" id="sidewalk_issue_5" /><label for="sidewalk_issue_5">No curb ramp</label><br />
