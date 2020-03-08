@@ -55,7 +55,7 @@ app.post('/create', upload.array('files', 3), async (req, res, next) => {
       lat: req.body.lat,
       lng: req.body.lng,
     },
-    address: req.body.street,
+    address: req.body.address,
     sidewalkIssues: Array.isArray(req.body.sidewalk_issues) ? req.body.sidewalk_issues : [req.body.sidewalk_issues],
     roadIssues: Array.isArray(req.body.road_issues) ? req.body.road_issues : [req.body.road_issues],
     photos: req.files,
