@@ -417,14 +417,20 @@ const showInfoWindow = (marker, data) => {
     let contentString = '';
 
     //loop through each photo in data and prepare an img tag for it
+    let imgString = '';
     data.photos.map( (val, i, arr) => {
-        contentString += `
+        imgString += `
+            <img class="card-img-top" src="/static/uploads/${val.filename}" />
+        `;
+    });
+
+    contentString += `
 <div class="card col-12 col-md-5">
     <img class="edit-icon" src="/static/images/material_design_icons/edit-24px.svg" />
     <div class="card-body">
         <h2 class="card-title">${data.address}</h2>
     </div>
-    <img class="card-img-top" src="/static/uploads/${val.filename}" />
+    ${imgString}
     <div class="card-body">
         <p class="card-text">${data.comments}</p>
     </div>
@@ -433,8 +439,7 @@ const showInfoWindow = (marker, data) => {
         <li class="list-group-item">Road issues: ${data.roadIssues.join(', ')}</li>
     </ul>
 </div>
-        `;
-    }); // data.photos.map
+    `;
 
     // update the infoWindow content
     $('.info-window-content').html(contentString);
