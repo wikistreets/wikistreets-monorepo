@@ -83,15 +83,15 @@ const app = {
         me: null,
         icons: {
             sidewalk: {
-                default: L.AwesomeMarkers.icon({ type: 'awesomeMarker', icon: 'walking', prefix: 'fa', markerColor: 'red' }),
-                active: L.AwesomeMarkers.icon({ type: 'awesomeMarker', icon: 'walking', prefix: 'fa', markerColor: 'green' }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
+                default: L.ExtraMarkers.icon({ icon: 'fa-walking', prefix: 'fa', markerColor: 'red' }),
+                active: L.ExtraMarkers.icon({ icon: 'fa-walking', prefix: 'fa', markerColor: 'green' }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
             },
             street: {
-                default: L.AwesomeMarkers.icon({ type: 'awesomeMarker', icon: 'road', prefix: 'fa', markerColor: 'red' }),
-                active: L.AwesomeMarkers.icon({ type: 'awesomeMarker', icon: 'road', prefix: 'fa', markerColor: 'green' }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
+                default: L.ExtraMarkers.icon({ icon: 'fa-road', shape: 'square', prefix: 'fa', markerColor: 'red' }),
+                active: L.ExtraMarkers.icon({ icon: 'fa-road', shape: 'square', prefix: 'fa', markerColor: 'green' }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
             },
             me: {
-                default: L.AwesomeMarkers.icon({ type: 'awesomeMarker', icon: 'walking', extraClasses: 'me-marker', prefix: 'fa', markerColor: 'blue' }) //{ imageUrl: '/static/images/material_design_icons/directions_walk-24px.svg' }
+                default: L.ExtraMarkers.icon({ icon: 'fa-walking', shape: 'penta', extraClasses: 'me-marker', prefix: 'fa', markerColor: 'blue' }) //{ imageUrl: '/static/images/material_design_icons/directions_walk-24px.svg' }
             }
         },
         size: {
@@ -491,11 +491,14 @@ const expandInfoWindow = async (infoWindowHeight=60, mapHeight=40) => {
     $('.issue-map, #map').animate( {
             height: `${mapHeight}vh`
         }, () => {
+            // scroll the info window to the top, in case it was previously scrolled down
             $('.info-window').scrollTop(0)
-            app.map.element.invalidateSize(true); // inform the map that it has been dynamically resized
+            // inform the map that it has been dynamically resized
+            app.map.element.invalidateSize(true); 
         }
     );
 
+    // resolve the promise once the animation is complete
     return $('.issue-map, #map').promise().done( () => {
         return 'finished'
     });
@@ -506,16 +509,25 @@ const collapseInfoWindow = async e => {
     app.mode = 'default';
     console.log(`mode=${app.mode}`);
 
+    // hide the info window
     $('.info-window').css( {
         display: 'none',
         height: '0vh'
     });
 
+    // animate the map to taake up full screen
     $('.issue-map, #map').animate( {
         height: '100vh'
     }, () => {
-        Promise.resolve('finished');
+        // inform the map that it has been dynamically resized
+        app.map.element.invalidateSize(true); 
     });
+
+    // resolve the promise once the animation is complete
+    return $('.issue-map, #map').promise().done( () => {
+        return 'finished'
+    });
+
 }
 
 const openIssueForm = () => {

@@ -31,27 +31,28 @@ h1.logo {
     padding: 0;
 }
 
-.personal-location-marker img.person-icon, .personal-location-marker img.crosshairs-icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
+.hide {
+    display: none;
 }
 
-.personal-location-marker img.crosshairs-icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 16px;
-    height: 16px;
-    margin-left: -8px;
-    margin-top: -16px;
+/* general styles */
+
+section {
+    margin-bottom: 20px;
 }
 
-.personal-location-marker img.person-icon {
-    width: 50px;
-    height: 50px;
-    margin-left: -24px;
-    margin-top: -62px;
+label {
+    padding-left: 10px;
+}
+
+input[type='text'], select {
+    width: 300px;
+}
+
+ul {
+    margin-left: 0;
+    padding-left: 0;
+    list-style-position: inside;
 }
 
 .alert.instructions {
@@ -102,7 +103,8 @@ h1.logo {
     z-index: 12;
 }
 
-/* image inside Google Maps InfoWindow */
+/* info panel styles */
+
 .info-window-content img {
     max-width: 100%;
 }
@@ -111,29 +113,8 @@ h1.logo {
     font-size: 14pt;
 }
 
-.hide {
-    display: none;
-}
-
-section {
-    margin-bottom: 20px;
-}
-
-label {
-    padding-left: 10px;
-}
-
-input[type='text'], select {
-    width: 300px;
-}
-
-ul {
-    margin-left: 0;
-    padding-left: 0;
-    list-style-position: inside;
-}
-
 /* custom map controls */
+
 .control-add-issue, .control-find-location, .control-search-address, .control-download-data {
     position: absolute;
     right: 20px;
@@ -158,10 +139,13 @@ ul {
     height: 50px;
 }
 
-.awesome-marker i {
+/* Leaflet extra markers */
+.leaflet-marker-draggable {
+}
+.extra-marker i {
     font-size: 18px;
 }
 
-.awesome-marker.me-marker i {
-    font-size: 20px;
+.extra-marker i.me-marker {
+    font-size: 18px;
 }
