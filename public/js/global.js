@@ -25,14 +25,15 @@ const app = {
             // settings for WikiStreets API
             baseUrl: '/data/json'
         },
-        googleMaps: {
-            // settings for Google Maps' API
-            apiKey: 'AIzaSyADajAi4t5UajrNOikURhipU3JmOwpQT8s', // Google Maps API Key
-            baseUrl: 'https://maps.googleapis.com/maps/api/geocode/json?',
+        mapbox: {
+            // settings for the Mapbox API
+            apiKey: 'pk.eyJ1IjoiYWIxMjU4IiwiYSI6ImNrN3FodmtkdzAzbnUzbm1oamJ3cDc4ZGwifQ.VXZygrvQFDu6wNM9i7IN2g',
+            baseUrl: 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}'
         }
     },
     map: {
         element: null,
+        htmlElementId: 'map',
         htmlElementSelector: '#map', // the id of the map element in the html
         geolocation: {
             lat: 41.1974622, 
@@ -40,7 +41,7 @@ const app = {
         },
         zoom: {
             default: 16,
-            issuelocate: 18
+            issuelocate: 19
         }
     },
     controls: {
@@ -81,9 +82,17 @@ const app = {
         markers: [],
         me: null,
         icons: {
-            default: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
-            active: '/static/images/material_design_icons/place-24px.svg',
-            me: '/static/images/material_design_icons/directions_walk-24px.svg'
+            sidewalk: {
+                default: L.AwesomeMarkers.icon({ type: 'awesomeMarker', icon: 'walking', prefix: 'fa', markerColor: 'red' }),
+                active: L.AwesomeMarkers.icon({ type: 'awesomeMarker', icon: 'walking', prefix: 'fa', markerColor: 'green' }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
+            },
+            street: {
+                default: L.AwesomeMarkers.icon({ type: 'awesomeMarker', icon: 'road', prefix: 'fa', markerColor: 'red' }),
+                active: L.AwesomeMarkers.icon({ type: 'awesomeMarker', icon: 'road', prefix: 'fa', markerColor: 'green' }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
+            },
+            me: {
+                default: L.AwesomeMarkers.icon({ type: 'awesomeMarker', icon: 'walking', extraClasses: 'me-marker', prefix: 'fa', markerColor: 'blue' }) //{ imageUrl: '/static/images/material_design_icons/directions_walk-24px.svg' }
+            }
         },
         size: {
             width: 50,
@@ -92,7 +101,7 @@ const app = {
         zIndex: {
             default: 50,
             active: 51,
-            me: 52
+            me: 100
         }
     }, 
     infoPanel: {
@@ -110,8 +119,8 @@ app.map.getCenter = () => {
     // update current center marker street address
     const center = app.map.element.getCenter();
     const coords = {
-        lat: center.lat(),
-        lng: center.lng()
+        lat: center.lat,
+        lng: center.lng
     }
     return coords;
 }
@@ -122,6 +131,7 @@ app.controls.gps.setState = (state) => {
     // show the correct icon for the given state: disabled, enabled, or active
     $(app.controls.gps.htmlElementSelector).attr('src', app.controls.gps.icons[state]);
 }
+
 app.browserGeolocation.update = async () => {    
     // get the browser's geolocation
     return getBrowserGeolocation()
@@ -153,62 +163,70 @@ app.infoPanel.close = () => {
 }
 app.markers.wipeMe = () => {
     if (app.markers.me) {
-        app.markers.me.setMap(null);
+        app.markers.me.remove();
         app.markers.me = null;    
     }
 }
 app.markers.wipe = () => {
     // remove any existing markers from map
     app.markers.markers.map( (marker, i, arr) => {
-        marker.setMap(null);
+        marker.remove()
     });
     app.markers.markers = [];
 }
 app.markers.place = data => {
     // make a marker from each data point
-    const latency = 100; // latency between marker animation drops
+    const latency = 50; // latency between marker animation drops
     data.map( (point, i, arr) => {
 
         // add delay before dropping marker onto map
-        // setTimeout( () => {
+        setTimeout( () => {
 
             if (point.position != undefined && point.position != null) {
-                // make a marker for this issue
-                const marker = new google.maps.Marker({
-                    position: {
-                        lat: point.position.lat,
-                        lng: point.position.lng
-                    },
-                    // map: app.map.element,
-                    title: `${point.address}`,
-                    zIndex: app.markers.zIndex.default,
-                    // animation: google.maps.Animation.DROP
-                });
+                const coords = [point.position.lat, point.position.lng];
+                const marker = L.marker(coords, {
+                    zIndexOffset: app.markers.zIndex.default,
+                    riseOffset: app.markers.zIndex.default,
+                    riseOnHover: true
+                }).addTo(app.map.element);
+
+                // add the issue type as a property of the
+                if (point.roadIssues.length && point.roadIssues[0] != null) {
+                    marker.issueType = 'street';
+                }
+                else if (point.sidewalkIssues.length && point.sidewalkIssues[0] != null) {
+                    marker.issueType = 'sidewalk';
+                }
+
+                // de-highlight the current marker
+                marker.setZIndexOffset(app.markers.zIndex.default);
+                marker.setIcon(app.markers.icons[marker.issueType].default);
 
                 // add to list of markers
                 app.markers.markers.push(marker);
 
-                // detect click events
-                marker.addListener('click', function() {
+                // // detect click events
+                marker.on('click', (e) => {
                     showInfoWindow(marker, point);
                 });
 
-                // console.log(marker);
             } // if
 
-        // }, i*latency); // setTimeout
+        }, i*latency); // setTimeout
+        
     }); // data.map
 
-    const markerCluster = new MarkerClusterer(app.map.element, app.markers.markers,
-        {imagePath: '/static/images/markerclusterplus/m'});
-    console.log(markerCluster);
+    // const markerCluster = new MarkerClusterer(app.map.element, app.markers.markers,
+    //     {imagePath: '/static/images/markerclusterplus/m'});
+    // console.log(markerCluster);
 
 }
 app.markers.deactivate = (marker = app.markers.current) => {
     // return selected marker to default state
     if (marker) {
-        marker.setZIndex(app.markers.zIndex.default);
-        marker.setIcon(app.markers.icons.default);
+        // de-highlight the current marker
+        marker.setZIndexOffset(app.markers.zIndex.default);
+        marker.setIcon(app.markers.icons[marker.issueType].default);
         marker = null;
     }    
     // there is now no active marker
@@ -227,19 +245,22 @@ app.issues.fetch = async () => {
 
 async function initMap() {
     // instantiate map
-    app.map.element = new google.maps.Map($(app.map.htmlElementSelector)[0], {
-        center: app.browserGeolocation.coords,
-        zoom: app.map.zoom.default,
-        disableDefaultUI: true, // get rid of zoom buttons, street view button, etc.
-        gestureHandling: "greedy", // allow one-finger panning on mobile
-        mapTypeControlOptions: {
-            mapTypeIds: []
-        }
-    });
+    const coords = [app.browserGeolocation.coords.lat, app.browserGeolocation.coords.lng];
+    app.map.element = L.map(app.map.htmlElementId).setView(coords, app.map.zoom.default);
 
-    // populate with markers
+    // load map tiles
+    L.tileLayer(app.apis.mapbox.baseUrl, {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 21,
+        id: 'mapbox/streets-v11',
+        tileSize: 512,
+        zoomOffset: -1,
+        accessToken: app.apis.mapbox.apiKey,
+    }).addTo(app.map.element);
+
+    // // populate with markers
     const data = await app.issues.fetch();
-    app.markers.wipe(); // remove any existing markers
+    //app.markers.wipe(); // remove any existing markers
     app.markers.place(data);
 
     // find browser's geolocation
@@ -279,7 +300,7 @@ async function initMap() {
     // pop open issue form when control icon clicked
     $('.control-search-address').click( openSearchAddressForm );
 
-    google.maps.event.addListener(app.map.element, 'click', function(event){
+    app.map.element.on('click', function(event){
         // console.log('map clicked');
         // close any open infowindow except the issue form
         collapseInfoWindow();
@@ -292,7 +313,7 @@ async function initMap() {
 
     });
 
-    google.maps.event.addListener(app.map.element, 'center_changed', async function(e){
+    app.map.element.on('moveend', async function(e){
         // console.log('map moved');
         // // get the center address of the map
         const coords = app.map.getCenter();
@@ -316,8 +337,12 @@ async function initMap() {
     });
 
     // minimize any open infowindow while dragging
-    google.maps.event.addListener(app.map.element, 'dragstart', (e) => {
+    app.map.element.on('dragstart', (e) => {
         // console.log('map drag start');
+
+        // deactivate any currently-selected markers
+        app.markers.deactivate();
+
         // close any open infowindow
         if (app.mode == 'issuedetails') {
             // console.log('dragstart');
@@ -326,29 +351,29 @@ async function initMap() {
     });
 
     // minimize any open infowindow while dragging
-    google.maps.event.addListener(app.map.element, 'dragend', (e) => {
+    app.map.element.on('dragend', (e) => {
         // console.log('map drag end');
     });
 }
 
 // on page load....
 $(function() {
-    // the google maps script tag in the HTML has a callback to the initMap function
+    initMap();
 });
 
 /**
- * Use Google Maps API to determine street address based on lat long coordinates.
+ * Use Mapbox API to determine street address based on lat long coordinates.
  * @param {*} lat The latitude
  * @param {*} long The longitude
  */
 const getStreetAddress = async (coords) => {
-    const apiFullUrl = `${app.apis.googleMaps.baseUrl}latlng=${coords.lat},${coords.lng}&key=${app.apis.googleMaps.apiKey}`;
+    const apiFullUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${coords.lng},${coords.lat}.json?access_token=${app.apis.mapbox.apiKey}`;
     // console.log(apiFullUrl)
     return fetch(apiFullUrl)
     .then(response => response.json()) // convert JSON response text to an object
     .then(data => {
-        console.log(data);
-        let address = data.results[0].formatted_address;
+        // console.log(data);
+        let address = data.features[0].place_name;
         let street = address.substring(0, address.indexOf(',')); // up till the comma
         return street
     })
@@ -405,11 +430,8 @@ const showInfoWindow = (marker, data) => {
     app.markers.deactivate();
 
     // highlight the current marker
-    marker.setIcon({
-        url: app.markers.icons.active,
-        scaledSize: new google.maps.Size(app.markers.size.width, app.markers.size.height)
-    });
-    marker.setZIndex(app.markers.zIndex.active);
+    marker.setIcon(app.markers.icons[marker.issueType].active);
+    marker.setZIndexOffset(app.markers.zIndex.active);
 
     // the current marker is now the active one
     app.markers.current = marker;
@@ -448,11 +470,15 @@ const showInfoWindow = (marker, data) => {
     if ($('.info-window').css('display') != 'block') {
         // console.log('opening infowindow');
         expandInfoWindow().then( () => {
-        })
+            // center the map on the selected marker after panel has opened
+            app.map.element.panTo(marker.getLatLng());
+        });
+    }
+    else {
+        // center the map on the selected marker
+        app.map.element.panTo(marker.getLatLng());
     }
 
-    // center the map on the selected marker
-    app.map.element.panTo(marker.position);
 } // showInfoWindow
 
 const expandInfoWindow = async (infoWindowHeight=60, mapHeight=40) => {
@@ -461,11 +487,18 @@ const expandInfoWindow = async (infoWindowHeight=60, mapHeight=40) => {
         height: `${infoWindowHeight}vh`
     });
 
+    // animate the info window open and scroll it to the top once open
     $('.issue-map, #map').animate( {
-        height: `${mapHeight}vh`
-    }, () => 'finished');
+            height: `${mapHeight}vh`
+        }, () => {
+            $('.info-window').scrollTop(0)
+            app.map.element.invalidateSize(true); // inform the map that it has been dynamically resized
+        }
+    );
 
-    $('.info-window').scrollTop(0);
+    return $('.issue-map, #map').promise().done( () => {
+        return 'finished'
+    });
 
 }
 
@@ -502,26 +535,31 @@ const openIssueForm = () => {
     // zoom into map
     app.map.element.setZoom(app.map.zoom.issuelocate);
 
-    // place a me marker on the map center
-    app.markers.me = new google.maps.Marker({
-        position: app.map.getCenter(),
-        map: app.map.element,
-        title: `Me`,
-        icon: {
-            url: app.markers.icons.me,
-            scaledSize: new google.maps.Size(app.markers.size.width, app.markers.size.height), // scaled size
-        },
-        zIndex: app.markers.zIndex.me,
-        draggable: true,
-        animation: google.maps.Animation.DROP
-    });
+    // place the me marker on the map
+    const center = app.map.element.getCenter();
+    const coords = [center.lat, center.lng];
+    const marker = L.marker(coords, {
+        zIndexOffset: app.markers.zIndex.me,
+        riseOffset: app.markers.zIndex.me,
+        riseOnHover: true,
+        // make it draggable!
+        draggable: true, 
+        autoPan: true
+    }).addTo(app.map.element);
+
+    marker.setIcon(app.markers.icons.me.default);
+
+    // attach a popup
+    marker.bindPopup("<strong>Drag me...</strong><br>to the exact location of the issue.").openPopup();
+
+    app.markers.me = marker;
 
     // detect drag events on me marker
-    app.markers.me.addListener('dragend', async () => {
+    app.markers.me.on('dragend', async () => {
         // get the center address of the map
         app.browserGeolocation.coords = {
-            lat: app.markers.me.getPosition().lat(),
-            lng: app.markers.me.getPosition().lng(),
+            lat: app.markers.me.getLatLng().lat,
+            lng: app.markers.me.getLatLng().lng,
         };
 
         // center map on the me marker
