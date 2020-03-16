@@ -1,4 +1,5 @@
 const escapeXml = (unsafe) => {
+    if (!unsafe) return unsafe; // return nothing if nothing comes in
     return unsafe.replace(/[<>&'"]/g, function (c) {
         switch (c) {
             case '<': return '&lt;';
