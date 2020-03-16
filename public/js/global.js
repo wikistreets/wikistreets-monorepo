@@ -319,17 +319,18 @@ async function initMap() {
         // // get the center address of the map
         const coords = app.map.getCenter();
         app.browserGeolocation.coords = coords; 
-        // // if locator mode, update street address
-        if (app.mode == 'issuelocate') {
-            const street = await getStreetAddress(coords);
-            app.browserGeolocation.street = street;
-            $('.street-address').html(street);
 
-            // update hidden from elements
-            $('.address').val(street);
-            $('.lat').val(coords.lat);
-            $('.lng').val(coords.lng);
-        }
+        // // if locator mode, update street address
+        // if (app.mode == 'issuelocate') {
+        //     const street = await getStreetAddress(coords);
+        //     app.browserGeolocation.street = street;
+        //     $('.street-address').html(street);
+
+        //     // update hidden from elements
+        //     $('.address').val(street);
+        //     $('.lat').val(coords.lat);
+        //     $('.lng').val(coords.lng);
+        // }
 
         // if we had previous been centered on user's personal location, change icon now
         if (app.browserGeolocation.enabled)
@@ -532,7 +533,7 @@ const collapseInfoWindow = async e => {
 
 }
 
-const openIssueForm = () => {
+const openIssueForm = async () => {
 
     // zoom into map
     if (app.mode != 'issuelocate') {
@@ -567,6 +568,12 @@ const openIssueForm = () => {
 
     marker.setIcon(app.markers.icons.me.default);
 
+    // update street address
+    const street = await getStreetAddress( { lat: center.lat, lng: center.lng} );
+    // console.log(street);
+    app.browserGeolocation.street = street;
+    $('.street-address').html(street);
+
     // attach a popup
     marker.bindPopup( $('.map-popup-container').html() ).openPopup();
 
@@ -585,10 +592,19 @@ const openIssueForm = () => {
 
         // update street address
         const street = await getStreetAddress(app.browserGeolocation.coords);
+        // console.log(street);
+        app.browserGeolocation.street = street;
         $('.street-address').html(street);
 
-        //re-open popup
-        app.markers.me.openPopup();
+        // update hidden from elements
+        $('.address').val(street);
+        $('.lat').val(coords.lat);
+        $('.lng').val(coords.lng);
+
+        //re-open popup ... make sure it has the updated street first
+        app.markers.me.setPopupContent( $('.map-popup-container').html() );
+        app.markers.me.openPopup()
+
     });
     
     // show instructions
