@@ -66,16 +66,22 @@ app.post('/create', upload.array('files', 3), async (req, res, next) => {
 
   issue.save(function (err, obj) {
     if (err) {
-      //return response
-      res.send({
+      //return failure response
+      res.json({
         status: false,
         message: 'error',
         err: err
       });
     }
     else {
-      //redirect to main screen
-      res.redirect(`/`);
+      // console.log( JSON.stringify( obj, null, 2) )
+
+      //return success response with new object
+      res.json({
+        status: true,
+        message: 'success',
+        data: obj
+      });
     }
   });
 

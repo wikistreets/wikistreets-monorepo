@@ -23,7 +23,8 @@ const app = {
     apis: {
         wikistreets: {
             // settings for WikiStreets API
-            baseUrl: '/data/json'
+            getUrl: '/data/json',
+            postUrl: '/create'
         },
         mapbox: {
             // settings for the Mapbox API
@@ -235,7 +236,7 @@ app.markers.deactivate = (marker = app.markers.current) => {
 
 app.issues.fetch = async () => {
     // fetch data from wikistreets api
-    return fetch(app.apis.wikistreets.baseUrl)
+    return fetch(app.apis.wikistreets.getUrl)
     .then(response => response.json()) // convert JSON response text to an object
     .then(data => {
         app.issues.issues = data;     
@@ -360,6 +361,7 @@ async function initMap() {
 $(function() {
     initMap();
 });
+
 
 /**
  * Use Mapbox API to determine street address based on lat long coordinates.
@@ -532,20 +534,24 @@ const collapseInfoWindow = async e => {
 
 const openIssueForm = () => {
 
-    // keep track
-    app.mode = 'issuelocate';
-    console.log(`mode=${app.mode}`);
+    // zoom into map
+    if (app.mode != 'issuelocate') {
+        // zoom in nice and close
+        app.map.element.setZoom(app.map.zoom.issuelocate);
 
-    //deactivate all markers
-    app.markers.deactivate();
+        // keep track
+        app.mode = 'issuelocate';
+        console.log(`mode=${app.mode}`);
+
+        //deactivate all markers
+        app.markers.deactivate();
+
+    }
 
     // remove any previous me marker
     if (app.markers.me) {
         app.markers.wipeMe();
     }
-
-    // zoom into map
-    app.map.element.setZoom(app.map.zoom.issuelocate);
 
     // place the me marker on the map
     const center = app.map.element.getCenter();
@@ -562,7 +568,7 @@ const openIssueForm = () => {
     marker.setIcon(app.markers.icons.me.default);
 
     // attach a popup
-    marker.bindPopup("<strong>Drag me...</strong><br>to the exact location of the issue.").openPopup();
+    marker.bindPopup( $('.map-popup-container').html() ).openPopup();
 
     app.markers.me = marker;
 
@@ -580,6 +586,9 @@ const openIssueForm = () => {
         // update street address
         const street = await getStreetAddress(app.browserGeolocation.coords);
         $('.street-address').html(street);
+
+        //re-open popup
+        app.markers.me.openPopup();
     });
     
     // show instructions
@@ -588,6 +597,51 @@ const openIssueForm = () => {
     // copy the issue form into the infowindow
     const infoWindowHTML = $('.issue-form-container').html();
     $('.info-window-content').html(infoWindowHTML);
+
+    // deal with form submissions
+    $('.info-window-content form.issue-form').on('submit', e => {
+        // prevent page reload
+        e.preventDefault();
+
+        // construct a FormData object from the form DOM element
+        let formData = new FormData( e.target )
+
+        // add additional info, if desired
+        // formData.append("CustomField", "This is some extra data, testing");
+
+        // debugging FormData object... it can't easily be printed otherwise
+		// for (const key of formData.entries()) {
+		// 	console.log(key[0] + ', ' + key[1])
+        // }
+        
+        // post to server
+        fetch(app.apis.wikistreets.postUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then( res => res.json() )
+        .then( res => {
+            // console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
+
+            // make a new marker for the new issue
+            // put the new issue data into an array and pass to the place method
+            app.markers.place( [ res.data ]);
+
+            // close any open infowindow except the issue form
+            collapseInfoWindow();
+
+            // remove me marker, if present
+            app.markers.wipeMe();
+
+        })
+        .catch( err => {
+            console.err(`ERROR: ${err}`)
+        })
+
+        // update the map
+        
+
+    });
 
     // open the info window
     expandInfoWindow(40, 60).then( async () => {
