@@ -20,6 +20,11 @@ h1.logo {
     left: 50%;
     margin-left: -50px; /* half the width */
     border: 1px solid black;
+    cursor: pointer;
+}
+h1.logo:hover {
+    /* text-decoration: underline; */
+    color: green;
 }
 
 #map {

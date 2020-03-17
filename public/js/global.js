@@ -79,6 +79,7 @@ const app = {
         issues: []
     },
     markers: {
+        cluster: null,
         current: null,
         markers: [],
         me: null,
@@ -175,9 +176,18 @@ app.markers.wipe = () => {
     });
     app.markers.markers = [];
 }
-app.markers.place = data => {
+app.markers.createCluster = () => {
+    // create a marker cluster
+    app.markers.markerCluster = L.markerClusterGroup({ spiderfyOnMaxZoom: false, disableClusteringAtZoom: 18 });
+    // add marker cluster to map
+    app.map.element.addLayer(app.markers.markerCluster);
+    // return cluster
+    return app.markers.markerCluster;
+}
+app.markers.place = (data, cluster) => {
+
     // make a marker from each data point
-    const latency = 50; // latency between marker animation drops
+    const latency = 25; // latency between marker animation drops
     data.map( (point, i, arr) => {
 
         // add delay before dropping marker onto map
@@ -189,7 +199,7 @@ app.markers.place = data => {
                     zIndexOffset: app.markers.zIndex.default,
                     riseOffset: app.markers.zIndex.default,
                     riseOnHover: true
-                }).addTo(app.map.element);
+                }); //.addTo(app.map.element);
 
                 // add the issue type as a property of the
                 if (point.roadIssues.length && point.roadIssues[0] != null) {
@@ -198,6 +208,9 @@ app.markers.place = data => {
                 else if (point.sidewalkIssues.length && point.sidewalkIssues[0] != null) {
                     marker.issueType = 'sidewalk';
                 }
+
+                // add to the marker cluster
+                cluster.addLayer(marker);
 
                 // de-highlight the current marker
                 marker.setZIndexOffset(app.markers.zIndex.default);
@@ -216,10 +229,6 @@ app.markers.place = data => {
         }, i*latency); // setTimeout
         
     }); // data.map
-
-    // const markerCluster = new MarkerClusterer(app.map.element, app.markers.markers,
-    //     {imagePath: '/static/images/markerclusterplus/m'});
-    // console.log(markerCluster);
 
 }
 app.markers.deactivate = (marker = app.markers.current) => {
@@ -261,8 +270,12 @@ async function initMap() {
 
     // // populate with markers
     const data = await app.issues.fetch();
-    //app.markers.wipe(); // remove any existing markers
-    app.markers.place(data);
+
+    // create marker cluster
+    const cluster = (app.markers.cluster) ? app.markers.cluster : app.markers.createCluster();
+
+    // place new markers down
+    app.markers.place(data, cluster);
 
     // find browser's geolocation
     //app.browserGeolocation.update();
@@ -486,12 +499,12 @@ const showInfoWindow = (marker, data) => {
 
 const expandInfoWindow = async (infoWindowHeight=60, mapHeight=40) => {
     $('.info-window').show();
-    $('.info-window').animate( {
+    $('.info-window').stop().animate( {
         height: `${infoWindowHeight}vh`
     });
 
     // animate the info window open and scroll it to the top once open
-    $('.issue-map, #map').animate( {
+    $('.issue-map, #map').stop().animate( {
             height: `${mapHeight}vh`
         }, () => {
             // scroll the info window to the top, in case it was previously scrolled down
@@ -518,8 +531,8 @@ const collapseInfoWindow = async e => {
         height: '0vh'
     });
 
-    // animate the map to taake up full screen
-    $('.issue-map, #map').animate( {
+    // animate the map to take up full screen
+    $('.issue-map, #map').stop().animate( {
         height: '100vh'
     }, () => {
         // inform the map that it has been dynamically resized
@@ -568,11 +581,20 @@ const openIssueForm = async () => {
 
     marker.setIcon(app.markers.icons.me.default);
 
-    // update street address
+    // get the center address of the map
+    app.browserGeolocation.coords = {
+        lat: center.lat,
+        lng: center.lng,
+    };
+    
+    // update street address, lat, and lng
     const street = await getStreetAddress( { lat: center.lat, lng: center.lng} );
     // console.log(street);
     app.browserGeolocation.street = street;
     $('.street-address').html(street);
+    $('.address').val(street);
+    $('.lat').val(app.browserGeolocation.coords.lat);
+    $('.lng').val(app.browserGeolocation.coords.lng);
 
     // attach a popup
     marker.bindPopup( $('.map-popup-container').html() ).openPopup();
@@ -598,8 +620,8 @@ const openIssueForm = async () => {
 
         // update hidden from elements
         $('.address').val(street);
-        $('.lat').val(coords.lat);
-        $('.lng').val(coords.lng);
+        $('.lat').val(app.browserGeolocation.coords.lat);
+        $('.lng').val(app.browserGeolocation.coords.lng);
 
         //re-open popup ... make sure it has the updated street first
         app.markers.me.setPopupContent( $('.map-popup-container').html() );
@@ -639,9 +661,12 @@ const openIssueForm = async () => {
         .then( res => {
             // console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
 
+            // get a marker cluster
+            const cluster = (app.markers.cluster) ? app.markers.cluster : app.markers.createCluster();
+
             // make a new marker for the new issue
             // put the new issue data into an array and pass to the place method
-            app.markers.place( [ res.data ]);
+            app.markers.place( [ res.data ], cluster);
 
             // close any open infowindow except the issue form
             collapseInfoWindow();
@@ -655,7 +680,7 @@ const openIssueForm = async () => {
         })
 
         // update the map
-        
+
 
     });
 

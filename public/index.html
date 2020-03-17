@@ -25,6 +25,11 @@
         <link rel="stylesheet" href="/static/frameworks/leaflet.extra-markers/css/leaflet.extra-markers.min.css">
         <script src="/static/frameworks/leaflet.extra-markers/js/leaflet.extra-markers.min.js"></script>
 
+        <!-- LEAFLET MARKER CLUSTERS PLUGIN -->
+        <link rel="stylesheet" href="/static/frameworks/leaflet.markercluster/MarkerCluster.css" />
+        <link rel="stylesheet" href="/static/frameworks/leaflet.markercluster/MarkerCluster.Default.css" />
+        <script src="/static/frameworks/leaflet.markercluster/leaflet.markercluster-src.js"></script>
+    
         <!-- CUSTOM -->
         <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
         <script type="text/javascript" src="/static/js/global.js"></script>
@@ -32,7 +37,10 @@
     </head>
     <body>
 
-        <h1 class="logo display-4">WikiStreets</h1>
+        <header>
+            <h1 class="logo display-4">WikiStreets</h1>
+        </header>
+
         <section class="issue-map">
             <div id="map">loading map...</div>
             <div class="control-add-issue">
