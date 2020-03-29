@@ -21,7 +21,11 @@ const server = ( { config } ) => {
   app.use(cors()); // allow cross-origin resource sharing
   app.use(bodyParser.json());  // decode JSON-formatted incoming POST data
   app.use(bodyParser.urlencoded({extended: true})) // decode url-encoded incoming POST data
-  app.use(morgan('dev')); // log HTTP requests
+
+  // log all incoming HTTP(S) requests, except when testing
+  if (config.mode != 'test') {
+    app.use(morgan('dev'));
+  }
 
   // make 'public' directory publicly readable
   app.use('/static', express.static('public'))

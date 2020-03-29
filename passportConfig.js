@@ -4,7 +4,7 @@ const LocalStrategy = require('passport-local').Strategy
 const { ExtractJwt } = require('passport-jwt')
 const { User } = require('./models/user')
 
-const passportHelper = ( { config } ) => {
+const passportConfig = ( { config } ) => {
 
     // JSON WEB TOKENS STRATEGY
     // used when accessing secret content restricted to authenticated users
@@ -57,4 +57,4 @@ const passportHelper = ( { config } ) => {
     
 }
 
-module.exports = passportHelper
+module.exports = passportConfig

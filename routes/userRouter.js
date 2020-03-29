@@ -2,7 +2,7 @@
 const express = require('express')
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
-const passportHelper = require('../passportHelper')
+const passportConfig = require('../passportConfig')
 
 // middleware
 // const _ = require('lodash'); // utility functions for arrays, numbers, objects, strings, etc.
@@ -33,7 +33,7 @@ const userRouter = ( { config } ) => {
     const router = express.Router()
 
     // load up the jwt passport settings
-    passportHelper( { config })
+    passportConfig( { config })
 
     // our passport strategies in action
     const ensurePassportSignIn = passport.authenticate('local', { session: false })
