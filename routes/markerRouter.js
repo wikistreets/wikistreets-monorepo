@@ -7,7 +7,7 @@ const multer = require('multer'); // middleware for uploading files - parses mul
 const path = require('path');
 
 // database schemas and models
-const { Issue } = require('../models/issueSchema')
+const { Issue } = require('../models/issue')
 
 const markerRouter = ( { config } ) => {
   

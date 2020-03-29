@@ -16,7 +16,9 @@ const config = {
         maxFiles: 3
     },
     users: {
-
+        jwtIssuer: process.env.JWT_ISSUER,
+        jwtSecret: process.env.JWT_SECRET,
+        jwtExpirationAge: process.env.JWT_EXPIRATION_AGE
     }
 }
 

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const { fileSchema } = require('./fileSchema');
+const { fileSchema } = require('./file');
 
 // an issue
 const issueSchema = new Schema({
