@@ -23,8 +23,8 @@ const app = {
     apis: {
         wikistreets: {
             // settings for WikiStreets API
-            getUrl: '/data/json',
-            postUrl: '/create'
+            getUrl: '/markers/json',
+            postUrl: '/markers/create'
         },
         mapbox: {
             // settings for the Mapbox API

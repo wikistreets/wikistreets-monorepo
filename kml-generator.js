@@ -1,3 +1,7 @@
+/**
+ * Encode content to be embeddable within XML
+ * @param {*} unsafe The content to escape
+ */
 const escapeXml = (unsafe) => {
     if (!unsafe) return unsafe; // return nothing if nothing comes in
     return unsafe.replace(/[<>&'"]/g, function (c) {
@@ -11,6 +15,11 @@ const escapeXml = (unsafe) => {
     });
 }
 
+/**
+ * Convert an array photos into a KML ExtendedData XML element
+ * @param {*} photos Array of photos
+ * @param {*} imageBaseUrl Base URL to prefix to image paths
+ */
 const photosKml = (photos, imageBaseUrl) => {
     let kml = `
     <ExtendedData>
@@ -29,6 +38,11 @@ const photosKml = (photos, imageBaseUrl) => {
     return kml;
 }
 
+/**
+ * Assemble a Placemark XML element from marker data
+ * @param {*} place An object with marker data to place into the Placemark XML element
+ * @param {*} imageBaseUrl Base URL to prefix to image paths
+ */
 const placeMarkKml = (place, imageBaseUrl) => {
     // clean up some data
     const address = escapeXml(place.address);
@@ -59,6 +73,11 @@ const placeMarkKml = (place, imageBaseUrl) => {
     return res;
 }
 
+/**
+ * Generate KML from an array of markers
+ * @param {*} data The marker data
+ * @param {*} imageBaseUrl Base URL to prefix to image paths
+ */
 const kmlGenerator = (data, imageBaseUrl) => {
     let kml = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">

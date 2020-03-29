@@ -1,17 +1,21 @@
 #!/usr/bin/env node
 'use strict';
 
-require('dotenv').config({silent: true});
+// load server configuration settings
+const config = require('./config');
 
-var server = require('./app');
-var port = process.env.PORT || 3000;
+// instantiate our custom server
+const server = require('./app')( { config } );
+const port = config.server.port || 3000;
 
-var startServer = server.listen(port, function() {
+// start listening on the port
+const listener = server.listen(port, function() {
   console.log(`Server running on port: ${port}`);
 });
 
-function close() {
-  startServer.close();
+// function to stop listening
+const close = () => {
+  listener.close();
 }
 
 module.exports = {
