@@ -9,7 +9,7 @@ const passportConfig = ( { config } ) => {
     // JSON WEB TOKENS STRATEGY
     // used when accessing secret content restricted to authenticated users
     passport.use( new JwtStrategy( {
-        jwtFromRequest: ExtractJwt.fromHeader('authorization'),
+        jwtFromRequest: ExtractJwt.fromHeader('Authorization'),
         secretOrKey: config.jwtSecret
     }, async (payload, done) => {
         try {

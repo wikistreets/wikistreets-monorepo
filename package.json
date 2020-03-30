@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start-dev": "nodemon server",
+    "start": "cross-env NODE_ENV=production node index",
+    "start-dev": "cross-env NODE_ENV=development nodemon index",
     "test": "cross-env NODE_ENV=test mocha --timeout 5000 __tests__/**/*.test.js",
     "report": "cross-env NODE_ENV=test nyc --reporter=lcov mocha --timeout 5000 __tests__/**/*.test.js",
     "text-report": "cross-env NODE_ENV=test nyc --reporter=text-summary mocha --timeout 5000 __tests__/**/*.test.js",
