@@ -5,8 +5,8 @@ const morgan = require('morgan'); // middleware for logging HTTP requests.
 const cors = require('cors'); // middleware for enabling CORS (Cross-Origin Resource Sharing) requests.
 
 // load routes
-const markerRouter = require('./routes/markerRouter')
-const userRouter = require('./routes/userRouter')
+const markerRouter = require('./routes/marker-router')
+const userRouter = require('./routes/user-router')
 
 // set up server
 const server = ( { config } ) => {

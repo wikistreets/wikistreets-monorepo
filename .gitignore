@@ -1,6 +1,9 @@
 # front-end frameworks
 #frameworks/
 
+# uploads
+uploads/
+
 # Logs
 logs
 *.log

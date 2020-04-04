@@ -1,18 +1,36 @@
 const passport = require('passport')
 const JwtStrategy = require('passport-jwt').Strategy
-const LocalStrategy = require('passport-local').Strategy
 const { ExtractJwt } = require('passport-jwt')
+const LocalStrategy = require('passport-local').Strategy
 const { User } = require('./models/user')
 
 const passportConfig = ( { config } ) => {
 
     // JSON WEB TOKENS STRATEGY
     // used when accessing secret content restricted to authenticated users
-    passport.use( new JwtStrategy( {
-        jwtFromRequest: ExtractJwt.fromHeader('Authorization'),
-        secretOrKey: config.jwtSecret
-    }, async (payload, done) => {
+
+    // extract JWT token from cookie... 
+    // can be used in JwtStrategy opts field `jwtFromRequest: cookieExtractor`
+    const cookieExtractor = req => {
+        let token = null;
+        if (req && req.cookies) 
+            token = req.cookies['jwt'];
+        return token;
+    }
+    
+    // JwtStrategy object options
+    const opts = {
+        jwtFromRequest: ExtractJwt.fromHeader('Authorization'), // or ExtractJwt.fromAuthHeaderAsBearerToken();
+        secretOrKey: config.jwtSecret,
+        // issuer: config.jwtIssuer,
+        ignoreExpiration: true,
+        passReqToCallback: true
+    }
+
+    // use the JWT strategy
+    passport.use( new JwtStrategy( opts, async (req, payload, done) => {
         try {
+            console.log('accessing secret content...')
             // find user specified in token
             const user = await User.findById(payload.sub)
     
@@ -20,9 +38,13 @@ const passportConfig = ( { config } ) => {
             if (!user) return done(null, false)
     
             // otherwise, return the user
+            req.user = user; // add to request object
             done(null, user)
+
         } catch ( err ) {
-            done( error, false )
+            console.log('error accessing secret content')
+            // if error, return it
+            done( err, false )
         }
     }))
 
@@ -32,6 +54,7 @@ const passportConfig = ( { config } ) => {
         usernameField: 'email'
     }, async ( email, password, done ) => {
         try {
+            console.log('logging in...')
             // find the user with the given email
             const user = await User.findOne( { email })
 
@@ -43,6 +66,7 @@ const passportConfig = ( { config } ) => {
 
             // if not, handle it
             if (!isValid) {
+                console.log('error logging in - invalid user')
                 return done(null, false)
             }
 
@@ -50,6 +74,7 @@ const passportConfig = ( { config } ) => {
             done(null, user)
 
         } catch (err) {
+            console.log('error logging in...')
             done(err, false)
         }
     }))
