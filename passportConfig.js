@@ -30,7 +30,6 @@ const passportConfig = ( { config } ) => {
     // use the JWT strategy
     passport.use( new JwtStrategy( opts, async (req, payload, done) => {
         try {
-            console.log('accessing secret content...')
             // find user specified in token
             const user = await User.findById(payload.sub)
     
@@ -42,7 +41,6 @@ const passportConfig = ( { config } ) => {
             done(null, user)
 
         } catch ( err ) {
-            console.log('error accessing secret content')
             // if error, return it
             done( err, false )
         }
@@ -54,7 +52,6 @@ const passportConfig = ( { config } ) => {
         usernameField: 'email'
     }, async ( email, password, done ) => {
         try {
-            console.log('logging in...')
             // find the user with the given email
             const user = await User.findOne( { email })
 
@@ -66,7 +63,6 @@ const passportConfig = ( { config } ) => {
 
             // if not, handle it
             if (!isValid) {
-                console.log('error logging in - invalid user')
                 return done(null, false)
             }
 
@@ -74,7 +70,6 @@ const passportConfig = ( { config } ) => {
             done(null, user)
 
         } catch (err) {
-            console.log('error logging in...')
             done(err, false)
         }
     }))

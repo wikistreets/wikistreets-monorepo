@@ -90,35 +90,7 @@ describe('Users route', () => {
         
     }) // signup
 
-    // describe tests for the /secret route
-    describe('/secret', () => {
-
-        it('should return status 401', done => {
-            chai
-                .request(server)
-                .get(secret)
-                .end( (err, res) => {
-                    expect(res.status).to.equal(401)
-                    expect(res.body).to.be.empty
-                    done()
-                })
-        })
-
-        it('should return status 200', done => {
-            chai
-                .request(server)
-                .get(secret)
-                .set('Authorization', token)
-                .end( (err, res) => {
-                    expect(res.status).to.equal(200)
-                    expect(res.body.message).to.equal( 'you are logged in via JWT!!!' )
-                    done()
-                })
-        })
-        
-    }) // secret
-
-    // describe tests for the /signup route
+    // describe tests for the /signin route
     describe('/signin', () => {
 
         // an user with missing email, handle, or password
@@ -149,5 +121,34 @@ describe('Users route', () => {
         })
         
     }) // signin
+
+
+    // describe tests for the /secret route
+    describe('/secret', () => {
+
+        it('should return status 401 if no JWT token supplied', done => {
+            chai
+                .request(server)
+                .get(secret)
+                .end( (err, res) => {
+                    expect(res.status).to.equal(401)
+                    expect(res.body).to.be.empty
+                    done()
+                })
+        })
+
+        it('should return status 200 if valid JWT token supplied', done => {
+            chai
+                .request(server)
+                .get(secret)
+                .set('Authorization', `Bearer ${token}`)
+                .end( (err, res) => {
+                    expect(res.status).to.equal(200)
+                    expect(res.body.message).to.equal( 'you are logged in via JWT!!!' )
+                    done()
+                })
+        })
+        
+    }) // secret
 
 })
