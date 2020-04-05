@@ -2,7 +2,7 @@
 #frameworks/
 
 # uploads
-uploads/
+uploads/*
 
 # Logs
 logs

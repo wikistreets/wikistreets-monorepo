@@ -19,6 +19,7 @@ const server = ( { config } ) => {
 
   // load general-purpose middleware
   app.use(cors()); // allow cross-origin resource sharing
+  
   app.use(bodyParser.json());  // decode JSON-formatted incoming POST data
   app.use(bodyParser.urlencoded({extended: true})) // decode url-encoded incoming POST data
 

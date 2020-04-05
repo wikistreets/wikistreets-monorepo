@@ -20,7 +20,7 @@ const passportConfig = ( { config } ) => {
     
     // JwtStrategy object options
     const opts = {
-        jwtFromRequest: ExtractJwt.fromHeader('Authorization'), // or ExtractJwt.fromAuthHeaderAsBearerToken();
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // options: cookieExtractor, ExtractJwt.fromHeader('Authorization'), ExtractJwt.fromAuthHeaderAsBearerToken()
         secretOrKey: config.jwtSecret,
         // issuer: config.jwtIssuer,
         ignoreExpiration: true,
