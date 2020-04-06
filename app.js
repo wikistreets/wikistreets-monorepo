@@ -37,8 +37,8 @@ const server = ( { config } ) => {
   });
 
   // load routes, passing relevant configuration settings as necessary
-  app.use('/markers', markerRouter( { config: config.markers } ) )
-  app.use('/users', userRouter( { config: config.users } ) )
+  app.use('/markers', markerRouter( { config } ) )
+  app.use('/users', userRouter( { config } ) )
 
   return app;
 

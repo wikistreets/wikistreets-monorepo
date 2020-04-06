@@ -1,8 +1,18 @@
 // app settings
 const app = {
+    auth: {
+        // get and set a JWT token for authorizing this user
+        setToken: token => localStorage.setItem('token', token),
+        getToken: () => localStorage.getItem('token')
+    },
     copy: {
+        aboutus: 'A mapping application for streets and sidewalks',
         issuelocatestart: 'Drag the person to the exact location of the issue',
-        searchaddress: 'Enter an address'
+        searchaddress: 'Enter an address',
+        signin: 'Log in to add an issue to the map',
+        signinError: 'The email or password you entered is not correct.  Please correct and try again',
+        signup: 'Create an account in order to submit an issue',
+        signupError: 'An account exists with that email address.  Please sign in or create a new account',
     },
     mode: 'default', // default, issuedetails, issuelocate
     browserGeolocation: {
@@ -23,8 +33,12 @@ const app = {
     apis: {
         wikistreets: {
             // settings for WikiStreets API
-            getUrl: '/markers/json',
-            postUrl: '/markers/create'
+            userSignin: '/users/signin',
+            userSignup: '/users/signup',
+            userSecret: '/users/secret',
+            getIssuesUrl: '/markers/json',
+            postIssueUrl: '/markers/create',
+            getUserUrl: '/markers/user'
         },
         mapbox: {
             // settings for the Mapbox API
@@ -245,10 +259,11 @@ app.markers.deactivate = (marker = app.markers.current) => {
 
 app.issues.fetch = async () => {
     // fetch data from wikistreets api
-    return fetch(app.apis.wikistreets.getUrl)
+    return fetch(app.apis.wikistreets.getIssuesUrl)
     .then(response => response.json()) // convert JSON response text to an object
     .then(data => {
         app.issues.issues = data;     
+//        console.log(JSON.stringify(data, null, 2))
         return data;
     });
 }
@@ -291,7 +306,9 @@ async function initMap() {
     $('.info-window .close-icon').click( collapseInfoWindow );
 
     // pop open issue form when control icon clicked
-    $('.control-add-issue').click( openIssueForm );
+    $('.control-add-issue').click( () => {
+        (app.auth.getToken()) ? openIssueForm() : openSigninPanel()
+    });
 
     // pop open issue form when control icon clicked
     $('.control-find-location').click( async () => {
@@ -305,7 +322,7 @@ async function initMap() {
             }
         })
         .catch( err => {
-            console.log('opening');
+            console.error('opening');
             openGeopositionUnavailableForm();
             throw err;
         });
@@ -313,6 +330,11 @@ async function initMap() {
 
     // pop open issue form when control icon clicked
     $('.control-search-address').click( openSearchAddressForm );
+
+    // pop open about us when logo is clicked
+    $('.logo').click( openAboutUsForm );
+
+    // handle map events...
 
     app.map.element.on('click', function(event){
         // console.log('map clicked');
@@ -394,7 +416,7 @@ const getStreetAddress = async (coords) => {
         return street
     })
     .catch( err => {
-        console.log(err)
+        console.error(err)
         throw err;
     })
 };
@@ -453,6 +475,23 @@ const showInfoWindow = (marker, data) => {
     app.markers.current = marker;
 
     let contentString = '';
+
+    // format the date the marker was created
+    const d = new Date(data.date)
+    const dtf = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'numeric', day: 'numeric' }) 
+    const [{ value: mo },,{ value: da },,{ value: ye }] = dtf.formatToParts(d) 
+    // give attribution to author
+    const attribution = `Posted by <a class="user-link" user-id="${data.user._id}" href="#">${data.user.handle}</a> on ${da}/${mo}/${ye}`
+    $('.info-window .instructions').html(attribution);
+
+    // handle click on username event
+    $('.info-window .instructions .user-link').click( e => {
+        // get target userid
+        const userId = $(e.target).attr('user-id')
+
+        openUserProfile(data.user.handle, userId)
+
+    })
 
     //loop through each photo in data and prepare an img tag for it
     let imgString = '';
@@ -637,9 +676,19 @@ const openIssueForm = async () => {
     $('.info-window-content').html(infoWindowHTML);
 
     // deal with form submissions
-    $('.info-window-content form.issue-form').on('submit', e => {
+    $('.info-window-content form.issue-form').on('submit', async e => {
         // prevent page reload
         e.preventDefault();
+
+        // force user login before an issue can be submitted
+        if (!app.auth.getToken()) {
+            // save the filled-in form in the stash
+            //$('.info-window .issue-form-container').appendTo('.stash')
+
+            // opem signin form
+            openSigninPanel()
+            return;
+        }
 
         // construct a FormData object from the form DOM element
         let formData = new FormData( e.target )
@@ -653,8 +702,11 @@ const openIssueForm = async () => {
         // }
         
         // post to server
-        fetch(app.apis.wikistreets.postUrl, {
+        fetch(app.apis.wikistreets.postIssueUrl, {
             method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${app.auth.getToken()}`,
+            },
             body: formData
         })
         .then( res => res.json() )
@@ -676,11 +728,10 @@ const openIssueForm = async () => {
 
         })
         .catch( err => {
-            console.err(`ERROR: ${err}`)
+            console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
+            app.auth.setToken(''); // wipe out JWT token
+            openSigninPanel()
         })
-
-        // update the map
-
 
     });
 
@@ -766,7 +817,7 @@ const panToPersonalLocation = () => {
         return coords;
     })
     .catch( err => {
-        // console.log(err);
+        // console.error(err);
         throw err;
     })
 }
@@ -789,3 +840,149 @@ const getBrowserGeolocation = options => {
     });
 };
 
+// authorize the current user
+const openSigninPanel = async () => {
+    // show instructions
+    $('.info-window .instructions').html(app.copy.signin)
+
+    // copy the search address form into the infowindow
+    const infoWindowHTML = $('.signin-form-container').html()
+    $('.info-window-content').html(infoWindowHTML)
+
+    // activate link to switch to signup panel
+    $('.info-window .signup-link').click( openSignupPanel );
+    
+    $('.info-window-content form.signin-form').submit( e => {
+        // prevent page reload
+        e.preventDefault();
+
+        // construct a FormData object from the form DOM element
+        let formData = new FormData( e.target )
+
+        // debugging FormData object... it can't easily be printed otherwise
+		// for (const key of formData.entries()) {
+		// 	console.log(key[0] + ', ' + key[1])
+        // }
+
+        // post to server
+        fetch(app.apis.wikistreets.userSignin, {
+            method: 'POST',
+            body: formData
+        })
+        .then( res => res.json() )
+        .then( res => {
+//            console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
+            app.auth.setToken(res.token)
+            collapseInfoWindow()
+        })
+        .catch( err => {
+            console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
+
+            // show instructions
+            $('.info-window .feedback-message').html(app.copy.signinError)
+            $('.info-window .feedback-message').removeClass('hide')
+        })
+    })
+
+    // open the info window
+    expandInfoWindow(40, 60).then( async () => {
+
+    })
+}
+
+// create a new user account
+const openSignupPanel = async () => {
+    // show instructions
+    $('.info-window .instructions').html(app.copy.signup)
+
+    // copy the search address form into the infowindow
+    const infoWindowHTML = $('.signup-form-container').html()
+    $('.info-window-content').html(infoWindowHTML)
+
+    // activate link to switch to signup panel
+    $('.info-window .signin-link').click( openSigninPanel );
+    
+    $('.info-window-content form.signup-form').submit( e => {
+        // prevent page reload
+        e.preventDefault();
+
+        // construct a FormData object from the form DOM element
+        let formData = new FormData( e.target )
+
+        // post to server
+        return fetch(app.apis.wikistreets.userSignup, {
+            method: 'POST',
+            body: formData
+        })
+        .then( res => res.json() )
+        .then( res => {
+//            console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
+            app.auth.setToken(res.token)
+            collapseInfoWindow()
+        })
+        .catch( err => {
+            console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
+
+            // show instructions
+            $('.info-window .feedback-message').html(app.copy.signupError)
+            $('.info-window .feedback-message').removeClass('hide')
+        })
+
+    })
+
+    // open the info window
+    expandInfoWindow(40, 60).then( async () => {
+
+    })
+}
+
+// create a new user account
+const openAboutUsForm = async () => {
+    // show instructions
+    $('.info-window .instructions').html(app.copy.aboutus)
+
+    // copy the search address form into the infowindow
+    const infoWindowHTML = $('.about-us-container').html()
+    $('.info-window-content').html(infoWindowHTML)
+
+    // open the info window
+    expandInfoWindow(40, 60).then()
+}
+
+// show a particular user's profile
+const openUserProfile = async (handle, userId) => {
+
+        // fetch data from wikistreets api
+        fetch(`${app.apis.wikistreets.getUserUrl}/${userId}`)
+        .then(response => response.json()) // convert JSON response text to an object
+        .then(data => {
+            const numIssues = data.length;
+
+            // copy the user profile html into the infowindow
+            const infoWindowHTML = $('.user-profile-container').html()
+            $('.info-window-content').html(infoWindowHTML)
+            $('.info-window-content .handle').text(handle)
+            $('.info-window-content .num-posts').text(numIssues)
+
+            // fill out the user profile's list of markers
+            data.map( (issue, i) => {
+                const d = new Date(issue.date)
+                const dtf = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'numeric', day: 'numeric' }) 
+                const [{ value: mo },,{ value: da },,{ value: ye }] = dtf.formatToParts(d) 
+                // give attribution to author
+            
+                $(`<li>${issue.address} <small>posted ${da}/${mo}/${ye}</small></li>`).appendTo('.info-window-content .posts')
+            })
+
+            // open the info window
+            expandInfoWindow(40, 60)
+        })
+        .catch( err => {
+            console.error(JSON.stringify(err, null, 2))
+        })
+}
+
+// enable bootstrap tooltips
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})

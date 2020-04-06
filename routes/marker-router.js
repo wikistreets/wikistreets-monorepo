@@ -1,5 +1,8 @@
 // express
 const express = require('express')
+const jwt = require('jsonwebtoken')
+const passport = require('passport')
+const passportConfig = require('../passportConfig')
 
 // middleware
 const _ = require('lodash'); // utility functions for arrays, numbers, objects, strings, etc.
@@ -7,6 +10,7 @@ const multer = require('multer'); // middleware for uploading files - parses mul
 const path = require('path');
 
 // database schemas and models
+const { User } = require('../models/user')
 const { Issue } = require('../models/issue')
 
 const markerRouter = ( { config } ) => {
@@ -14,10 +18,17 @@ const markerRouter = ( { config } ) => {
   // create an express router
   const router = express.Router()
 
+  // load up the jwt passport settings
+  passportConfig( { config: config.jwt })
+
+  // our passport strategies in action
+  const passportJWT = passport.authenticate('jwt', { session: false });
+
+  
   // enable file uploads... set storage options
   const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, config.uploadDirectory)
+        cb(null, config.markers.uploadDirectory)
     },
     filename: function (req, file, cb) {
         cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`)
@@ -31,8 +42,8 @@ const markerRouter = ( { config } ) => {
       if (!err){ 
           //console.log(docs);
           res.json(docs);
-      } else {throw err;}
-    });
+      } else { throw err; }
+    }).populate('user', 'handle') // populate each doc with the user's handle
   });
 
   // route for HTTP GET requests to the map JSON dataa
@@ -51,20 +62,41 @@ const markerRouter = ( { config } ) => {
         }
     });
   });
-  
+
+  // get a given user's markers
+  router.get('/user/:userId', (req, res) => {
+    const userId = req.params.userId
+    if (!userId) return
+
+    // get user's markers
+    Issue.find( { user: userId }, (err, docs) => {
+        if (!err) {
+            // respond with docs
+            res.json(docs)
+        } else { throw err }
+    })
+});
+
   // route for HTTP POST requests to create a new marker
-  router.post('/create', upload.array('files', config.maxFiles), async (req, res, next) => {
+  router.post('/create', passportJWT, upload.array('files', config.markers.maxFiles), async (req, res, next) => {
 
     const data = {
+      user: req.user._id,
       position: {
         lat: req.body.lat,
         lng: req.body.lng,
       },
       address: req.body.address,
-      sidewalkIssues: Array.isArray(req.body.sidewalk_issues) ? req.body.sidewalk_issues : [req.body.sidewalk_issues],
-      roadIssues: Array.isArray(req.body.road_issues) ? req.body.road_issues : [req.body.road_issues],
       photos: req.files,
       comments: req.body.comments
+    }
+
+    // add road or sidewalk issues, if present
+    if (req.body.sidewalk_issues) {
+      data.sidewalkIssues = Array.isArray(req.body.sidewalk_issues) ? req.body.sidewalk_issues : [req.body.sidewalk_issues]
+    }
+    if (req.body.road_issues) {
+      data.roadIssues = Array.isArray(req.body.road_issues) ? req.body.road_issues : [req.body.road_issues]
     }
 
     const issue = new Issue(data);
@@ -79,18 +111,24 @@ const markerRouter = ( { config } ) => {
         });
       }
       else {
-        // console.log( JSON.stringify( obj, null, 2) )
+        //console.log( JSON.stringify( obj, null, 2) )
 
-        //return success response with new object
-        res.json({
-          status: true,
-          message: 'success',
-          data: obj
-        });
-      }
-    });
+        // get the full document, including referenced user document
+        const data = Issue.findOne({ _id: obj._id }, (err, doc) => {
+          if (!err){ 
+              //console.log(docs);
+              //return success response with new object
+              res.json({
+                status: true,
+                message: 'success',
+                data: doc
+              });
+          } else { throw err; }
+        }).populate('user', 'handle') // populate each doc with the user's handle
 
-  });
+      } //else no error
+    }); // issue.save
+  }); // '/create' route
 
   return router;
   

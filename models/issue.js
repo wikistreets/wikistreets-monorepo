@@ -4,9 +4,14 @@ const { fileSchema } = require('./file');
 
 // an issue
 const issueSchema = new Schema({
+    user: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'User',
+        required: true
+    },
     position: {
-        lat: Number,
-        lng: Number
+        lat: { type: Number, required: true },
+        lng: { type: Number, required: true }
     },
     address: String,
     sidewalkIssues: [String],

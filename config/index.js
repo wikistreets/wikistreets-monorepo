@@ -15,7 +15,7 @@ const config = {
         uploadDirectory: 'public/uploads',
         maxFiles: 3
     },
-    users: {
+    jwt: {
         jwtIssuer: process.env.JWT_ISSUER,
         jwtSecret: process.env.JWT_SECRET,
         jwtExpirationAge: process.env.JWT_EXPIRATION_AGE

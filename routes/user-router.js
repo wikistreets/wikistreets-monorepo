@@ -3,14 +3,18 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const passportConfig = require('../passportConfig')
+// multer is needed since we're using FormData to submit form on client side
+// bodyParser does not accept multipart form data, but multer does
+const multer = require('multer'); 
 
 // middleware
 // const _ = require('lodash'); // utility functions for arrays, numbers, objects, strings, etc.
 // const multer = require('multer'); // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
 // const path = require('path');
 
-// user schemas and models
+// mongoose schemas and models
 const { User } = require('../models/user')
+const { Issue } = require('../models/issue')
 
 /**
  * Sign a JWT token with the user's id and our issuer details
@@ -25,7 +29,6 @@ const signJwtToken = (user, config) => {
         exp: expirationDate
     }, config.jwtSecret )
     return token
-
 }
 
 const userRouter = ( { config } ) => {
@@ -34,14 +37,17 @@ const userRouter = ( { config } ) => {
     const router = express.Router()
 
     // load up the jwt passport settings
-    passportConfig( { config })
+    passportConfig( { config: config.jwt })
 
     // our passport strategies in action
     const passportSignIn = passport.authenticate('local', { session: false });
     const passportJWT = passport.authenticate('jwt', { session: false });
 
+    // instantiate multer so we can accept multi-part form data submissions
+    const upload = multer();
+
     // user registration
-    router.post('/signup', async (req, res) => {
+    router.post('/signup', upload.none(), async (req, res) => {
         // extract salient details from the request
         const { email, handle, password } = req.body
 
@@ -57,17 +63,17 @@ const userRouter = ( { config } ) => {
         .catch( err => res.status(403).send( { error: 'Please enter a username, handle, and password.' } ) )
         
         // respond with new signed token
-        const token = signJwtToken( user, config )
+        const token = signJwtToken( user, config.jwt )
 
         res.json( { token } )
 
     });
 
     // user login
-    router.post('/signin', passportSignIn, (req, res) => {
+    router.post('/signin', upload.none(), passportSignIn, (req, res) => {
         // passport will only execute this on successful local sign-in
         // respond with new signed token
-        const token = signJwtToken(req.user, config) 
+        const token = signJwtToken( req.user, config.jwt ) 
         res.json( { token })
     });
 

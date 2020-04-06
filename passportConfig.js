@@ -48,9 +48,10 @@ const passportConfig = ( { config } ) => {
 
     // LOCAL STRATEGY
     // used when logging into an existing account
-    passport.use( new LocalStrategy({ 
-        usernameField: 'email'
-    }, async ( email, password, done ) => {
+    passport.use( new LocalStrategy({
+            usernameField: "email", 
+            passwordField: "password"
+        }, async ( email, password, done ) => {
         try {
             // find the user with the given email
             const user = await User.findOne( { email })
