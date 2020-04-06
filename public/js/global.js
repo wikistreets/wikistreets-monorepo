@@ -485,6 +485,8 @@ const showInfoWindow = (marker, data) => {
 
     // handle click on username event
     $('.info-window .instructions .user-link').click( e => {
+        e.preventDefault()
+        
         // get target userid
         const userId = $(e.target).attr('user-id')
 
