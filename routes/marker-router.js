@@ -75,7 +75,13 @@ const markerRouter = ( { config } ) => {
             res.json(docs)
         } else { throw err }
     })
-});
+  });
+
+  // route for HTTP GET requests to the map JSON data
+  router.get('/add-user', async (req, res) => {
+    await Issue.updateMany({}, { $set: { user: '5e8a8ef8051e73267f7dee72' } });
+    res.json({ 'status': 'ok'})
+  });
 
   // route for HTTP POST requests to create a new marker
   router.post('/create', passportJWT, upload.array('files', config.markers.maxFiles), async (req, res, next) => {

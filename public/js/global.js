@@ -13,6 +13,7 @@ const app = {
         signinError: 'The email or password you entered is not correct.  Please correct and try again',
         signup: 'Create an account in order to submit an issue',
         signupError: 'An account exists with that email address.  Please sign in or create a new account',
+        userprofile: 'Details about this user'
     },
     mode: 'default', // default, issuedetails, issuelocate
     browserGeolocation: {
@@ -477,11 +478,9 @@ const showInfoWindow = (marker, data) => {
     let contentString = '';
 
     // format the date the marker was created
-    const d = new Date(data.date)
-    const dtf = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'numeric', day: 'numeric' }) 
-    const [{ value: mo },,{ value: da },,{ value: ye }] = dtf.formatToParts(d) 
+    const date = formatDate(data.date)
     // give attribution to author
-    const attribution = `Posted by <a class="user-link" user-id="${data.user._id}" href="#">${data.user.handle}</a> on ${da}/${mo}/${ye}`
+    const attribution = `Posted by <a class="user-link" user-id="${data.user._id}" href="#">${data.user.handle}</a> on ${date}`
     $('.info-window .instructions').html(attribution);
 
     // handle click on username event
@@ -490,7 +489,6 @@ const showInfoWindow = (marker, data) => {
         const userId = $(e.target).attr('user-id')
 
         openUserProfile(data.user.handle, userId)
-
     })
 
     //loop through each photo in data and prepare an img tag for it
@@ -840,6 +838,15 @@ const getBrowserGeolocation = options => {
     });
 };
 
+const formatDate = (date) => {
+    // format the date
+    const d = new Date(date)
+    const dtf = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric' }) 
+    const [{ value: mo },,{ value: da },,{ value: ye }] = dtf.formatToParts(d) 
+    const formattedDate = `${da} ${mo} ${ye}`
+    return formattedDate
+}
+
 // authorize the current user
 const openSigninPanel = async () => {
     // show instructions
@@ -958,6 +965,9 @@ const openUserProfile = async (handle, userId) => {
         .then(data => {
             const numIssues = data.length;
 
+            // show instructions
+            $('.info-window .instructions').html(app.copy.userprofile)
+
             // copy the user profile html into the infowindow
             const infoWindowHTML = $('.user-profile-container').html()
             $('.info-window-content').html(infoWindowHTML)
@@ -966,12 +976,9 @@ const openUserProfile = async (handle, userId) => {
 
             // fill out the user profile's list of markers
             data.map( (issue, i) => {
-                const d = new Date(issue.date)
-                const dtf = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'numeric', day: 'numeric' }) 
-                const [{ value: mo },,{ value: da },,{ value: ye }] = dtf.formatToParts(d) 
-                // give attribution to author
-            
-                $(`<li>${issue.address} <small>posted ${da}/${mo}/${ye}</small></li>`).appendTo('.info-window-content .posts')
+                const date = formatDate(issue.date)
+                // give attribution to author            
+                $(`<li>${issue.address} <small>posted ${date}</small></li>`).appendTo('.info-window-content .posts')
             })
 
             // open the info window
