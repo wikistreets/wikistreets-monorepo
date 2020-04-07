@@ -13,7 +13,10 @@ const config = {
     },
     markers: {
         uploadDirectory: 'public/uploads',
-        maxFiles: 3
+        maxFiles: 3,
+        maxImageWidth: 1200,
+        maxImageHeight: 1200,
+        maxImageFileSize: 8 * 1024 * 1024 // 8MB
     },
     jwt: {
         jwtIssuer: process.env.JWT_ISSUER,

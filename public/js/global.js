@@ -10,9 +10,10 @@ const app = {
         issuelocatestart: 'Drag the person to the exact location of the issue',
         searchaddress: 'Enter an address',
         signin: 'Log in to add an issue to the map',
-        signinError: 'The email or password you entered is not correct.  Please correct and try again',
+        signinerror: 'The email or password you entered is not correct.  Please correct and try again',
         signup: 'Create an account in order to submit an issue',
-        signupError: 'An account exists with that email address.  Please sign in or create a new account',
+        signuperror: 'An account exists with that email address.  Please sign in or create a new account',
+        createissueerror: 'Something unusual happened!',
         userprofile: 'Details about this user'
     },
     mode: 'default', // default, issuedetails, issuelocate
@@ -107,6 +108,14 @@ const app = {
                 default: L.ExtraMarkers.icon({ icon: 'fa-road', shape: 'square', prefix: 'fa', markerColor: 'red' }),
                 active: L.ExtraMarkers.icon({ icon: 'fa-road', shape: 'square', prefix: 'fa', markerColor: 'green' }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
             },
+            unknownPhoto: {
+                default: L.ExtraMarkers.icon({ icon: 'fa-image', shape: 'square', prefix: 'fa', markerColor: 'red' }),
+                active: L.ExtraMarkers.icon({ icon: 'fa-image', shape: 'square', prefix: 'fa', markerColor: 'green' }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
+            },
+            unknownText: {
+                default: L.ExtraMarkers.icon({ icon: 'fa-comment-alt', shape: 'square', prefix: 'fa', markerColor: 'red' }),
+                active: L.ExtraMarkers.icon({ icon: 'fa-comment-alt', shape: 'square', prefix: 'fa', markerColor: 'green' }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
+            },
             me: {
                 default: L.ExtraMarkers.icon({ icon: 'fa-walking', shape: 'penta', extraClasses: 'me-marker', prefix: 'fa', markerColor: 'blue' }) //{ imageUrl: '/static/images/material_design_icons/directions_walk-24px.svg' }
             }
@@ -143,7 +152,7 @@ app.map.getCenter = () => {
 }
 
 app.controls.gps.setState = (state) => {
-    console.log(`setting state to ${state}.`)
+    // console.log(`setting state to ${state}.`)
     app.controls.gps.state = state;
     // show the correct icon for the given state: disabled, enabled, or active
     $(app.controls.gps.htmlElementSelector).attr('src', app.controls.gps.icons[state]);
@@ -154,7 +163,7 @@ app.browserGeolocation.update = async () => {
     return getBrowserGeolocation()
     .then( coords => {
         // store coords
-        console.log(`GPS available: ${coords.lat}, ${coords.lng}`);
+        // console.log(`GPS available: ${coords.lat}, ${coords.lng}`);
         app.browserGeolocation.enabled = true;
         app.browserGeolocation.coords = coords;
         // update interface
@@ -222,6 +231,12 @@ app.markers.place = (data, cluster) => {
                 }
                 else if (point.sidewalkIssues.length && point.sidewalkIssues[0] != null) {
                     marker.issueType = 'sidewalk';
+                }
+                else if (point.photos && point.photos.length) {
+                    marker.issueType = 'unknownPhoto';
+                }
+                else {
+                    marker.issueType = 'unknownText';
                 }
 
                 // add to the marker cluster
@@ -509,11 +524,22 @@ const showInfoWindow = (marker, data) => {
     </div>
     ${imgString}
     <div class="card-body">
+    `
+    contentString += (!data.comments) ? '' : `
         <p class="card-text">${data.comments}</p>
+    `
+    contentString += `
     </div>
     <ul class="list-group list-group-flush">
-        <li class="list-group-item">Sidewalk issues: ${data.sidewalkIssues.join(', ')}</li>
-        <li class="list-group-item">Road issues: ${data.roadIssues.join(', ')}</li>
+    `
+
+    contentString += (!data.sidewalkIssues.length) ? '' : `
+        <li class="list-group-item">Sidewalk: ${data.sidewalkIssues.join(', ')}</li>
+    `
+    contentString += (!data.roadIssues.length) ? '' : `
+        <li class="list-group-item">Road: ${data.roadIssues.join(', ')}</li>
+    `
+    contentString += `
     </ul>
 </div>
     `;
@@ -711,7 +737,14 @@ const openIssueForm = async () => {
         })
         .then( res => res.json() )
         .then( res => {
-            // console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
+
+            if(!res.status) {
+                console.log(`ERROR: ${JSON.stringify(res, null, 2)}`)
+                openErrorPanel(res.message)
+                return
+            }
+
+            console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
 
             // get a marker cluster
             const cluster = (app.markers.cluster) ? app.markers.cluster : app.markers.createCluster();
@@ -728,9 +761,12 @@ const openIssueForm = async () => {
 
         })
         .catch( err => {
-            console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
-            app.auth.setToken(''); // wipe out JWT token
-            openSigninPanel()
+            // console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
+            // boot user out of login
+            // app.auth.setToken(''); // wipe out JWT token
+            // openSigninPanel()
+            // open error panel
+            openErrorPanel('Hmmm... something went wrong.  Please try posting again with up to 3 images.')
         })
 
     });
@@ -745,7 +781,7 @@ const openSearchAddressForm = () => {
 
     // keep track
     app.mode = 'searchaddress';
-    console.log(`mode=${app.mode}`);
+    // console.log(`mode=${app.mode}`);
 
     //deactivate all markers
     app.markers.deactivate();
@@ -786,7 +822,7 @@ const openSearchAddressForm = () => {
 const openGeopositionUnavailableForm = () => {
     // keep track
     app.mode = 'geopositionerror';
-    console.log(`mode=${app.mode}`);
+    // console.log(`mode=${app.mode}`);
 
     //deactivate all markers
     app.markers.deactivate();
@@ -811,7 +847,7 @@ const openGeopositionUnavailableForm = () => {
 const panToPersonalLocation = () => {
     return app.browserGeolocation.update()
     .then( coords => {
-        console.log(`panning to ${coords}`)
+        // console.log(`panning to ${coords}`)
         app.map.element.panTo(coords) // pan map to personal location
         app.controls.gps.setState('active');
         return coords;
@@ -888,7 +924,7 @@ const openSigninPanel = async () => {
             console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
 
             // show instructions
-            $('.info-window .feedback-message').html(app.copy.signinError)
+            $('.info-window .feedback-message').html(app.copy.signinerror)
             $('.info-window .feedback-message').removeClass('hide')
         })
     })
@@ -933,7 +969,7 @@ const openSignupPanel = async () => {
             console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
 
             // show instructions
-            $('.info-window .feedback-message').html(app.copy.signupError)
+            $('.info-window .feedback-message').html(app.copy.signuperror)
             $('.info-window .feedback-message').removeClass('hide')
         })
 
@@ -989,6 +1025,21 @@ const openUserProfile = async (handle, userId) => {
         .catch( err => {
             console.error(JSON.stringify(err, null, 2))
         })
+}
+
+// show a particular user's profile
+const openErrorPanel = (message) => {
+
+    // show instructions
+    $('.info-window .instructions').html(app.copy.createissueerror)
+
+    // copy the user profile html into the infowindow
+    const infoWindowHTML = $('.error-container').html()
+    $('.info-window-content').html(infoWindowHTML)
+    $('.error-message').html(message)
+
+    // open the info window
+    expandInfoWindow(40, 60)
 }
 
 // enable bootstrap tooltips
