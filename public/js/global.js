@@ -475,7 +475,7 @@ function geocodePosition(pos) {
 const showInfoWindow = (marker, data) => {
     // close form if open
     app.mode = 'issuedetails'; // in case it was set previously
-    console.log(`mode=${app.mode}`);
+    // console.log(`mode=${app.mode}`);
 
     // remove me marker if present
     app.markers.wipeMe();
@@ -588,7 +588,7 @@ const expandInfoWindow = async (infoWindowHeight=60, mapHeight=40) => {
 
 const collapseInfoWindow = async e => {
     app.mode = 'default';
-    console.log(`mode=${app.mode}`);
+    // console.log(`mode=${app.mode}`);
 
     // hide the info window
     $('.info-window').css( {
@@ -620,7 +620,7 @@ const openIssueForm = async () => {
 
         // keep track
         app.mode = 'issuelocate';
-        console.log(`mode=${app.mode}`);
+        // console.log(`mode=${app.mode}`);
 
         //deactivate all markers
         app.markers.deactivate();

@@ -200,12 +200,13 @@ const markerRouter = ( { config } ) => {
         }); // issue.save
       } // try new Issue
       catch (err) {
+        console.log( JSON.stringify(err, null, 2))
         // delete any uploaded files if the entire route fails for some reason
         if (req.files && req.files.length > 0) {
           req.files.map( (file, i) => {
-            if (file.storedFilename) {
+            if (file.path) {
               // if it was stored on disk, delete it
-              markerImageService.delete(file.storedFilename)
+              markerImageService.delete(file.path)
             }
           })
         }
