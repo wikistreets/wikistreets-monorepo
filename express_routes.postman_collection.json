@@ -1,372 +1,321 @@
 {
-	"info": {
-		"_postman_id": "d8670a6b-926d-49de-afcb-5f5ba4b7e170",
-		"name": "Express.js routes",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "Load home page",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:10520/",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10520",
-					"path": [
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get all markers as JSON",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:10520/markers/json",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10520",
-					"path": [
-						"markers",
-						"json"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get all markers as KML",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:10520/markers/kml",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10520",
-					"path": [
-						"markers",
-						"kml"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Upload marker data with one photo",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "files",
-							"type": "file",
-							"src": "/Users/amos/Documents/teaching/web-design/docs/images/web_architecture.png"
-						},
-						{
-							"key": "comments",
-							"value": "testing the /markers/create route",
-							"type": "text"
-						},
-						{
-							"key": "road_issues",
-							"value": "hole",
-							"type": "text"
-						},
-						{
-							"key": "address",
-							"value": "13 Cleveland Dr",
-							"type": "text"
-						},
-						{
-							"key": "lat",
-							"value": "41.1950839",
-							"type": "text"
-						},
-						{
-							"key": "lng",
-							"value": "-73.8775766",
-							"type": "text"
-						}
-					]
-				},
-				"url": {
-					"raw": "http://localhost:10520/markers/create/",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10520",
-					"path": [
-						"markers",
-						"create",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Upload marker data with two photos",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "files",
-							"type": "file",
-							"src": "/Users/amos/Documents/teaching/web-design/docs/images/ux_venn_diagram.png"
-						},
-						{
-							"key": "files",
-							"type": "file",
-							"src": "/Users/amos/Documents/teaching/web-design/docs/images/responsive_design_other_device_ownership.png"
-						},
-						{
-							"key": "comments",
-							"value": "testing the /markers/create route",
-							"type": "text"
-						},
-						{
-							"key": "sidewalk_issues",
-							"value": "hole",
-							"type": "text"
-						},
-						{
-							"key": "address",
-							"value": "13 Cleveland Dr",
-							"type": "text"
-						},
-						{
-							"key": "lat",
-							"value": "41.1950839",
-							"type": "text"
-						},
-						{
-							"key": "lng",
-							"value": "-73.8781762",
-							"type": "text"
-						}
-					]
-				},
-				"url": {
-					"raw": "http://localhost:10520/markers/create/",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10520",
-					"path": [
-						"markers",
-						"create",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Create a new user",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"email\": \"fb1258@nyu.edu\",\n\t\"handle\": \"fb1258@nyu.edu\",\n\t\"password\": \"fb1258@nyu.edu\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:10520/users/signup",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10520",
-					"path": [
-						"users",
-						"signup"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Log in existing user",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"description": "JWT Token of user fb1258@nyu.edu",
-						"key": "Authorization",
-						"type": "text",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJXaWtpU3RyZWV0cyIsInN1YiI6IjVlODgwMjgwMmQ5OTAzN2IzNGExY2QxOCIsImlhdCI6MTU4NTk3MTg0MDgxOSwiZXhwIjoxNTg2ODM1ODQwODE4fQ.hpcEdsbmcg5jQSmgSrlhS5_b7d5YbRVm6qEyqqPqCDQ"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"email\": \"fb1258@nyu.edu\",\n\t\"handle\": \"fb1258@nyu.edu\",\n\t\"password\": \"fb1258@nyu.edu\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:10520/users/signin",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10520",
-					"path": [
-						"users",
-						"signin"
-					]
-				},
-				"description": "Sign in at /users/signin route"
-			},
-			"response": []
-		},
-		{
-			"name": "Log in existing user with wrong credentials",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"description": "JWT Token of user fb1258@nyu.edu",
-						"key": "Authorization",
-						"type": "text",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJXaWtpU3RyZWV0cyIsInN1YiI6IjVlODdjMDc0MWQzMjhiNzU1MzA5MWIzYyIsImlhdCI6MTU4NTk1NDkzMzE2MCwiZXhwIjoxNTg2MDQxMzMzMTYwfQ.8UgTpvKOCwn77C3N6kjPjgA9lDMkdxoTq0wV5rMffZ4"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"email\": \"fb1258@nyu.edu\",\n\t\"handle\": \"fb1258@nyu.edu\",\n\t\"password\": \"wrong password!\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:10520/users/signin",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10520",
-					"path": [
-						"users",
-						"signin"
-					]
-				},
-				"description": "Sign in at /users/signin route with incorrect credentials"
-			},
-			"response": []
-		},
-		{
-			"name": "Request secret content with valid JWT token",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJXaWtpU3RyZWV0cyIsInN1YiI6IjVlODgwYTYzYjJjMWMzN2Y0MzM4MDdlNyIsImlhdCI6MTU4NjAxMzI5MDE4NSwiZXhwIjoxNTg2ODc3MjkwMTg0fQ.-oP2Sk4pozFwUR54RrHOfJMqRE3tfz89shF3jK2ciuQ",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:10520/users/secret",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10520",
-					"path": [
-						"users",
-						"secret"
-					]
-				},
-				"description": "Try to access content behind JWT authentication wall with correct JWT token."
-			},
-			"response": []
-		},
-		{
-			"name": "Request secret content with invalid JWT token",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"description": "JWT Token of user fb1258@nyu.edu",
-						"key": "Authorization",
-						"type": "text",
-						"value": "invalid jwt token value!!!"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:10520/users/secret",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10520",
-					"path": [
-						"users",
-						"secret"
-					]
-				},
-				"description": "Try to access content behind JWT authentication wall with incorrect JWT token."
-			},
-			"response": []
-		}
-	],
-	"protocolProfileBehavior": {}
+  "info": {
+    "_postman_id": "d8670a6b-926d-49de-afcb-5f5ba4b7e170",
+    "name": "Express.js routes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Load home page",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:10520/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10520",
+          "path": [""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get all markers as JSON",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:10520/markers/json",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10520",
+          "path": ["markers", "json"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get all markers as KML",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:10520/markers/kml",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10520",
+          "path": ["markers", "kml"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload marker data with one photo",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "files",
+              "type": "file",
+              "src": "/Users/amos/Documents/teaching/web-design/docs/images/web_architecture.png"
+            },
+            {
+              "key": "comments",
+              "value": "testing the /markers/create route",
+              "type": "text"
+            },
+            {
+              "key": "road_issues",
+              "value": "hole",
+              "type": "text"
+            },
+            {
+              "key": "address",
+              "value": "13 Cleveland Dr",
+              "type": "text"
+            },
+            {
+              "key": "lat",
+              "value": "41.1950839",
+              "type": "text"
+            },
+            {
+              "key": "lng",
+              "value": "-73.8775766",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:10520/markers/create/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10520",
+          "path": ["markers", "create", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload marker data with two photos",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "files",
+              "type": "file",
+              "src": "/Users/amos/Documents/teaching/web-design/docs/images/ux_venn_diagram.png"
+            },
+            {
+              "key": "files",
+              "type": "file",
+              "src": "/Users/amos/Documents/teaching/web-design/docs/images/responsive_design_other_device_ownership.png"
+            },
+            {
+              "key": "comments",
+              "value": "testing the /markers/create route",
+              "type": "text"
+            },
+            {
+              "key": "sidewalk_issues",
+              "value": "hole",
+              "type": "text"
+            },
+            {
+              "key": "address",
+              "value": "13 Cleveland Dr",
+              "type": "text"
+            },
+            {
+              "key": "lat",
+              "value": "41.1950839",
+              "type": "text"
+            },
+            {
+              "key": "lng",
+              "value": "-73.8781762",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:10520/markers/create/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10520",
+          "path": ["markers", "create", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create a new user",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\t\"email\": \"fb1258@nyu.edu\",\n\t\"handle\": \"fb1258@nyu.edu\",\n\t\"password\": \"fb1258@nyu.edu\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:10520/users/signup",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10520",
+          "path": ["users", "signup"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Log in existing user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "description": "JWT Token of user fb1258@nyu.edu",
+            "key": "Authorization",
+            "type": "text",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJXaWtpU3RyZWV0cyIsInN1YiI6IjVlODgwMjgwMmQ5OTAzN2IzNGExY2QxOCIsImlhdCI6MTU4NTk3MTg0MDgxOSwiZXhwIjoxNTg2ODM1ODQwODE4fQ.hpcEdsbmcg5jQSmgSrlhS5_b7d5YbRVm6qEyqqPqCDQ"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\t\"email\": \"fb1258@nyu.edu\",\n\t\"handle\": \"fb1258@nyu.edu\",\n\t\"password\": \"fb1258@nyu.edu\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:10520/users/signin",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10520",
+          "path": ["users", "signin"]
+        },
+        "description": "Sign in at /users/signin route"
+      },
+      "response": []
+    },
+    {
+      "name": "Log in existing user with wrong credentials",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "description": "JWT Token of user fb1258@nyu.edu",
+            "key": "Authorization",
+            "type": "text",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJXaWtpU3RyZWV0cyIsInN1YiI6IjVlODdjMDc0MWQzMjhiNzU1MzA5MWIzYyIsImlhdCI6MTU4NTk1NDkzMzE2MCwiZXhwIjoxNTg2MDQxMzMzMTYwfQ.8UgTpvKOCwn77C3N6kjPjgA9lDMkdxoTq0wV5rMffZ4"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\t\"email\": \"fb1258@nyu.edu\",\n\t\"handle\": \"fb1258@nyu.edu\",\n\t\"password\": \"wrong password!\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:10520/users/signin",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10520",
+          "path": ["users", "signin"]
+        },
+        "description": "Sign in at /users/signin route with incorrect credentials"
+      },
+      "response": []
+    },
+    {
+      "name": "Request secret content with valid JWT token",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJXaWtpU3RyZWV0cyIsInN1YiI6IjVlODgwYTYzYjJjMWMzN2Y0MzM4MDdlNyIsImlhdCI6MTU4NjAxMzI5MDE4NSwiZXhwIjoxNTg2ODc3MjkwMTg0fQ.-oP2Sk4pozFwUR54RrHOfJMqRE3tfz89shF3jK2ciuQ",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:10520/users/secret",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10520",
+          "path": ["users", "secret"]
+        },
+        "description": "Try to access content behind JWT authentication wall with correct JWT token."
+      },
+      "response": []
+    },
+    {
+      "name": "Request secret content with invalid JWT token",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "description": "JWT Token of user fb1258@nyu.edu",
+            "key": "Authorization",
+            "type": "text",
+            "value": "invalid jwt token value!!!"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:10520/users/secret",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10520",
+          "path": ["users", "secret"]
+        },
+        "description": "Try to access content behind JWT authentication wall with incorrect JWT token."
+      },
+      "response": []
+    }
+  ],
+  "protocolProfileBehavior": {}
 }

@@ -3,16 +3,21 @@
  * @param {*} unsafe The content to escape
  */
 const escapeXml = (unsafe) => {
-    if (!unsafe) return unsafe; // return nothing if nothing comes in
-    return unsafe.replace(/[<>&'"]/g, function (c) {
-        switch (c) {
-            case '<': return '&lt;';
-            case '>': return '&gt;';
-            case '&': return '&amp;';
-            case '\'': return '&apos;';
-            case '"': return '&quot;';
-        }
-    });
+  if (!unsafe) return unsafe // return nothing if nothing comes in
+  return unsafe.replace(/[<>&'"]/g, function (c) {
+    switch (c) {
+      case '<':
+        return '&lt;'
+      case '>':
+        return '&gt;'
+      case '&':
+        return '&amp;'
+      case "'":
+        return '&apos;'
+      case '"':
+        return '&quot;'
+    }
+  })
 }
 
 /**
@@ -21,21 +26,21 @@ const escapeXml = (unsafe) => {
  * @param {*} imageBaseUrl Base URL to prefix to image paths
  */
 const photosKml = (photos, imageBaseUrl) => {
-    let kml = `
+  let kml = `
     <ExtendedData>
         <Data name="gx_media_links">
-`;
-        photos.map( photo => {
-            kml += `
+`
+  photos.map((photo) => {
+    kml += `
             <value><![CDATA[${imageBaseUrl}/${photo.filename}]]></value>
-`;
-        });
+`
+  })
 
-        kml += `
+  kml += `
         </Data>
     </ExtendedData>
-`;
-    return kml;
+`
+  return kml
 }
 
 /**
@@ -44,21 +49,29 @@ const photosKml = (photos, imageBaseUrl) => {
  * @param {*} imageBaseUrl Base URL to prefix to image paths
  */
 const placeMarkKml = (place, imageBaseUrl) => {
-    // clean up some data
-    const address = escapeXml(place.address);
-    const sidewalkIssues = place.sidewalkIssues.length ? `sidewalk issues: ${escapeXml(place.sidewalkIssues.join(", "))}<br /><br />` : '';
-    const roadIssues = place.roadIssues.length ? `street issues: ${escapeXml(place.roadIssues.join(", "))}<br /><br />` : '';
-    const comments = place.comments ? `${escapeXml(place.comments)}<br /><br />` : '';
+  // clean up some data
+  const address = escapeXml(place.address)
+  const sidewalkIssues = place.sidewalkIssues.length
+    ? `sidewalk issues: ${escapeXml(
+        place.sidewalkIssues.join(', ')
+      )}<br /><br />`
+    : ''
+  const roadIssues = place.roadIssues.length
+    ? `street issues: ${escapeXml(place.roadIssues.join(', '))}<br /><br />`
+    : ''
+  const comments = place.comments
+    ? `${escapeXml(place.comments)}<br /><br />`
+    : ''
 
-    let photos = '';
-    let mainPhotoTag = '';
+  let photos = ''
+  let mainPhotoTag = ''
 
-    if (place.photos.length) {
-        mainPhotoTag = `<img src="${imageBaseUrl}/${place.photos[0].filename}" height="200" width="auto" /><br /><br />`;
-        photos = photosKml(place.photos, imageBaseUrl); // get kml for photos
-    } // if photos.length
+  if (place.photos.length) {
+    mainPhotoTag = `<img src="${imageBaseUrl}/${place.photos[0].filename}" height="200" width="auto" /><br /><br />`
+    photos = photosKml(place.photos, imageBaseUrl) // get kml for photos
+  } // if photos.length
 
-    let res = `
+  let res = `
 <Placemark>
     <name>${address}</name>
     <description><![CDATA[${mainPhotoTag}${sidewalkIssues}${roadIssues}${comments}${place.date}]]></description>
@@ -69,8 +82,8 @@ const placeMarkKml = (place, imageBaseUrl) => {
         </coordinates>
     </Point>
 </Placemark>
-`;
-    return res;
+`
+  return res
 }
 
 /**
@@ -79,24 +92,23 @@ const placeMarkKml = (place, imageBaseUrl) => {
  * @param {*} imageBaseUrl Base URL to prefix to image paths
  */
 const kmlGenerator = (data, imageBaseUrl) => {
-    let kml = `<?xml version="1.0" encoding="UTF-8"?>
+  let kml = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
     <Document>
     <name>wikistreets</name>
     <description/>
 `
 
-    data.map( (point, i, arr) => {
-        kml += placeMarkKml(point, imageBaseUrl);
-    });
+  data.map((point, i, arr) => {
+    kml += placeMarkKml(point, imageBaseUrl)
+  })
 
-    kml += `
+  kml += `
     </Document>
 </kml>
-`;
+`
 
-    return kml;
-
+  return kml
 }
 
-module.exports = kmlGenerator;
+module.exports = kmlGenerator

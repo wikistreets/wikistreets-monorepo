@@ -1,158 +1,164 @@
-html, body {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 h1.logo {
-    font-size: 18px;
-    border-radius: 10px;
-    text-transform: lowercase;
-    text-align: center;
-    width: 100px;
-    margin: 0 auto;
-    position: fixed;
-    z-index: 10;
-    background-color: white;
-    padding-top: 10px;
-    top: -10px;
-    left: 50%;
-    margin-left: -50px; /* half the width */
-    border: 1px solid black;
-    cursor: pointer;
+  font-size: 18px;
+  border-radius: 10px;
+  text-transform: lowercase;
+  text-align: center;
+  width: 100px;
+  margin: 0 auto;
+  position: fixed;
+  z-index: 10;
+  background-color: white;
+  padding-top: 10px;
+  top: -10px;
+  left: 50%;
+  margin-left: -50px; /* half the width */
+  border: 1px solid black;
+  cursor: pointer;
 }
 h1.logo:hover {
-    /* text-decoration: underline; */
-    color: green;
+  /* text-decoration: underline; */
+  color: green;
 }
 
 #map {
-    border: 1px solid black;
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-    z-index: 1;
+  border: 1px solid black;
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
 }
 
 .hide {
-    display: none;
+  display: none;
 }
 
 /* general styles */
 
 section {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 label {
-    padding-left: 10px;
+  padding-left: 10px;
 }
 
-input[type='text'], select {
-    width: 300px;
+input[type='text'],
+select {
+  width: 300px;
 }
 
 ul {
-    margin-left: 0;
-    padding-left: 0;
-    list-style-position: inside;
+  margin-left: 0;
+  padding-left: 0;
+  list-style-position: inside;
 }
 
 .alert.instructions {
-    position: absolute;
-    width: 100%;
-    top: 0;
-    left: 0;
-    margin: 0;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  margin: 0;
 }
 
 .info-window {
-    display: none;
-    position: fixed;
-    overflow: auto;
-    bottom: 0;
-    width: 100%;
-    height: 50px;
-    background-color: white;
-    border-top: 1px solid black;
-    padding: 0 40px;
-    margin-bottom: 0px;
-    z-index: 200;
+  display: none;
+  position: fixed;
+  overflow: auto;
+  bottom: 0;
+  width: 100%;
+  height: 50px;
+  background-color: white;
+  border-top: 1px solid black;
+  padding: 0 40px;
+  margin-bottom: 0px;
+  z-index: 200;
 }
 
 .info-window-content {
-    margin-top: 70px;
+  margin-top: 70px;
 }
 .info-window-content .card {
-    padding-top: 10px;
+  padding-top: 10px;
 }
-
 
 .info-window .close-icon {
-    position: absolute;
-    display: block;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-    z-index: 201;
+  position: absolute;
+  display: block;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  z-index: 201;
 }
 
-
 .info-window .edit-icon {
-    position: absolute;
-    display: block;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-    z-index: 201;
+  position: absolute;
+  display: block;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  z-index: 201;
 }
 
 /* info panel styles */
 
 .info-window-content img {
-    max-width: 100%;
+  max-width: 100%;
 }
 
 .info-window-content h2 {
-    font-size: 14pt;
+  font-size: 14pt;
 }
 
 /* custom map controls */
 
-.control-add-issue, .control-find-location, .control-search-address, .control-download-data {
-    position: absolute;
-    right: 20px;
-    cursor: pointer;
-    z-index: 100;
+.control-add-issue,
+.control-find-location,
+.control-search-address,
+.control-download-data {
+  position: absolute;
+  right: 20px;
+  cursor: pointer;
+  z-index: 100;
 }
 .control-add-issue {
-    top: 20px;
+  top: 20px;
 }
 .control-find-location {
-    top: 80px;
+  top: 80px;
 }
 .control-search-address {
-    top: 140px;
-    display: none; /* not yet functional */
+  top: 140px;
+  display: none; /* not yet functional */
 }
 .control-download-data {
-    bottom: 36px;
+  bottom: 36px;
 }
-.control-add-issue img, .control-find-location img, .control-search-address img, .control-download-data img {
-    width: 50px;
-    height: 50px;
+.control-add-issue img,
+.control-find-location img,
+.control-search-address img,
+.control-download-data img {
+  width: 50px;
+  height: 50px;
 }
 
 /* Leaflet extra markers */
 .leaflet-marker-draggable {
 }
 .extra-marker i {
-    font-size: 18px;
+  font-size: 18px;
 }
 
 .extra-marker i.me-marker {
-    font-size: 18px;
+  font-size: 18px;
 }

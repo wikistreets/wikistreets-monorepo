@@ -1,258 +1,468 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no">
-        <title>WikiStreets</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no"
+    />
+    <title>WikiStreets</title>
 
-        <!-- JQUERY -->
-        <script type="text/javascript" src="/static/frameworks/jquery/jquery.min.js"></script>
+    <!-- JQUERY -->
+    <script
+      type="text/javascript"
+      src="/static/frameworks/jquery/jquery.min.js"
+    ></script>
 
-        <!-- BOOTSTRAP -->
-        <script type="text/javascript" src="/static/frameworks/bootstrap/js/bootstrap.bundle.js"></script>
-        <link rel="stylesheet" type="text/css" href="/static/frameworks/bootstrap/css/bootstrap.min.css" />
+    <!-- BOOTSTRAP -->
+    <script
+      type="text/javascript"
+      src="/static/frameworks/bootstrap/js/bootstrap.bundle.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/static/frameworks/bootstrap/css/bootstrap.min.css"
+    />
 
-        <!-- LEAFLET.JS -->
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
-            integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-            crossorigin=""/>
-        <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
-            integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-            crossorigin=""></script>
+    <!-- LEAFLET.JS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+      integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+      integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+      crossorigin=""
+    ></script>
 
-        <!-- LEAFLET EXTRA MARKERS PLUGIN -->
-        <link href="/static/frameworks/fontawesome-free-5.12.1-web/css/all.css" rel="stylesheet"> <!--load all styles -->
-        <link rel="stylesheet" href="/static/frameworks/leaflet.extra-markers/css/leaflet.extra-markers.min.css">
-        <script src="/static/frameworks/leaflet.extra-markers/js/leaflet.extra-markers.min.js"></script>
+    <!-- LEAFLET EXTRA MARKERS PLUGIN -->
+    <link
+      href="/static/frameworks/fontawesome-free-5.12.1-web/css/all.css"
+      rel="stylesheet"
+    />
+    <!--load all styles -->
+    <link
+      rel="stylesheet"
+      href="/static/frameworks/leaflet.extra-markers/css/leaflet.extra-markers.min.css"
+    />
+    <script src="/static/frameworks/leaflet.extra-markers/js/leaflet.extra-markers.min.js"></script>
 
-        <!-- LEAFLET MARKER CLUSTERS PLUGIN -->
-        <link rel="stylesheet" href="/static/frameworks/leaflet.markercluster/MarkerCluster.css" />
-        <link rel="stylesheet" href="/static/frameworks/leaflet.markercluster/MarkerCluster.Default.css" />
-        <script src="/static/frameworks/leaflet.markercluster/leaflet.markercluster-src.js"></script>
-    
-        <!-- CUSTOM -->
-        <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
-        <script type="text/javascript" src="/static/js/global.js"></script>
+    <!-- LEAFLET MARKER CLUSTERS PLUGIN -->
+    <link
+      rel="stylesheet"
+      href="/static/frameworks/leaflet.markercluster/MarkerCluster.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/static/frameworks/leaflet.markercluster/MarkerCluster.Default.css"
+    />
+    <script src="/static/frameworks/leaflet.markercluster/leaflet.markercluster-src.js"></script>
 
-    </head>
-    <body>
+    <!-- CUSTOM -->
+    <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
+    <script type="text/javascript" src="/static/js/global.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1 class="logo display-4">WikiStreets</h1>
+    </header>
 
-        <header>
-            <h1 class="logo display-4">WikiStreets</h1>
-        </header>
+    <section class="issue-map">
+      <div id="map">loading map...</div>
+      <div class="control-add-issue">
+        <img
+          data-toggle="tooltip"
+          data-placement="left"
+          alt="Report a street or sidewalk issue"
+          title="Report a street or sidewalk issue"
+          src="/static/images/material_design_icons/add_circle_outline-24px.svg"
+        />
+      </div>
+      <div class="control-find-location">
+        <img
+          data-toggle="tooltip"
+          data-placement="left"
+          alt="Center map on your current location"
+          title="Center map on your current location"
+          src="/static/images/material_design_icons/gps_off-24px.svg"
+        />
+      </div>
+      <div class="control-search-address">
+        <img
+          data-toggle="tooltip"
+          data-placement="left"
+          alt="Search by address"
+          title="Search by address"
+          src="/static/images/material_design_icons/search-24px.svg"
+        />
+      </div>
+      <div class="control-download-data">
+        <a href="/markers/kml">
+          <img
+            data-toggle="tooltip"
+            data-placement="left"
+            alt="Download KML data file"
+            title="Download KML data file"
+            src="/static/images/material_design_icons/cloud_download-24px.svg"
+          />
+        </a>
+      </div>
+    </section>
 
-        <section class="issue-map">
-            <div id="map">loading map...</div>
-            <div class="control-add-issue">
-                <img data-toggle="tooltip" data-placement="left" alt="Report a street or sidewalk issue" title="Report a street or sidewalk issue" src="/static/images/material_design_icons/add_circle_outline-24px.svg" />
-            </div>
-            <div class="control-find-location">
-                <img data-toggle="tooltip" data-placement="left" alt="Center map on your current location" title="Center map on your current location" src="/static/images/material_design_icons/gps_off-24px.svg" />
-            </div>
-            <div class="control-search-address">
-                <img data-toggle="tooltip" data-placement="left" alt="Search by address" title="Search by address" src="/static/images/material_design_icons/search-24px.svg" />
-            </div>
-            <div class="control-download-data">
-                <a href="/markers/kml">
-                    <img data-toggle="tooltip" data-placement="left" alt="Download KML data file" title="Download KML data file" src="/static/images/material_design_icons/cloud_download-24px.svg" />
-                </a>
-            </div>
-        </section>
+    <!-- info window -->
+    <section class="info-window">
+      <!-- info window icons -->
+      <!-- <img class="close-icon" src="/static/images/material_design_icons/close-24px.svg" /> -->
 
-        <!-- info window -->
-        <section class="info-window">
+      <address
+        class="instructions street-address alert alert-info"
+        role="alert"
+      >
+        Welcome!
+      </address>
 
-            <!-- info window icons -->
-            <!-- <img class="close-icon" src="/static/images/material_design_icons/close-24px.svg" /> -->
+      <section class="info-window-content"></section>
+    </section>
+    <!-- // info window -->
 
-            <address class="instructions street-address alert alert-info" role="alert">
-                Welcome!
-            </address>
+    <!-- search address -->
+    <div class="search-address-form-container hide">
+      <form action="/search" method="POST" class="row">
+        <input
+          class="col-12 col-md-8"
+          type="text"
+          name="searchterm"
+          id="searchterm"
+          placeholder="Enter address"
+        />
+        <input class="col-12 col-md-4 btn btn-primary" type="submit" />
+      </form>
+    </div>
+    <!-- // search address -->
 
-            <section class="info-window-content">
-            </section>
-        </section>
-        <!-- // info window -->
+    <!-- geolocation error -->
+    <div class="geoposition-error-container hide">
+      <h2>Could not locate you</h2>
+      <p>
+        You are welcome to manually drag the map to your location instead.
+      </p>
+      <p>
+        Geolocation will not be available until we receive a certificate to
+        allow us to send data securely over the web ... stay tuned! Geoposition
+        may also be unavailable because you have disabled geolocation sharing in
+        your web browser.
+      </p>
+    </div>
+    <!-- // geolocation error -->
 
-        <!-- search address -->
-        <div class="search-address-form-container hide">
-            <form action="/search" method="POST" class="row">
-                <input class="col-12 col-md-8" type="text" name="searchterm" id="searchterm" placeholder='Enter address' />
-                <input class="col-12 col-md-4 btn btn-primary" type="submit" />
-            </form>
-        </div>
-        <!-- // search address -->
+    <!-- signin form -->
+    <div class="signin-form-container hide">
+      <div class="feedback-message alert alert-danger hide"></div>
+      <div class="row">
+        <form
+          class="signin-form col-xs-12 col-md-6"
+          action="/users/signin"
+          method="POST"
+        >
+          <div class="form-group">
+            <label for="signin-email">Email address</label>
+            <input
+              type="email"
+              class="form-control"
+              name="email"
+              id="signin-email"
+              placeholder="Enter email"
+            />
+          </div>
+          <div class="form-group">
+            <label for="signin-password">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              name="password"
+              id="signin-password"
+              placeholder="Password"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Log In</button>
+        </form>
+        <article class="col-xs-12 col-md-6">
+          <h2>Don't have an account?</h2>
+          <p>
+            <a href="#" class="signup-link">Sign up</a> to be able to post
+            markers to this map.
+          </p>
+        </article>
+      </div>
+    </div>
+    <!-- // signin form-->
 
-        <!-- geolocation error -->
-        <div class="geoposition-error-container hide">
-            <h2>Could not locate you</h2>
-            <p>
-                You are welcome to manually drag the map to your location instead.
-            </p>
-            <p>
-                Geolocation will not be available until we receive a certificate to allow us to send data securely over the web ... stay tuned!  Geoposition may also be unavailable because you have disabled geolocation sharing in your web browser.  
-            </p>
-        </div>
-        <!-- // geolocation error -->
+    <!-- signup form -->
+    <div class="signup-form-container hide">
+      <div class="feedback-message alert alert-danger hide"></div>
+      <div class="row">
+        <form
+          class="signup-form col-xs-12 col-md-6"
+          action="/users/signup"
+          method="POST"
+        >
+          <div class="form-group">
+            <label for="signup-email">Email address</label>
+            <input
+              type="email"
+              class="form-control"
+              name="email"
+              id="signup-email"
+              placeholder="Enter email"
+            />
+          </div>
+          <div class="form-group">
+            <label for="signup-handle">Username</label>
+            <input
+              type="text"
+              class="form-control"
+              name="handle"
+              id="signup-handle"
+              placeholder="Enter username"
+            />
+          </div>
+          <div class="form-group">
+            <label for="signup-password">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              name="password"
+              id="signup-password"
+              placeholder="Password"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Log In</button>
+        </form>
+        <article class="col-xs-12 col-md-6">
+          <h2>Already have an account?</h2>
+          <p>
+            <a href="#" class="signin-link">Sign in</a> to an existing account.
+          </p>
+        </article>
+      </div>
+    </div>
+    <!-- // signup form-->
 
-        <!-- signin form -->
-        <div class="signin-form-container hide">
-            <div class="feedback-message alert alert-danger hide"></div>
-            <div class="row">
-                <form class="signin-form col-xs-12 col-md-6" action="/users/signin" method="POST">
-                    <div class="form-group">
-                        <label for="signin-email">Email address</label>
-                        <input type="email" class="form-control" name="email" id="signin-email" placeholder="Enter email">
-                    </div>
-                    <div class="form-group">
-                        <label for="signin-password">Password</label>
-                        <input type="password" class="form-control" name="password" id="signin-password" placeholder="Password">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Log In</button>
-                </form>
-                <article class="col-xs-12 col-md-6">
-                    <h2>Don't have an account?</h2>
-                    <p><a href="#" class="signup-link">Sign up</a> to be able to post markers to this map.</p>
-                </article>
-            </div>
-        </div>
-        <!-- // signin form-->
-
-        <!-- signup form -->
-        <div class="signup-form-container hide">
-            <div class="feedback-message alert alert-danger hide"></div>
-            <div class="row">
-                <form class="signup-form col-xs-12 col-md-6" action="/users/signup" method="POST">
-                    <div class="form-group">
-                        <label for="signup-email">Email address</label>
-                        <input type="email" class="form-control" name="email" id="signup-email" placeholder="Enter email">
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-handle">Username</label>
-                        <input type="text" class="form-control" name="handle" id="signup-handle" placeholder="Enter username">
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-password">Password</label>
-                        <input type="password" class="form-control" name="password" id="signup-password" placeholder="Password">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Log In</button>
-                </form>
-                <article class="col-xs-12 col-md-6">
-                    <h2>Already have an account?</h2>
-                    <p><a href="#" class="signin-link">Sign in</a> to an existing account.</p>
-                </article>
-            </div>
-        </div>
-        <!-- // signup form-->
-
-        <!-- issue form -->
-        <div class="issue-form-container hide">
-            <!-- <div class="row">
+    <!-- issue form -->
+    <div class="issue-form-container hide">
+      <!-- <div class="row">
                 <h2 class="col-12">Report an issue at <span class="street-address"></span></h2>
             </div> -->
-            <form class="issue-form" action="/markers/create" method="POST" enctype="multipart/form-data" >
-                <input type="hidden" name="address" class="address" />
-                <input type="hidden" name="lat" class="lat" />
-                <input type="hidden" name="lng" class="lng" />
+      <form
+        class="issue-form"
+        action="/markers/create"
+        method="POST"
+        enctype="multipart/form-data"
+      >
+        <input type="hidden" name="address" class="address" />
+        <input type="hidden" name="lat" class="lat" />
+        <input type="hidden" name="lng" class="lng" />
 
-                <div class="row">
-                    <section class="col-12 col-md-6 col-lg-4">
-                        <h2>Sidewalk issues</h2>
-                        <p>Select any that apply:</p>
-                        <input type="checkbox" name="sidewalk_issues" value="missing" id="sidewalk_issue_1" /><label for="sidewalk_issue_1">Missing sidewalk</label><br />
-                        <input type="checkbox" name="sidewalk_issues" value="upheave" id="sidewalk_issue_2" /><label for="sidewalk_issue_2">Upheave / vertical height difference</label><br />
-                        <input type="checkbox" name="sidewalk_issues" value="cars" id="sidewalk_issue_3" /><label for="sidewalk_issue_3">Cars regularly parked on sidewalk</label><br />
-                        <input type="checkbox" name="sidewalk_issues" value="cracked" id="sidewalk_issue_4" /><label for="sidewalk_issue_4">Cracked surface</label><br />
-                        <input type="checkbox" name="sidewalk_issues" value="ramp" id="sidewalk_issue_5" /><label for="sidewalk_issue_5">No curb ramp</label><br />
-                        <input type="checkbox" name="sidewalk_issues" value="vegetation" id="sidewalk_issue_6" /><label for="sidewalk_issue_6">Overhanging vegetation</label><br />
-                        <input type="checkbox" name="sidewalk_issues" value="sloping" id="sidewalk_issue_7" /><label for="sidewalk_issue_7">Cross sloping</label><br />
-                        <input type="checkbox" name="sidewalk_issues" value="crosswalk" id="sidewalk_issue_8" /><label for="sidewalk_issue_8">Crosswalk problems</label><br />
-                        <input type="checkbox" name="sidewalk_issues" value="cars" id="sidewalk_issue_9" /><label for="sidewalk_issue_9">Cars regularly parked on sidewalk</label><br />
-                        <input type="checkbox" name="sidewalk_issues" value="obstacle" id="sidewalk_issue_10" /><label for="sidewalk_issue_10">Other obstacle in sidewalk</label><br />
-                    </section>
+        <div class="row">
+          <section class="col-12 col-md-6 col-lg-4">
+            <h2>Sidewalk issues</h2>
+            <p>Select any that apply:</p>
+            <input
+              type="checkbox"
+              name="sidewalk_issues"
+              value="missing"
+              id="sidewalk_issue_1"
+            /><label for="sidewalk_issue_1">Missing sidewalk</label><br />
+            <input
+              type="checkbox"
+              name="sidewalk_issues"
+              value="upheave"
+              id="sidewalk_issue_2"
+            /><label for="sidewalk_issue_2"
+              >Upheave / vertical height difference</label
+            ><br />
+            <input
+              type="checkbox"
+              name="sidewalk_issues"
+              value="cars"
+              id="sidewalk_issue_3"
+            /><label for="sidewalk_issue_3"
+              >Cars regularly parked on sidewalk</label
+            ><br />
+            <input
+              type="checkbox"
+              name="sidewalk_issues"
+              value="cracked"
+              id="sidewalk_issue_4"
+            /><label for="sidewalk_issue_4">Cracked surface</label><br />
+            <input
+              type="checkbox"
+              name="sidewalk_issues"
+              value="ramp"
+              id="sidewalk_issue_5"
+            /><label for="sidewalk_issue_5">No curb ramp</label><br />
+            <input
+              type="checkbox"
+              name="sidewalk_issues"
+              value="vegetation"
+              id="sidewalk_issue_6"
+            /><label for="sidewalk_issue_6">Overhanging vegetation</label><br />
+            <input
+              type="checkbox"
+              name="sidewalk_issues"
+              value="sloping"
+              id="sidewalk_issue_7"
+            /><label for="sidewalk_issue_7">Cross sloping</label><br />
+            <input
+              type="checkbox"
+              name="sidewalk_issues"
+              value="crosswalk"
+              id="sidewalk_issue_8"
+            /><label for="sidewalk_issue_8">Crosswalk problems</label><br />
+            <input
+              type="checkbox"
+              name="sidewalk_issues"
+              value="cars"
+              id="sidewalk_issue_9"
+            /><label for="sidewalk_issue_9"
+              >Cars regularly parked on sidewalk</label
+            ><br />
+            <input
+              type="checkbox"
+              name="sidewalk_issues"
+              value="obstacle"
+              id="sidewalk_issue_10"
+            /><label for="sidewalk_issue_10">Other obstacle in sidewalk</label
+            ><br />
+          </section>
 
-                    <section class="col-12 col-md-6 col-lg-4">
-                        <h2>Road issues</h2>
-                        <p>Select any that apply:</p>
-                        <input type="checkbox" name="road_issues" value="hole" id="road_issue_1" /><label for="road_issue_1">Pot hole</label><br />
-                        <input type="checkbox" name="road_issues" value="cracked" id="road_issue_2" /><label for="road_issue_2">Cracked surface</label><br />
-                        <input type="checkbox" name="road_issues" value="obstacle" id="road_issue_3" /><label for="road_issue_3">Obstacle in road</label><br />
-                        <input type="checkbox" name="road_issues" value="uplift" id="road_issue_4" /><label for="road_issue_4">Uplift / vertical height difference</label><br />
-                        <input type="checkbox" name="road_issues" value="cracked" id="road_issue_5" /><label for="road_issue_5">Other road surface issue</label><br />
-                        <input type="checkbox" name="road_issues" value="sewer" id="road_issue_6" /><label for="road_issue_6">Dangerous sewer grate</label><br />
-                    </section>
+          <section class="col-12 col-md-6 col-lg-4">
+            <h2>Road issues</h2>
+            <p>Select any that apply:</p>
+            <input
+              type="checkbox"
+              name="road_issues"
+              value="hole"
+              id="road_issue_1"
+            /><label for="road_issue_1">Pot hole</label><br />
+            <input
+              type="checkbox"
+              name="road_issues"
+              value="cracked"
+              id="road_issue_2"
+            /><label for="road_issue_2">Cracked surface</label><br />
+            <input
+              type="checkbox"
+              name="road_issues"
+              value="obstacle"
+              id="road_issue_3"
+            /><label for="road_issue_3">Obstacle in road</label><br />
+            <input
+              type="checkbox"
+              name="road_issues"
+              value="uplift"
+              id="road_issue_4"
+            /><label for="road_issue_4"
+              >Uplift / vertical height difference</label
+            ><br />
+            <input
+              type="checkbox"
+              name="road_issues"
+              value="cracked"
+              id="road_issue_5"
+            /><label for="road_issue_5">Other road surface issue</label><br />
+            <input
+              type="checkbox"
+              name="road_issues"
+              value="sewer"
+              id="road_issue_6"
+            /><label for="road_issue_6">Dangerous sewer grate</label><br />
+          </section>
 
-                    <section class="col-12 col-md-6 col-lg-4 submit-container">
-                        <h2>Photos</h2>
-                        <p>Post up to 3 photos</p>
-                        <input id="files" name="files" type="file" multiple />
-                        <br />
-                        <br />
-                        <h2>Comments</h2>
-                        <textarea class="col-12" name="comments" placeholder="Any additional important details"></textarea>
-                        <br />
-                        <br />
-                        <h2>Ready to submit?</h2>
-                        <input class="btn btn-primary" type="submit" value="Submit!" />
-                    </section>
-                </div>
-
-                <div class="map-popup-container hide">
-                    <strong class="street-address"></strong><br>Drag to the issue location.
-                </div>
-
-            </form>
-            
+          <section class="col-12 col-md-6 col-lg-4 submit-container">
+            <h2>Photos</h2>
+            <p>Post up to 3 photos</p>
+            <input id="files" name="files" type="file" multiple />
+            <br />
+            <br />
+            <h2>Comments</h2>
+            <textarea
+              class="col-12"
+              name="comments"
+              placeholder="Any additional important details"
+            ></textarea>
+            <br />
+            <br />
+            <h2>Ready to submit?</h2>
+            <input class="btn btn-primary" type="submit" value="Submit!" />
+          </section>
         </div>
-        <!-- // issue form -->
 
-        <!-- about us -->
-        <div class="about-us-container hide">
-            <div class="row">
-                <header class="col-xs-12 col-md-6">
-                    <h2>Wikistreets</h2>
-                    <p>A tool to map street and sidewalk issues.</p>
-                </header>
-                <article class="col-12 col-md-6">
-                    <h2>Features</h2>
-                    <ul>
-                        <li>Perfect for use on the road</li>
-                        <li>Open to anyone with a phone or computer</li>
-                        <li>Drop markers anywhere you find a dangerous issue with a street or sidewalk</li>
-                        <li>Snap and save photos and details of the issue to the map</li>
-                        <li>Share with others in your community</li>
-                        <li>Advocate for improvements</li>
-                        <li>Data is downloadable in standard KML format to import into other GIS applications</li>
-                    </ul>
-                </article>
-                <article class="col-12">
-                    <small>Created by <a href="http://plasticpast.com">Plastic Past</a></small>
-                </article>
-            </div> <!-- //row -->
+        <div class="map-popup-container hide">
+          <strong class="street-address"></strong><br />Drag to the issue
+          location.
         </div>
-        <!-- // about us-->
+      </form>
+    </div>
+    <!-- // issue form -->
 
-        <!-- user profile -->
-        <div class="user-profile-container hide">
-            <div class="row">
-                <header class="col-xs-12 col-md-4">
-                    <h2 class="handle"></h2>
-                    <p><span class="num-posts"></span> posts</p>
-                </header>
-                <article class="col-12 col-md-8">
-                    <h2>Recent posts</h2>
-                    <ul class="posts">
-                    </ul>
-                </article>
-            </div>
-        </div>
-        <!-- // user profile-->
+    <!-- about us -->
+    <div class="about-us-container hide">
+      <div class="row">
+        <header class="col-xs-12 col-md-6">
+          <h2>Wikistreets</h2>
+          <p>A tool to map street and sidewalk issues.</p>
+        </header>
+        <article class="col-12 col-md-6">
+          <h2>Features</h2>
+          <ul>
+            <li>Perfect for use on the road</li>
+            <li>Open to anyone with a phone or computer</li>
+            <li>
+              Drop markers anywhere you find a dangerous issue with a street or
+              sidewalk
+            </li>
+            <li>Snap and save photos and details of the issue to the map</li>
+            <li>Share with others in your community</li>
+            <li>Advocate for improvements</li>
+            <li>
+              Data is downloadable in standard KML format to import into other
+              GIS applications
+            </li>
+          </ul>
+        </article>
+        <article class="col-12">
+          <small
+            >Created by <a href="http://plasticpast.com">Plastic Past</a></small
+          >
+        </article>
+      </div>
+      <!-- //row -->
+    </div>
+    <!-- // about us-->
 
-        <!-- error message -->
-        <div class="error-container hide">
-            <p class="alert alert-danger error-message"></p>
-        </div>
-        <!-- // error-container -->
+    <!-- user profile -->
+    <div class="user-profile-container hide">
+      <div class="row">
+        <header class="col-xs-12 col-md-4">
+          <h2 class="handle"></h2>
+          <p><span class="num-posts"></span> posts</p>
+        </header>
+        <article class="col-12 col-md-8">
+          <h2>Recent posts</h2>
+          <ul class="posts"></ul>
+        </article>
+      </div>
+    </div>
+    <!-- // user profile-->
 
-    </body>
+    <!-- error message -->
+    <div class="error-container hide">
+      <p class="alert alert-danger error-message"></p>
+    </div>
+    <!-- // error-container -->
+  </body>
 </html>
