@@ -76,7 +76,10 @@ const userRouter = ({ config }) => {
     // respond with new signed token
     const token = signJwtToken(user, config.jwt)
 
-    res.json({ token })
+    res.json({
+      token,
+      handle: user.handle,
+    })
   })
 
   // user login
@@ -84,7 +87,10 @@ const userRouter = ({ config }) => {
     // passport will only execute this on successful local sign-in
     // respond with new signed token
     const token = signJwtToken(req.user, config.jwt)
-    res.json({ token })
+    res.json({
+      token,
+      handle: req.user.handle,
+    })
   })
 
   // try to gain access to some content that is hidden behind the JWT authentication wall

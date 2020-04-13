@@ -122,20 +122,38 @@ ul {
 
 /* custom map controls */
 
+.control-map-selector,
 .control-add-issue,
 .control-find-location,
 .control-search-address,
+.control-fork-map,
 .control-download-data {
   position: absolute;
   right: 20px;
   cursor: pointer;
   z-index: 100;
 }
-.control-add-issue {
+
+.control-map-selector {
   top: 20px;
+  z-index: 101;
+}
+.control-map-selector .dropdown-menu {
+  width: 300px;
+}
+.control-map-selector button.map-title {
+  background-color: black;
+}
+
+.control-add-issue {
+  top: 80px;
 }
 .control-find-location {
-  top: 80px;
+  top: 140px;
+}
+.control-fork-map {
+  top: 200px;
+  transform: rotate(90deg);
 }
 .control-search-address {
   top: 140px;
@@ -144,9 +162,11 @@ ul {
 .control-download-data {
   bottom: 36px;
 }
+
 .control-add-issue img,
 .control-find-location img,
 .control-search-address img,
+.control-fork-map img,
 .control-download-data img {
   width: 50px;
   height: 50px;
@@ -154,6 +174,7 @@ ul {
 
 /* Leaflet extra markers */
 .leaflet-marker-draggable {
+  /* tbd */
 }
 .extra-marker i {
   font-size: 18px;

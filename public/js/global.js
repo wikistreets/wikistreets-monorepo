@@ -9,14 +9,16 @@ const app = {
     aboutus: 'A mapping application for streets and sidewalks',
     issuelocatestart: 'Drag the person to the exact location of the issue',
     searchaddress: 'Enter an address',
-    signin: 'Log in to add an issue to the map',
+    signin: 'You must be logged in to create or modify a map',
     signinerror:
       'The email or password you entered is not correct.  Please correct and try again',
-    signup: 'Create an account in order to submit an issue',
+    signup: 'Create an account in order to modify maps',
     signuperror:
       'An account exists with that email address.  Please sign in or create a new account',
     createissueerror: 'Something unusual happened!',
     userprofile: 'Details about this user',
+    forkmapinstructions: 'Click the button to fork this map',
+    forkmaperror: 'Sign in the fork this map',
   },
   mode: 'default', // default, issuedetails, issuelocate
   browserGeolocation: {
@@ -40,9 +42,12 @@ const app = {
       userSignin: '/users/signin',
       userSignup: '/users/signup',
       userSecret: '/users/secret',
-      getIssuesUrl: '/markers/json',
+      getMapUrl: '/map/data',
       postIssueUrl: '/markers/create',
       getUserUrl: '/markers/user',
+      mapTitleUrl: '/map/title',
+      forkMapUrl: '/map/fork',
+      staticMapUrl: '/map',
     },
     mapbox: {
       // settings for the Mapbox API
@@ -53,6 +58,16 @@ const app = {
     },
   },
   map: {
+    id: {
+      get: () => {
+        // get this map's ID from the URL
+        const url = window.location.pathname
+        const urlParts = url.split('/') // split by slash
+        const mapId = urlParts[urlParts.length - 1] // last part is always map ID?
+        return mapId
+      },
+    },
+    title: '',
     element: null,
     htmlElementId: 'map',
     htmlElementSelector: '#map', // the id of the map element in the html
@@ -190,6 +205,48 @@ const app = {
 }
 
 // add methods
+
+// send request to the server with auth and mapId attached
+app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
+  // get the current maps' id from the URL
+  const mapId = app.map.id.get()
+
+  let options = {
+    method: requestType,
+    headers: {
+      // attach JWT token, if present
+      Authorization: `Bearer ${app.auth.getToken()}`,
+    },
+  }
+
+  // add body, if POST
+  if (requestType == 'POST') {
+    // attach map ID to POST request body data (using FormData object's append method)
+
+    // deal with multipart FormData differently from simple objects
+    if (multipart) {
+      // using the FormData object
+      if (!data.has('mapId')) data.append('mapId', mapId)
+      if (!data.has('mapTitle')) data.append('mapTitle', app.map.title)
+    } else {
+      // using a simple object
+      if (!data.mapId) data.mapId = mapId
+      if (!data.mapTitle) data.mapTitle = app.map.title
+    }
+    options.body = data
+  } else if (requestType == 'GET') {
+    // attach map ID to GET request url query string
+    url += `?mapId=${mapId}`
+  }
+
+  // fetch from server
+  const res = await fetch(url, options).then((response) => response.json()) // convert JSON response text to an object
+
+  // return json object
+  return res
+}
+
+// get the center point of the map
 app.map.getCenter = () => {
   // update current center marker street address
   const center = app.map.element.getCenter()
@@ -273,14 +330,15 @@ app.markers.place = (data, cluster) => {
         }) //.addTo(app.map.element);
 
         // add the issue type as a property of the
-        if (point.roadIssues.length && point.roadIssues[0] != null) {
-          marker.issueType = 'street'
-        } else if (
-          point.sidewalkIssues.length &&
-          point.sidewalkIssues[0] != null
-        ) {
-          marker.issueType = 'sidewalk'
-        } else if (point.photos && point.photos.length) {
+        // if (point.roadIssues.length && point.roadIssues[0] != null) {
+        //   marker.issueType = 'street'
+        // } else if (
+        //   point.sidewalkIssues.length &&
+        //   point.sidewalkIssues[0] != null
+        // ) {
+        //   marker.issueType = 'sidewalk'
+        // } else
+        if (point.photos && point.photos.length) {
           marker.issueType = 'unknownPhoto'
         } else {
           marker.issueType = 'unknownText'
@@ -316,14 +374,21 @@ app.markers.deactivate = (marker = app.markers.current) => {
   app.markers.current = null
 }
 
-app.issues.fetch = async () => {
+app.map.fetch = async () => {
   // fetch data from wikistreets api
-  return fetch(app.apis.wikistreets.getIssuesUrl)
-    .then((response) => response.json()) // convert JSON response text to an object
+  return app
+    .myFetch(`${app.apis.wikistreets.getMapUrl}/${app.map.id.get()}`)
     .then((data) => {
-      app.issues.issues = data
-      //        console.log(JSON.stringify(data, null, 2))
-      return data
+      app.issues.issues = data.issues
+      if (data.title) {
+        app.map.title = data.title
+        $('.map-title').text(app.map.title)
+      } else {
+        // no title for this map
+        $('.map-title').text('anonymous map')
+      }
+      //      console.log(`RESPONSE: ${data}`)
+      return data.issues
     })
 }
 
@@ -350,7 +415,7 @@ async function initMap() {
   }).addTo(app.map.element)
 
   // // populate with markers
-  const data = await app.issues.fetch()
+  const data = await app.map.fetch()
 
   // create marker cluster
   const cluster = app.markers.cluster
@@ -373,9 +438,45 @@ async function initMap() {
   // allow infoWindow to close when icon clicked
   $('.info-window .close-icon').click(collapseInfoWindow)
 
+  // update visible map title when user renames it
+  $('.control-map-selector form').submit((e) => {
+    e.preventDefault()
+    const mapTitle = $('.control-map-selector #mapTitle').val()
+    if (!mapTitle) return
+
+    app.map.title = mapTitle
+    $('.map-title').text(mapTitle) // update the visible name
+    $('#map-title-field').val('') // clear the field
+    //$('.control-map-selector').dropdown('hide') // hide the dropdown
+    $('.dropdown .dropdown-toggle').dropdown('toggle')
+
+    // send new title to server, if user logged in and map already has markers
+    if (app.auth.getToken() && app.markers.markers.length) {
+      let formData = new FormData(e.target)
+      app.myFetch(
+        `${app.apis.wikistreets.mapTitleUrl}/${app.map.id.get()}`,
+        'POST',
+        formData
+      )
+    } else {
+      //      console.log('not sending')
+    }
+  })
+
+  $('.signin-link').click((e) => {
+    e.preventDefault()
+    //$('.control-map-selector').dropdown('hide') // hide the dropdown
+    openSigninPanel()
+  })
+
   // pop open issue form when control icon clicked
   $('.control-add-issue').click(() => {
     app.auth.getToken() ? openIssueForm() : openSigninPanel()
+  })
+
+  // pop open issue form when control icon clicked
+  $('.control-fork-map').click(() => {
+    app.auth.getToken() ? openForkPanel() : openSigninPanel()
   })
 
   // pop open issue form when control icon clicked
@@ -489,7 +590,7 @@ const getMatchingAddresses = async (address) => {
   const bounds = app.map.element.getBounds()
   const apiFullUrl = `${app.apis.googleMaps.baseUrl}address=${address}&bounds=${bounds}&key=${app.apis.googleMaps.apiKey}`
   //console.log(apiFullUrl)
-  return fetch(apiFullUrl).then((response) => response.json()) // convert JSON response text to an object
+  return app.myFetch(apiFullUrl) // convert JSON response text to an object
 }
 
 /**
@@ -577,23 +678,24 @@ const showInfoWindow = (marker, data) => {
     `
   contentString += `
     </div>
-    <ul class="list-group list-group-flush">
+    <!-- <ul class="list-group list-group-flush"> -->
     `
 
-  contentString += !data.sidewalkIssues.length
-    ? ''
-    : `
-        <li class="list-group-item">Sidewalk: ${data.sidewalkIssues.join(
-          ', '
-        )}</li>
-    `
-  contentString += !data.roadIssues.length
-    ? ''
-    : `
-        <li class="list-group-item">Road: ${data.roadIssues.join(', ')}</li>
-    `
+  // contentString += !data.sidewalkIssues.length
+  //   ? ''
+  //   : `
+  //       <li class="list-group-item">Sidewalk: ${data.sidewalkIssues.join(
+  //         ', '
+  //       )}</li>
+  //   `
+  // contentString += !data.roadIssues.length
+  //   ? ''
+  //   : `
+  //       <li class="list-group-item">Road: ${data.roadIssues.join(', ')}</li>
+  //   `
+
   contentString += `
-    </ul>
+    <!-- </ul> -->
 </div>
     `
 
@@ -789,22 +891,16 @@ const openIssueForm = async () => {
     // }
 
     // post to server
-    fetch(app.apis.wikistreets.postIssueUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${app.auth.getToken()}`,
-      },
-      body: formData,
-    })
-      .then((res) => res.json())
+    app
+      .myFetch(app.apis.wikistreets.postIssueUrl, 'POST', formData)
       .then((res) => {
         if (!res.status) {
-          console.log(`ERROR: ${JSON.stringify(res, null, 2)}`)
+          //          console.log(`ERROR: ${res}`)
           openErrorPanel(res.message)
           return
         }
 
-        console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
+        //        console.log(`SUCCESS: ${res}`)
 
         // get a marker cluster
         const cluster = app.markers.cluster
@@ -975,18 +1071,16 @@ const openSigninPanel = async () => {
     // }
 
     // post to server
-    fetch(app.apis.wikistreets.userSignin, {
-      method: 'POST',
-      body: formData,
-    })
-      .then((res) => res.json())
+    app
+      .myFetch(app.apis.wikistreets.userSignin, 'POST', formData)
       .then((res) => {
-        //            console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
+        // console.log(`SUCCESS: ${res}`)
         app.auth.setToken(res.token)
+        $('.handle').text(res.handle)
         collapseInfoWindow()
       })
       .catch((err) => {
-        console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        console.error(`ERROR: ${err}`)
 
         // show instructions
         $('.info-window .feedback-message').html(app.copy.signinerror)
@@ -1018,14 +1112,12 @@ const openSignupPanel = async () => {
     let formData = new FormData(e.target)
 
     // post to server
-    return fetch(app.apis.wikistreets.userSignup, {
-      method: 'POST',
-      body: formData,
-    })
-      .then((res) => res.json())
+    return app
+      .myFetch(app.apis.wikistreets.userSignup, 'POST', formData)
       .then((res) => {
-        //            console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
+        //console.log(`SUCCESS: ${res}`)
         app.auth.setToken(res.token)
+        $('.handle').text(res.handle)
         collapseInfoWindow()
       })
       .catch((err) => {
@@ -1057,8 +1149,8 @@ const openAboutUsForm = async () => {
 // show a particular user's profile
 const openUserProfile = async (handle, userId) => {
   // fetch data from wikistreets api
-  fetch(`${app.apis.wikistreets.getUserUrl}/${userId}`)
-    .then((response) => response.json()) // convert JSON response text to an object
+  app
+    .myFetch(`${app.apis.wikistreets.getUserUrl}/${userId}`)
     .then((data) => {
       const numIssues = data.length
 
@@ -1097,6 +1189,29 @@ const openErrorPanel = (message) => {
   const infoWindowHTML = $('.error-container').html()
   $('.info-window-content').html(infoWindowHTML)
   $('.error-message').html(message)
+
+  // open the info window
+  expandInfoWindow(40, 60)
+}
+
+// show a particular user's profile
+const openForkPanel = () => {
+  // show instructions
+  $('.info-window .instructions').html(app.copy.forkmapinstructions)
+
+  // copy the user profile html into the infowindow
+  const infoWindowHTML = $('.fork-map-container').html()
+  $('.info-window-content').html(infoWindowHTML)
+
+  // activate fork button
+  $('.info-window .fork-button').click(async (e) => {
+    e.preventDefault()
+    const mapData = await app.myFetch(
+      `${app.apis.wikistreets.forkMapUrl}/${app.map.id.get()}`
+    )
+    //console.log(`FORK SERVER RESPONSE: ${result}`)
+    window.location.href = `${app.apis.wikistreets.staticMapUrl}/${mapData.publicId}`
+  })
 
   // open the info window
   expandInfoWindow(40, 60)

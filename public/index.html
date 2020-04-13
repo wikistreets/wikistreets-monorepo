@@ -72,12 +72,45 @@
 
     <section class="issue-map">
       <div id="map">loading map...</div>
+
+      <div class="control-map-selector dropdown">
+        <button
+          class="map-title btn btn-secondary dropdown-toggle"
+          type="button"
+          id="dropdownMenuButton"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false"
+        ></button>
+        <div class="dropdown-menu dropdown-menu-right p-4">
+          <form method="POST" action="/map/title" enctype="multipart/form-data">
+            <div class="form-group">
+              <label for="mapTitle">Rename this map:</label>
+              <input
+                class="form-control"
+                type="text"
+                name="mapTitle"
+                id="mapTitle"
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </form>
+          <div class="dropdown-divider"></div>
+          <div class="form-group">
+            <p>
+              <a href="#" class="signin-link">Sign in</a> to view your saved
+              maps.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div class="control-add-issue">
         <img
           data-toggle="tooltip"
           data-placement="left"
-          alt="Report a street or sidewalk issue"
-          title="Report a street or sidewalk issue"
+          alt="Place a new marker"
+          title="Place a new marker"
           src="/static/images/material_design_icons/add_circle_outline-24px.svg"
         />
       </div>
@@ -85,8 +118,8 @@
         <img
           data-toggle="tooltip"
           data-placement="left"
-          alt="Center map on your current location"
-          title="Center map on your current location"
+          alt="Find my location"
+          title="Find my location"
           src="/static/images/material_design_icons/gps_off-24px.svg"
         />
       </div>
@@ -97,6 +130,15 @@
           alt="Search by address"
           title="Search by address"
           src="/static/images/material_design_icons/search-24px.svg"
+        />
+      </div>
+      <div class="control-fork-map">
+        <img
+          data-toggle="tooltip"
+          data-placement="left"
+          alt="Fork this map"
+          title="Fork this map"
+          src="/static/images/material_design_icons/call_split-24px.svg"
         />
       </div>
       <div class="control-download-data">
@@ -267,7 +309,7 @@
         <input type="hidden" name="lng" class="lng" />
 
         <div class="row">
-          <section class="col-12 col-md-6 col-lg-4">
+          <!-- <section class="col-12 col-md-6 col-lg-4">
             <h2>Sidewalk issues</h2>
             <p>Select any that apply:</p>
             <input
@@ -380,7 +422,7 @@
               value="sewer"
               id="road_issue_6"
             /><label for="road_issue_6">Dangerous sewer grate</label><br />
-          </section>
+          </section> -->
 
           <section class="col-12 col-md-6 col-lg-4 submit-container">
             <h2>Photos</h2>
@@ -436,8 +478,15 @@
         </article>
         <article class="col-12">
           <small
-            >Created by <a href="http://plasticpast.com">Plastic Past</a></small
-          >
+            >Created by <a href="http://plasticpast.com">Plastic Past</a>. All
+            rights reserved.
+
+            <br />
+
+            By using this app, you agree that we make no promises to you, will
+            do whatever we want with your data, and may change these terms at
+            any moment.
+          </small>
         </article>
       </div>
       <!-- //row -->
@@ -454,6 +503,29 @@
         <article class="col-12 col-md-8">
           <h2>Recent posts</h2>
           <ul class="posts"></ul>
+        </article>
+      </div>
+    </div>
+    <!-- // user profile-->
+
+    <!-- user profile -->
+    <div class="fork-map-container hide">
+      <div class="row">
+        <header class="col-xs-12 col-md-4">
+          <h2>Fork this map</h2>
+          <ul>
+            <li><span class="num-forks"></span> forks</li>
+            <li><span class="num-markers"></span> markers</li>
+            <li><span class="num-contributors"></span> contributors</li>
+          </ul>
+          <button class="btn btn-primary fork-button">Fork it</button>
+        </header>
+        <article class="col-12 col-md-8">
+          <h2>About forks</h2>
+          <p>
+            Forking a map creates a clone of it that can be modified
+            independently of the original.
+          </p>
         </article>
       </div>
     </div>

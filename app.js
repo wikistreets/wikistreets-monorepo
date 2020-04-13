@@ -7,6 +7,7 @@ const cors = require('cors') // middleware for enabling CORS (Cross-Origin Resou
 // load routes
 const markerRouter = require('./routes/marker-router')
 const userRouter = require('./routes/user-router')
+const mapRouter = require('./routes/map-router')
 
 // set up server
 const server = ({ config }) => {
@@ -30,14 +31,10 @@ const server = ({ config }) => {
   // make 'public' directory publicly readable
   app.use('/static', express.static('public'))
 
-  // route for HTTP GET requests to the home page with link to /foo
-  app.get('/', (req, res) => {
-    res.sendFile('/public/index.html', { root: __dirname })
-  })
-
   // load routes, passing relevant configuration settings as necessary
-  app.use('/markers', markerRouter({ config }))
-  app.use('/users', userRouter({ config }))
+  app.use(['/', '/map'], mapRouter({ config })) // requests for a map
+  app.use('/markers', markerRouter({ config })) // requests for just marker data
+  app.use('/users', userRouter({ config })) // requests for just acccount actions
 
   return app
 }

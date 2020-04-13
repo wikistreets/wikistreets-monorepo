@@ -10,8 +10,9 @@ const multer = require('multer') // middleware for uploading files - parses mult
 const path = require('path')
 
 // database schemas and models
-const { User } = require('../models/user')
+const { Map } = require('../models/map')
 const { Issue } = require('../models/issue')
+const { User } = require('../models/user')
 
 // image editing service
 const { ImageService } = require('../services/ImageService')
@@ -68,7 +69,8 @@ const markerRouter = ({ config }) => {
 
   // route for HTTP GET requests to the map JSON data
   router.get('/json', (req, res) => {
-    const data = Issue.find({}, (err, docs) => {
+    const mapId = req.query.mapId // get mapId from query string
+    const data = Issue.find({ mapId }, (err, docs) => {
       if (!err) {
         //console.log(docs);
         res.json(docs)
@@ -80,7 +82,8 @@ const markerRouter = ({ config }) => {
 
   // route for HTTP GET requests to the map JSON dataa
   router.get('/kml', (req, res) => {
-    const data = Issue.find({}, (err, docs) => {
+    const mapId = req.query.mapId // get mapId from query string
+    const data = Issue.find({ mapId }, (err, docs) => {
       if (!err) {
         //console.log(docs);
         const kmlGenerator = require('../kml-generator')
@@ -127,6 +130,7 @@ const markerRouter = ({ config }) => {
     upload.array('files', config.markers.maxFiles), // multer file upload
     handleImages(markerImageService), // sharp file editing
     async (req, res, next) => {
+      const mapId = req.body.mapId
       const data = {
         user: req.user._id,
         position: {
@@ -138,24 +142,33 @@ const markerRouter = ({ config }) => {
         comments: req.body.comments,
       }
 
-      // add road or sidewalk issues, if present
-      if (req.body.sidewalk_issues) {
-        data.sidewalkIssues = Array.isArray(req.body.sidewalk_issues)
-          ? req.body.sidewalk_issues
-          : [req.body.sidewalk_issues]
-      }
-      if (req.body.road_issues) {
-        data.roadIssues = Array.isArray(req.body.road_issues)
-          ? req.body.road_issues
-          : [req.body.road_issues]
-      }
+      // // add road or sidewalk issues, if present
+      // if (req.body.sidewalk_issues) {
+      //   data.sidewalkIssues = Array.isArray(req.body.sidewalk_issues)
+      //     ? req.body.sidewalk_issues
+      //     : [req.body.sidewalk_issues]
+      // }
+      // if (req.body.road_issues) {
+      //   data.roadIssues = Array.isArray(req.body.road_issues)
+      //     ? req.body.road_issues
+      //     : [req.body.road_issues]
+      // }
 
+      // reject posts with no map
+      if (!mapId) {
+        const err = 'No map specified.'
+        return res.status(400).json({
+          status: false,
+          message: err,
+          err: err,
+        })
+      }
       // reject posts with no useful data
-      if (
+      else if (
         !data.photos.length &&
-        !data.comments &&
-        !data.sidewalkIssues &&
-        !data.roadIssues
+        !data.comments
+        // !data.sidewalkIssues &&
+        // !data.roadIssues
       ) {
         const err = 'You submitted an empty post.... please try again.'
         return res.status(400).json({
@@ -174,47 +187,34 @@ const markerRouter = ({ config }) => {
         })
       }
 
-      console.log(JSON.stringify(data, null, 2))
-
       try {
+        // create an Issue object
         const issue = new Issue(data)
 
-        issue.save(function (err, obj) {
-          if (err) {
-            //return failure response
-            res.status(500).json({
-              status: false,
-              message:
-                'Something went wrong on our end...  Please try again later',
-              err: err,
-            })
-          } else {
-            //console.log( JSON.stringify( obj, null, 2) )
+        console.log(`ISSUE: ${JSON.stringify(issue, null, 2)}`)
 
-            // get the full document, including referenced user document
-            const data = Issue.findOne({ _id: obj._id }, (err, doc) => {
-              if (!err) {
-                //console.log(docs);
-                //return success response with new object
-                res.json({
-                  status: true,
-                  message: 'success',
-                  data: doc,
-                })
-              } else {
-                return res.status(500).json({
-                  status: false,
-                  message:
-                    "Your post has been saved, but we can't display it.  Please reload this map.",
-                  err: err,
-                })
-              }
-            }).populate('user', 'handle') // populate each doc with the user's handle
-          } //else no error
-        }) // issue.save
+        // check whether the map exists already
+        const map = await Map.findOneAndUpdate(
+          { publicId: mapId },
+          { $push: { issues: issue } },
+          { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
+        ).catch((err) => {
+          console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        })
+
+        console.log(`MAP: ${JSON.stringify(map, null, 2)}`)
+
+        // tack on the current user to the issue
+        issue.user = req.user
+
+        res.json({
+          status: true,
+          message: 'success',
+          data: issue,
+        })
       } catch (err) {
         // try new Issue
-        console.log(JSON.stringify(err, null, 2))
+        console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
         // delete any uploaded files if the entire route fails for some reason
         if (req.files && req.files.length > 0) {
           req.files.map((file, i) => {
