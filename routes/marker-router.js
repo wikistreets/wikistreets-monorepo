@@ -81,25 +81,25 @@ const markerRouter = ({ config }) => {
   })
 
   // route for HTTP GET requests to the map JSON dataa
-  router.get('/kml', (req, res) => {
-    const mapId = req.query.mapId // get mapId from query string
-    const data = Issue.find({ mapId }, (err, docs) => {
-      if (!err) {
-        //console.log(docs);
-        const kmlGenerator = require('../kml-generator')
-        const kmlDoc = kmlGenerator(
-          docs,
-          `${req.protocol}://${req.headers.host}/static/uploads`
-        ) // generate kml from this data
-        // trigger browser download, if possible
-        res.set('Content-Disposition', 'attachment; filename="wikistreets.kml"')
-        res.set('Content-Type', 'text/xml')
-        res.send(kmlDoc)
-      } else {
-        console.log(err)
-      }
-    })
-  })
+  // router.get('/kml', (req, res) => {
+  //   const mapId = req.query.mapId // get mapId from query string
+  //   const data = Issue.find({ mapId }, (err, docs) => {
+  //     if (!err) {
+  //       //console.log(docs);
+  //       const kmlGenerator = require('../kml-generator')
+  //       const kmlDoc = kmlGenerator(
+  //         docs,
+  //         `${req.protocol}://${req.headers.host}/static/uploads`
+  //       ) // generate kml from this data
+  //       // trigger browser download, if possible
+  //       res.set('Content-Disposition', 'attachment; filename="wikistreets.kml"')
+  //       res.set('Content-Type', 'text/xml')
+  //       res.send(kmlDoc)
+  //     } else {
+  //       console.log(err)
+  //     }
+  //   })
+  // })
 
   // get a given user's markers
   router.get('/user/:userId', (req, res) => {
@@ -131,6 +131,7 @@ const markerRouter = ({ config }) => {
     handleImages(markerImageService), // sharp file editing
     async (req, res, next) => {
       const mapId = req.body.mapId
+      const mapTitle = req.body.mapTitle
       const data = {
         user: req.user._id,
         position: {
@@ -193,16 +194,20 @@ const markerRouter = ({ config }) => {
 
         console.log(`ISSUE: ${JSON.stringify(issue, null, 2)}`)
 
+        // set up changes we want to make
+        let updates = {
+          centerPoint: {
+            lat: req.body.lat,
+            lng: req.body.lng,
+          },
+          $push: { issues: issue },
+        }
+        if (mapTitle) updates.mapTitle = mapTitle // add map title if present
+
         // check whether the map exists already
         const map = await Map.findOneAndUpdate(
           { publicId: mapId },
-          {
-            centerPoint: {
-              lat: req.body.lat,
-              lng: req.body.lng,
-            },
-            $push: { issues: issue },
-          },
+          updates,
           { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         ).catch((err) => {
           console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)

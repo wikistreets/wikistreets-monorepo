@@ -73,85 +73,100 @@
     <section class="issue-map">
       <div id="map">loading map...</div>
 
-      <div class="control-map-selector dropdown">
-        <button
-          class="map-title btn btn-secondary dropdown-toggle"
-          type="button"
-          id="dropdownMenuButton"
-          data-toggle="dropdown"
-          aria-haspopup="true"
-          aria-expanded="false"
-        ></button>
-        <div class="dropdown-menu dropdown-menu-right p-4">
-          <form method="POST" action="/map/title" enctype="multipart/form-data">
+        <div class="control-map-selector dropdown">
+          <button
+            class="map-title btn btn-secondary dropdown-toggle"
+            type="button"
+            id="dropdownMenuButton"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+          ></button>
+          <div class="dropdown-menu dropdown-menu-left p-4">
+            <form
+              method="POST"
+              action="/map/title"
+              enctype="multipart/form-data"
+            >
+              <div class="form-group">
+                <label for="mapTitle">Rename this map:</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  name="mapTitle"
+                  id="mapTitle"
+                  maxlength="29"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+            <div class="dropdown-divider"></div>
             <div class="form-group">
-              <label for="mapTitle">Rename this map:</label>
-              <input
-                class="form-control"
-                type="text"
-                name="mapTitle"
-                id="mapTitle"
-              />
+              <p>
+                <a href="#" class="signin-link">Sign in</a> to view your saved
+                maps.
+              </p>
             </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-          </form>
-          <div class="dropdown-divider"></div>
-          <div class="form-group">
-            <p>
-              <a href="#" class="signin-link">Sign in</a> to view your saved
-              maps.
-            </p>
           </div>
         </div>
       </div>
+      <!-- //.row-->
 
-      <div class="control-add-issue">
-        <img
-          data-toggle="tooltip"
-          data-placement="left"
-          alt="Place a new marker"
-          title="Place a new marker"
-          src="/static/images/material_design_icons/add_circle_outline-24px.svg"
-        />
-      </div>
-      <div class="control-find-location">
-        <img
-          data-toggle="tooltip"
-          data-placement="left"
-          alt="Find my location"
-          title="Find my location"
-          src="/static/images/material_design_icons/gps_off-24px.svg"
-        />
-      </div>
-      <div class="control-search-address">
-        <img
-          data-toggle="tooltip"
-          data-placement="left"
-          alt="Search by address"
-          title="Search by address"
-          src="/static/images/material_design_icons/search-24px.svg"
-        />
-      </div>
-      <div class="control-fork-map">
-        <img
-          data-toggle="tooltip"
-          data-placement="left"
-          alt="Fork this map"
-          title="Fork this map"
-          src="/static/images/material_design_icons/call_split-24px.svg"
-        />
-      </div>
-      <div class="control-download-data">
+      <div class="map-controls">
+        <div class="map-control control-add-issue">
+          <img
+            data-toggle="tooltip"
+            data-placement="top"
+            alt="Place a new marker"
+            title="Place a new marker"
+            src="/static/images/material_design_icons/add_circle_outline-24px.svg"
+          />
+        </div>
+
+        <div class="map-control control-find-location">
+          <img
+            data-toggle="tooltip"
+            data-placement="top"
+            alt="Find my location"
+            title="Find my location"
+            src="/static/images/material_design_icons/gps_off-24px.svg"
+          />
+        </div>
+
+        <div class="map-control control-search-address">
+          <img
+            data-toggle="tooltip"
+            data-placement="top"
+            alt="Search by address"
+            title="Search by address"
+            src="/static/images/material_design_icons/search-24px.svg"
+          />
+        </div>
+
+        <div class="map-control control-fork-map">
+          <img
+            data-toggle="tooltip"
+            data-placement="top"
+            alt="Fork this map"
+            title="Fork this map"
+            src="/static/images/material_design_icons/call_split-24px.svg"
+          />
+        </div>
+
+        <!-- <div class="map-control control-download-data">
         <a href="/markers/kml">
           <img
             data-toggle="tooltip"
-            data-placement="left"
+            data-placement="top"
             alt="Download KML data file"
             title="Download KML data file"
             src="/static/images/material_design_icons/cloud_download-24px.svg"
           />
         </a>
+      </div> -->
       </div>
+      <div class="clear"></div>
+      <!-- // .map-controls -->
     </section>
 
     <!-- info window -->
@@ -189,13 +204,11 @@
     <div class="geoposition-error-container hide">
       <h2>Could not locate you</h2>
       <p>
-        You are welcome to manually drag the map to your location instead.
+        Geolocation will not be available until we receive a security certificate to
+        allow us to send data securely over the web ... stay tuned! 
       </p>
       <p>
-        Geolocation will not be available until we receive a certificate to
-        allow us to send data securely over the web ... stay tuned! Geoposition
-        may also be unavailable because you have disabled geolocation sharing in
-        your web browser.
+        You are welcome to manually drag the map instead for now... sorry.
       </p>
     </div>
     <!-- // geolocation error -->
@@ -230,7 +243,10 @@
             />
           </div>
           <button type="submit" class="btn btn-primary">Log In</button>
+          <br />
+          <br />
         </form>
+
         <article class="col-xs-12 col-md-6">
           <h2>Don't have an account?</h2>
           <p>
@@ -282,6 +298,7 @@
             />
           </div>
           <button type="submit" class="btn btn-primary">Log In</button>
+          <br /><br />
         </form>
         <article class="col-xs-12 col-md-6">
           <h2>Already have an account?</h2>
@@ -444,8 +461,7 @@
         </div>
 
         <div class="map-popup-container hide">
-          <strong class="street-address"></strong><br />Drag to the issue
-          location.
+          <strong class="street-address"></strong><br />Drag me somewhere interesting!
         </div>
       </form>
     </div>
@@ -456,36 +472,28 @@
       <div class="row">
         <header class="col-xs-12 col-md-6">
           <h2>Wikistreets</h2>
-          <p>A tool to map street and sidewalk issues.</p>
+          <p>Map your world.</p>
         </header>
         <article class="col-12 col-md-6">
           <h2>Features</h2>
           <ul>
-            <li>Perfect for use on the road</li>
-            <li>Open to anyone with a phone or computer</li>
-            <li>
-              Drop markers anywhere you find a dangerous issue with a street or
-              sidewalk
-            </li>
-            <li>Snap and save photos and details of the issue to the map</li>
-            <li>Share with others in your community</li>
-            <li>Advocate for improvements</li>
-            <li>
-              Data is downloadable in standard KML format to import into other
-              GIS applications
-            </li>
+            <li>Anyone can make maps</li>
+            <li>Works at home or on the road</li>
+            <li>Snap and map photos</li>
+            <li>Share if you want</li>
+            <li>Don't share if you don't want</li>
+            <li>Fork (i.e. copy) any map </li>
           </ul>
         </article>
         <article class="col-12">
-          <small
-            >Created by <a href="http://plasticpast.com">Plastic Past</a>. All
-            rights reserved.
-
+          <small>
+            &copy; 2020. All rights reserved.
             <br />
-
-            By using this app, you agree that we make no promises to you, will
-            do whatever we want with your data, and may change these terms at
-            any moment.
+            Created by <a href="http://plasticpast.com">Plastic Past</a>. 
+            <br />
+            By using this app, you agree to the following terms and conditions: that you assume all liability for your usage of this app; that we make no promises or guarantees to you of any kind;  that we will
+            do whatever we want with your data;  and that we may change these terms at
+            any moment when it suits us.
           </small>
         </article>
       </div>

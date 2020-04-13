@@ -6,13 +6,13 @@ const app = {
     getToken: () => localStorage.getItem('token'),
   },
   copy: {
-    aboutus: 'A mapping application for streets and sidewalks',
-    issuelocatestart: 'Drag the person to the exact location of the issue',
+    aboutus: 'Maps for normal people',
+    issuelocatestart: 'Drag the person to mark the spot',
     searchaddress: 'Enter an address',
-    signin: 'You must be logged in to create or modify a map',
+    signin: 'Log in to make maps',
     signinerror:
       'The email or password you entered is not correct.  Please correct and try again',
-    signup: 'Create an account in order to modify maps',
+    signup: 'Create an account to make maps',
     signuperror:
       'An account exists with that email address.  Please sign in or create a new account',
     createissueerror: 'Something unusual happened!',
@@ -76,8 +76,8 @@ const app = {
       lng: -73.8802434,
     },
     zoom: {
-      default: 16,
-      issuelocate: 19,
+      default: 14,
+      issuelocate: 16,
     },
   },
   controls: {
@@ -392,10 +392,9 @@ async function initMap() {
     app.browserGeolocation.coords.lat,
     app.browserGeolocation.coords.lng,
   ]
-  app.map.element = L.map(app.map.htmlElementId).setView(
-    coords,
-    app.map.zoom.default
-  )
+  app.map.element = new L.map(app.map.htmlElementId, {
+    zoomControl: false,
+  }).setView(coords, app.map.zoom.default)
 
   // load map tiles
   L.tileLayer(app.apis.mapbox.baseUrl, {
@@ -588,8 +587,23 @@ const getStreetAddress = async (coords) => {
     .then((response) => response.json()) // convert JSON response text to an object
     .then((data) => {
       // console.log(data);
-      let address = data.features[0].place_name
-      let street = address.substring(0, address.indexOf(',')) // up till the comma
+      let street
+      if (data.features.length && data.features[0].place_name) {
+        const address = data.features[0].place_name
+        street = address.substring(0, address.indexOf(',')) // up till the comma
+        console.log(address)
+        // check if street is a number...
+        if (street != '' && !isNaN(street)) {
+          // if so, get the second part of the address instead
+          const posFirstComma = address.indexOf(',')
+          street = address.substring(
+            posFirstComma + 1,
+            address.indexOf(',', posFirstComma + 1)
+          )
+        }
+      } else {
+        street = 'Anonymous location'
+      }
       return street
     })
     .catch((err) => {
@@ -717,7 +731,7 @@ const showInfoWindow = (marker, data) => {
   // show it if it's not yet shown
   if ($('.info-window').css('display') != 'block') {
     // console.log('opening infowindow');
-    expandInfoWindow().then(() => {
+    expandInfoWindow(50, 50).then(() => {
       // center the map on the selected marker after panel has opened
       app.map.element.panTo(marker.getLatLng())
     })
@@ -942,7 +956,7 @@ const openIssueForm = async () => {
   })
 
   // open the info window
-  expandInfoWindow(40, 60).then(async () => {})
+  expandInfoWindow(60, 40).then(async () => {})
 }
 
 const openSearchAddressForm = () => {
@@ -1101,7 +1115,7 @@ const openSigninPanel = async () => {
   })
 
   // open the info window
-  expandInfoWindow(40, 60).then(async () => {})
+  expandInfoWindow(70, 30).then(async () => {})
 }
 
 // create a new user account
@@ -1142,7 +1156,7 @@ const openSignupPanel = async () => {
   })
 
   // open the info window
-  expandInfoWindow(40, 60).then(async () => {})
+  expandInfoWindow(70, 30).then(async () => {})
 }
 
 // create a new user account

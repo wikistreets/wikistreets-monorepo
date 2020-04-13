@@ -5,6 +5,9 @@ body {
   margin: 0;
   padding: 0;
 }
+.clear {
+  clear: both; /* clearfix hack */
+}
 
 h1.logo {
   font-size: 18px;
@@ -26,6 +29,18 @@ h1.logo {
 h1.logo:hover {
   /* text-decoration: underline; */
   color: green;
+}
+a {
+  color: black;
+  text-decoration: underline;
+}
+a:hover {
+  color: black;
+  text-decoration: none;
+}
+
+.btn.btn-primary {
+  background-color: black;
 }
 
 #map {
@@ -80,7 +95,7 @@ ul {
   height: 50px;
   background-color: white;
   border-top: 1px solid black;
-  padding: 0 40px;
+  padding: 0px 40px 0 40px;
   margin-bottom: 0px;
   z-index: 200;
 }
@@ -122,54 +137,58 @@ ul {
 
 /* custom map controls */
 
-.control-map-selector,
-.control-add-issue,
-.control-find-location,
-.control-search-address,
-.control-fork-map,
-.control-download-data {
-  position: absolute;
-  right: 20px;
-  cursor: pointer;
-  z-index: 100;
-}
-
 .control-map-selector {
-  top: 20px;
+  position: absolute;
+  cursor: pointer;
+  bottom: 0px;
+  left: 0;
+  margin: 0 auto;
   z-index: 101;
 }
 .control-map-selector .dropdown-menu {
   width: 300px;
 }
+.control-map-selector input[type='text'] {
+  width: 100%;
+}
 .control-map-selector button.map-title {
   background-color: black;
 }
 
+.map-controls {
+  position: absolute;
+  left: 0;
+  bottom: 50px;
+  z-index: 100;
+}
+
+.map-control {
+  margin-left: 17px;
+}
+
 .control-add-issue {
-  top: 80px;
+  float: left;
 }
 .control-find-location {
-  top: 140px;
+  float: left;
 }
 .control-fork-map {
-  top: 200px;
+  float: left;
   transform: rotate(90deg);
 }
 .control-search-address {
-  top: 140px;
+  float: left;
   display: none; /* not yet functional */
 }
 .control-download-data {
-  bottom: 36px;
+  float: left;
 }
 
-.control-add-issue img,
-.control-find-location img,
-.control-search-address img,
-.control-fork-map img,
-.control-download-data img {
-  width: 50px;
-  height: 50px;
+.map-controls img {
+  min-width: 30px;
+  max-width: 50px;
+  min-height: 30px;
+  max-height: 50px;
 }
 
 /* Leaflet extra markers */
