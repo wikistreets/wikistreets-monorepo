@@ -196,7 +196,13 @@ const markerRouter = ({ config }) => {
         // check whether the map exists already
         const map = await Map.findOneAndUpdate(
           { publicId: mapId },
-          { $push: { issues: issue } },
+          {
+            centerPoint: {
+              lat: req.body.lat,
+              lng: req.body.lng,
+            },
+            $push: { issues: issue },
+          },
           { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         ).catch((err) => {
           console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)

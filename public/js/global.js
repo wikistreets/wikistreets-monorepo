@@ -380,15 +380,9 @@ app.map.fetch = async () => {
     .myFetch(`${app.apis.wikistreets.getMapUrl}/${app.map.id.get()}`)
     .then((data) => {
       app.issues.issues = data.issues
-      if (data.title) {
-        app.map.title = data.title
-        $('.map-title').text(app.map.title)
-      } else {
-        // no title for this map
-        $('.map-title').text('anonymous map')
-      }
+
       //      console.log(`RESPONSE: ${data}`)
-      return data.issues
+      return data
     })
 }
 
@@ -414,8 +408,26 @@ async function initMap() {
     accessToken: app.apis.mapbox.apiKey,
   }).addTo(app.map.element)
 
-  // // populate with markers
+  // get the map data from server
   const data = await app.map.fetch()
+
+  // extract the issues
+  const issues = data.issues
+
+  // recenter on map centerpoint
+  if (data.centerPoint) {
+    console.log(data.centerPoint)
+    app.map.element.panTo(data.centerPoint)
+  }
+
+  // set the map title, if any
+  if (data.title) {
+    app.map.title = data.title
+    $('.map-title').text(app.map.title)
+  } else {
+    // no title for this map
+    $('.map-title').text('anonymous map')
+  }
 
   // create marker cluster
   const cluster = app.markers.cluster
@@ -423,7 +435,7 @@ async function initMap() {
     : app.markers.createCluster()
 
   // place new markers down
-  app.markers.place(data, cluster)
+  app.markers.place(issues, cluster)
 
   // find browser's geolocation
   //app.browserGeolocation.update();

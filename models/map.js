@@ -2,6 +2,11 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 const { issueSchema } = require('./issue')
 
+const coordinateSchema = new Schema({
+  lat: Number,
+  lng: Number,
+})
+
 // a map
 const mapSchema = new Schema({
   publicId: {
@@ -13,6 +18,7 @@ const mapSchema = new Schema({
     type: String,
     lowercase: true,
   },
+  centerPoint: coordinateSchema,
   description: String,
   issues: [issueSchema],
   date: { type: Date, default: Date.now },
