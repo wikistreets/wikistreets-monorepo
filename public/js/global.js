@@ -463,6 +463,11 @@ async function initMap() {
   // allow infoWindow to close when icon clicked
   $('.info-window .close-icon').click(collapseInfoWindow)
 
+  // update list of maps when user expands map selector dropdown
+  $('.control-map-selector.dropdown').on('show.bs.dropdown', () => {
+    console.log('opening map selector')
+  })
+
   // update visible map title when user renames it
   $('.control-map-selector form').submit((e) => {
     e.preventDefault()
