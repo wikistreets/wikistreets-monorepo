@@ -736,7 +736,7 @@ const showInfoWindow = (marker, data) => {
   $('.info-window-content').html(contentString)
 
   // console.log('opening infowindow');
-  expandInfoWindow().then(() => {
+  expandInfoWindow(70, 30).then(() => {
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
     app.map.element.panTo(marker.getLatLng())
@@ -808,7 +808,7 @@ const collapseInfoWindow = async (e) => {
 
 const meMarkerButtonClick = () => {
   // open the info window
-  expandInfoWindow(80, 20).then(async () => {})
+  expandInfoWindow(70, 30).then(async () => {})
 }
 
 const openIssueForm = async (point = false) => {
