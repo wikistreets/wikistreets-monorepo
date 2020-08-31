@@ -737,14 +737,14 @@ const showInfoWindow = (marker, data) => {
   $('.info-window-content').html(contentString)
 
   // console.log('opening infowindow');
-  expandInfoWindow(90, 10).then(() => {
+  expandInfoWindow().then(() => {
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
     app.map.element.panTo(marker.getLatLng())
   })
 } // showInfoWindow
 
-const expandInfoWindow = async (infoWindowHeight = 90, mapHeight = 10) => {
+const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   $('.info-window').show()
   $('.info-window')
     .stop()
@@ -809,7 +809,7 @@ const collapseInfoWindow = async (e) => {
 
 const meMarkerButtonClick = () => {
   // open the info window
-  expandInfoWindow(90, 10).then(async () => {})
+  expandInfoWindow().then(async () => {})
 }
 
 const openIssueForm = async (point = false) => {
@@ -1040,7 +1040,7 @@ const openGeopositionUnavailableForm = () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // open the info window
-  expandInfoWindow(90, 10).then(async () => {})
+  expandInfoWindow().then(async () => {})
 }
 
 const panToPersonalLocation = () => {
@@ -1137,7 +1137,7 @@ const openSigninPanel = async () => {
   })
 
   // open the info window
-  expandInfoWindow(90, 10).then(async () => {})
+  expandInfoWindow().then(async () => {})
 }
 
 // create a new user account
@@ -1178,7 +1178,7 @@ const openSignupPanel = async () => {
   })
 
   // open the info window
-  expandInfoWindow(90, 10).then(async () => {})
+  expandInfoWindow().then(async () => {})
 }
 
 // create a new user account
@@ -1191,7 +1191,7 @@ const openAboutUsForm = async () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // open the info window
-  expandInfoWindow(90, 10).then()
+  expandInfoWindow().then()
 }
 
 // show a particular user's profile
@@ -1221,7 +1221,7 @@ const openUserProfile = async (handle, userId) => {
       })
 
       // open the info window
-      expandInfoWindow(90, 10)
+      expandInfoWindow()
     })
     .catch((err) => {
       console.error(JSON.stringify(err, null, 2))
@@ -1239,7 +1239,7 @@ const openErrorPanel = (message) => {
   $('.error-message').html(message)
 
   // open the info window
-  expandInfoWindow(90, 10)
+  expandInfoWindow()
 }
 
 // show a particular user's profile
@@ -1262,7 +1262,7 @@ const openForkPanel = () => {
   })
 
   // open the info window
-  expandInfoWindow(90, 10)
+  expandInfoWindow()
 }
 
 // enable bootstrap tooltips
