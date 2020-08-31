@@ -84,6 +84,11 @@ ul {
   top: 0;
   left: 0;
   margin: 0;
+  color: white;
+  background-color: black;
+}
+.alert.instructions a {
+  color: white;
 }
 
 .info-window {
@@ -201,4 +206,17 @@ ul {
 
 .extra-marker i.me-marker {
   font-size: 18px;
+}
+
+.leaflet-popup-content {
+  text-align: center;
+}
+
+.leaflet-popup-content button.btn {
+  font-size: 14px;
+}
+
+.leaflet-popup-content p {
+  margin-top: 5px;
+  margin-bottom: 0px;
 }

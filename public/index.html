@@ -321,7 +321,7 @@
         method="POST"
         enctype="multipart/form-data"
       >
-        <input type="hidden" name="address" class="address" />
+        <!-- <input type="hidden" name="address" class="address" /> -->
         <input type="hidden" name="lat" class="lat" />
         <input type="hidden" name="lng" class="lng" />
 
@@ -442,17 +442,20 @@
           </section> -->
 
           <section class="col-12 col-md-6 col-lg-4 submit-container">
-            <h2>Photos</h2>
-            <p>Post up to 3 photos</p>
-            <input id="files" name="files" type="file" multiple />
-            <br />
-            <br />
-            <h2>Comments</h2>
+            <h2>Location name</h2>
+            <input type="text" class="address" name="address" placeholder="Name this location"/>
+            <br /><br />
+            <h2>Post a message here</h2>
             <textarea
               class="col-12"
               name="comments"
               placeholder="Any additional important details"
             ></textarea>
+            <br />
+            <br />
+            <h2>Add photos</h2>
+            <p>Up to 3 photos</p>
+            <input id="files" name="files" type="file" multiple />
             <br />
             <br />
             <h2>Ready to submit?</h2>
@@ -461,7 +464,9 @@
         </div>
 
         <div class="map-popup-container hide">
-          <strong class="street-address"></strong><br />Drag me somewhere interesting!
+          <p>near <strong class="street-address"></strong></p>
+          <button onclick="meMarkerButtonClick()" class="btn btn-primary me-marker-go-button">Create post at this location</button>
+          <p>... or drag marker somewhere else!</p>
         </div>
       </form>
     </div>

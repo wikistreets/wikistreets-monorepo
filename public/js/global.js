@@ -6,7 +6,7 @@ const app = {
     getToken: () => localStorage.getItem('token'),
   },
   copy: {
-    aboutus: 'Maps for normal people',
+    aboutus: 'Maps for everyone',
     issuelocatestart: 'Drag the person to mark the spot',
     searchaddress: 'Enter an address',
     signin: 'Log in to make maps',
@@ -151,13 +151,13 @@ const app = {
           icon: 'fa-image',
           shape: 'square',
           prefix: 'fa',
-          markerColor: 'red',
+          markerColor: 'black',
         }),
         active: L.ExtraMarkers.icon({
           icon: 'fa-image',
           shape: 'square',
           prefix: 'fa',
-          markerColor: 'green',
+          markerColor: 'red',
         }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
       },
       unknownText: {
@@ -165,13 +165,13 @@ const app = {
           icon: 'fa-comment-alt',
           shape: 'square',
           prefix: 'fa',
-          markerColor: 'red',
+          markerColor: 'black',
         }),
         active: L.ExtraMarkers.icon({
           icon: 'fa-comment-alt',
           shape: 'square',
           prefix: 'fa',
-          markerColor: 'green',
+          markerColor: 'red',
         }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
       },
       me: {
@@ -180,7 +180,7 @@ const app = {
           shape: 'penta',
           extraClasses: 'me-marker',
           prefix: 'fa',
-          markerColor: 'blue',
+          markerColor: 'black',
         }), //{ imageUrl: '/static/images/material_design_icons/directions_walk-24px.svg' }
       },
     },
@@ -292,6 +292,7 @@ app.browserGeolocation.update = async () => {
 app.infoPanel.open = (content) => {}
 app.infoPanel.close = () => {}
 app.markers.wipeMe = () => {
+  console.log('wiping')
   if (app.markers.me) {
     app.markers.me.remove()
     app.markers.me = null
@@ -362,7 +363,15 @@ app.markers.place = (data, cluster) => {
     }, i * latency) // setTimeout
   }) // data.map
 }
+
+app.markers.activate = (marker = app.markers.current) => {
+  app.markers.current = marker
+  marker.setIcon(app.markers.icons[marker.issueType].active)
+  marker.setZIndexOffset(app.markers.zIndex.active)
+}
+
 app.markers.deactivate = (marker = app.markers.current) => {
+  // console.log('deactivating')
   // return selected marker to default state
   if (marker) {
     // de-highlight the current marker
@@ -394,6 +403,7 @@ async function initMap() {
   ]
   app.map.element = new L.map(app.map.htmlElementId, {
     zoomControl: false,
+    doubleClickZoom: false,
   }).setView(coords, app.map.zoom.default)
 
   // load map tiles
@@ -415,7 +425,7 @@ async function initMap() {
 
   // recenter on map centerpoint
   if (data.centerPoint) {
-    console.log(data.centerPoint)
+    //console.log('init map panning')
     app.map.element.panTo(data.centerPoint)
   }
 
@@ -516,13 +526,15 @@ async function initMap() {
 
   // handle map events...
 
+  app.map.element.on('dblclick', (e) => {
+    const point = e.latlng
+    openIssueForm(point)
+  })
+
   app.map.element.on('click', function (event) {
     // console.log('map clicked');
     // close any open infowindow except the issue form
     collapseInfoWindow()
-
-    // deactivate any selected markers
-    app.markers.deactivate()
 
     // remove me marker, if present
     app.markers.wipeMe()
@@ -552,7 +564,7 @@ async function initMap() {
 
   // minimize any open infowindow while dragging
   app.map.element.on('dragstart', (e) => {
-    // console.log('map drag start');
+    // console.log('map drag start')
 
     // deactivate any currently-selected markers
     app.markers.deactivate()
@@ -591,7 +603,7 @@ const getStreetAddress = async (coords) => {
       if (data.features.length && data.features[0].place_name) {
         const address = data.features[0].place_name
         street = address.substring(0, address.indexOf(',')) // up till the comma
-        console.log(address)
+        // console.log(address)
         // check if street is a number...
         if (street != '' && !isNaN(street)) {
           // if so, get the second part of the address instead
@@ -655,12 +667,8 @@ const showInfoWindow = (marker, data) => {
   //deactivate all markers
   app.markers.deactivate()
 
-  // highlight the current marker
-  marker.setIcon(app.markers.icons[marker.issueType].active)
-  marker.setZIndexOffset(app.markers.zIndex.active)
-
   // the current marker is now the active one
-  app.markers.current = marker
+  app.markers.activate(marker)
 
   let contentString = ''
 
@@ -690,7 +698,7 @@ const showInfoWindow = (marker, data) => {
 
   contentString += `
 <div class="card col-12 col-md-5">
-    <img class="edit-icon" src="/static/images/material_design_icons/edit-24px.svg" />
+    <!--<img class="edit-icon" src="/static/images/material_design_icons/edit-24px.svg" /> -->
     <div class="card-body">
         <h2 class="card-title">${data.address}</h2>
     </div>
@@ -728,20 +736,15 @@ const showInfoWindow = (marker, data) => {
   // update the infoWindow content
   $('.info-window-content').html(contentString)
 
-  // show it if it's not yet shown
-  if ($('.info-window').css('display') != 'block') {
-    // console.log('opening infowindow');
-    expandInfoWindow(50, 50).then(() => {
-      // center the map on the selected marker after panel has opened
-      app.map.element.panTo(marker.getLatLng())
-    })
-  } else {
-    // center the map on the selected marker
+  // console.log('opening infowindow');
+  expandInfoWindow(90, 10).then(() => {
+    // center the map on the selected marker after panel has opened
+    //console.log('marker panning')
     app.map.element.panTo(marker.getLatLng())
-  }
+  })
 } // showInfoWindow
 
-const expandInfoWindow = async (infoWindowHeight = 60, mapHeight = 40) => {
+const expandInfoWindow = async (infoWindowHeight = 90, mapHeight = 10) => {
   $('.info-window').show()
   $('.info-window')
     .stop()
@@ -765,15 +768,10 @@ const expandInfoWindow = async (infoWindowHeight = 60, mapHeight = 40) => {
     )
 
   // resolve the promise once the animation is complete
-  return $('.issue-map, #map')
-    .promise()
-    .done(() => {
-      return 'finished'
-    })
+  return $('.issue-map, #map').promise()
 }
 
 const collapseInfoWindow = async (e) => {
-  app.mode = 'default'
   // console.log(`mode=${app.mode}`);
 
   // hide the info window
@@ -783,31 +781,42 @@ const collapseInfoWindow = async (e) => {
   })
 
   // animate the map to take up full screen
-  $('.issue-map, #map')
-    .stop()
-    .animate(
-      {
-        height: '100vh',
-      },
-      () => {
-        // inform the map that it has been dynamically resized
-        app.map.element.invalidateSize(true)
+  $('.issue-map, #map').animate(
+    {
+      height: '100vh',
+    },
+    () => {
+      // update mode
+      app.mode = 'default'
+
+      // inform the map that it has been dynamically resized
+      app.map.element.invalidateSize(true)
+
+      // re-center on current marker, if any
+      if (app.markers.current) {
+        //console.log('collapse panning')
+        app.map.element.panTo(app.markers.current.getLatLng())
+
+        // void the current marker
+        app.markers.deactivate()
       }
-    )
+    }
+  )
 
   // resolve the promise once the animation is complete
-  return $('.issue-map, #map')
-    .promise()
-    .done(() => {
-      return 'finished'
-    })
+  return $('.issue-map, #map').promise()
 }
 
-const openIssueForm = async () => {
+const meMarkerButtonClick = () => {
+  // open the info window
+  expandInfoWindow(90, 10).then(async () => {})
+}
+
+const openIssueForm = async (point = false) => {
   // zoom into map
   if (app.mode != 'issuelocate') {
     // zoom in nice and close
-    app.map.element.setZoom(app.map.zoom.issuelocate)
+    // app.map.element.setZoom(app.map.zoom.issuelocate)
 
     // keep track
     app.mode = 'issuelocate'
@@ -823,8 +832,14 @@ const openIssueForm = async () => {
   }
 
   // place the me marker on the map
-  const center = app.map.element.getCenter()
-  const coords = [center.lat, center.lng]
+  if (!point) {
+    // if no point specified, use the center of map
+    point = app.map.element.getCenter()
+  }
+
+  //console.log('issue form panning')
+  app.map.element.panTo(point)
+  const coords = [point.lat, point.lng]
   const marker = L.marker(coords, {
     zIndexOffset: app.markers.zIndex.me,
     riseOffset: app.markers.zIndex.me,
@@ -835,15 +850,19 @@ const openIssueForm = async () => {
   }).addTo(app.map.element)
 
   marker.setIcon(app.markers.icons.me.default)
+  app.markers.me = marker
 
   // get the center address of the map
   app.browserGeolocation.coords = {
-    lat: center.lat,
-    lng: center.lng,
+    lat: point.lat,
+    lng: point.lng,
   }
 
   // update street address, lat, and lng
-  const street = await getStreetAddress({ lat: center.lat, lng: center.lng })
+  const street = await getStreetAddress({
+    lat: point.lat,
+    lng: point.lng,
+  })
   // console.log(street);
   app.browserGeolocation.street = street
   $('.street-address').html(street)
@@ -854,7 +873,9 @@ const openIssueForm = async () => {
   // attach a popup
   marker.bindPopup($('.map-popup-container').html()).openPopup()
 
-  app.markers.me = marker
+  app.markers.me.on('dragstart', async () => {
+    app.markers.me.closePopup()
+  })
 
   // detect drag events on me marker
   app.markers.me.on('dragend', async () => {
@@ -865,6 +886,7 @@ const openIssueForm = async () => {
     }
 
     // center map on the me marker
+    //console.log('dragend panning...')
     app.map.element.panTo(app.browserGeolocation.coords)
 
     // update street address
@@ -874,7 +896,6 @@ const openIssueForm = async () => {
     $('.street-address').html(street)
 
     // update hidden from elements
-    $('.address').val(street)
     $('.lat').val(app.browserGeolocation.coords.lat)
     $('.lng').val(app.browserGeolocation.coords.lng)
 
@@ -884,11 +905,14 @@ const openIssueForm = async () => {
   })
 
   // show instructions
-  $('.info-window .instructions').html(app.copy.issuelocatestart)
+  $('.info-window .instructions').html(street) //app.copy.issuelocatestart
 
   // copy the issue form into the infowindow
   const infoWindowHTML = $('.issue-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
+
+  // update address in form
+  $('.address').val(street)
 
   // deal with form submissions
   $('.info-window-content form.issue-form').on('submit', async (e) => {
@@ -900,7 +924,7 @@ const openIssueForm = async () => {
       // save the filled-in form in the stash
       //$('.info-window .issue-form-container').appendTo('.stash')
 
-      // opem signin form
+      // open signin form
       openSigninPanel()
       return
     }
@@ -954,9 +978,6 @@ const openIssueForm = async () => {
         )
       })
   })
-
-  // open the info window
-  expandInfoWindow(60, 40).then(async () => {})
 }
 
 const openSearchAddressForm = () => {
@@ -990,7 +1011,7 @@ const openSearchAddressForm = () => {
     // create a new timeout
     app.controls.searchAddress.timer = setTimeout(async () => {
       const addresses = await getMatchingAddresses($('#searchterm').val())
-      console.log(addresses)
+      // console.log(addresses)
     }, 500)
   })
 
@@ -1019,7 +1040,7 @@ const openGeopositionUnavailableForm = () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // open the info window
-  expandInfoWindow(40, 60).then(async () => {})
+  expandInfoWindow(90, 10).then(async () => {})
 }
 
 const panToPersonalLocation = () => {
@@ -1027,6 +1048,7 @@ const panToPersonalLocation = () => {
     .update()
     .then((coords) => {
       // console.log(`panning to ${coords}`)
+      //console.log('personal location panning...')
       app.map.element.panTo(coords) // pan map to personal location
       app.controls.gps.setState('active')
       return coords
@@ -1115,7 +1137,7 @@ const openSigninPanel = async () => {
   })
 
   // open the info window
-  expandInfoWindow(70, 30).then(async () => {})
+  expandInfoWindow(90, 10).then(async () => {})
 }
 
 // create a new user account
@@ -1156,7 +1178,7 @@ const openSignupPanel = async () => {
   })
 
   // open the info window
-  expandInfoWindow(70, 30).then(async () => {})
+  expandInfoWindow(90, 10).then(async () => {})
 }
 
 // create a new user account
@@ -1169,7 +1191,7 @@ const openAboutUsForm = async () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // open the info window
-  expandInfoWindow(40, 60).then()
+  expandInfoWindow(90, 10).then()
 }
 
 // show a particular user's profile
@@ -1199,7 +1221,7 @@ const openUserProfile = async (handle, userId) => {
       })
 
       // open the info window
-      expandInfoWindow(40, 60)
+      expandInfoWindow(90, 10)
     })
     .catch((err) => {
       console.error(JSON.stringify(err, null, 2))
@@ -1217,7 +1239,7 @@ const openErrorPanel = (message) => {
   $('.error-message').html(message)
 
   // open the info window
-  expandInfoWindow(40, 60)
+  expandInfoWindow(90, 10)
 }
 
 // show a particular user's profile
@@ -1240,7 +1262,7 @@ const openForkPanel = () => {
   })
 
   // open the info window
-  expandInfoWindow(40, 60)
+  expandInfoWindow(90, 10)
 }
 
 // enable bootstrap tooltips
