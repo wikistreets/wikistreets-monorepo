@@ -743,6 +743,16 @@ const showInfoWindow = (marker, data) => {
   })
 } // showInfoWindow
 
+// hack to close tooltips on mobile... bootstrap's tooltips are buggy on mobile
+const hideAllTooltips = () => {
+  // trying every possible technique
+  $('[data-toggle="tooltip"]').tooltip('hide')
+  $('.map-control').tooltip('hide')
+  $('.map-control img').tooltip('hide')
+  $('.tooltip').hide() // trying another method
+  $('.tooltip').tooltip('hide') // trying another method
+}
+
 const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   $('.info-window').show()
   $('.info-window')
@@ -765,6 +775,11 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
         app.map.element.invalidateSize(true)
       }
     )
+
+  // close any open tooltips... this is to fix bootstrap's buggy tooltips on mobile
+
+  // hide tooltips on mobile after clicked
+  hideAllTooltips()
 
   // resolve the promise once the animation is complete
   return $('.issue-map, #map').promise()
@@ -1337,11 +1352,4 @@ const openMapSelectorPanel = async () => {
 // enable bootstrap tooltips
 $(function () {
   $('[data-toggle="tooltip"]').tooltip()
-})
-
-// hide tooltips on mobile after clicked
-$('[data-toggle="tooltip"], .map-control').on('click', function () {
-  $(this).tooltip('hide') // hide any tooltips on this element
-  $('.tooltip').hide() // trying another method
-  $('.tooltip').tooltip('hide') // trying another method
 })
