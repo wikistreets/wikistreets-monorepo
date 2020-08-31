@@ -209,7 +209,7 @@ const markerRouter = ({ config }) => {
 
         User.update(
           { _id: req.user._id },
-          { $addToSet: { maps: map } },
+          { $addToSet: { maps: mapId } },
           function (e) {
             const err = "Error saving map to user's list of maps"
             console.log(`ERROR: ${err} - ${e}`)
