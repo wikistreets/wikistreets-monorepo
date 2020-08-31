@@ -78,7 +78,7 @@ const mapRouter = ({ config }) => {
     }
   )
 
-  // route to rename a map
+  // route to fork a map
   router.get('/map/fork/:mapId', passportJWT, async (req, res) => {
     // retrieve the map to be forked
     const mapId = req.params.mapId

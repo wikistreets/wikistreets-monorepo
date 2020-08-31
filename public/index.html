@@ -78,37 +78,9 @@
             class="map-title btn btn-secondary dropdown-toggle"
             type="button"
             id="dropdownMenuButton"
-            data-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="false"
           ></button>
-          <div class="dropdown-menu dropdown-menu-left p-4">
-            <form
-              method="POST"
-              action="/map/title"
-              enctype="multipart/form-data"
-            >
-              <div class="form-group">
-                <label for="mapTitle">Rename this map:</label>
-                <input
-                  class="form-control"
-                  type="text"
-                  name="mapTitle"
-                  id="mapTitle"
-                  maxlength="29"
-                />
-              </div>
-              <button type="submit" class="btn btn-primary">Save</button>
-            </form>
-            <div class="dropdown-divider"></div>
-            <h6 class="dropdown-header">Maps</h6>
-            <div class="form-group">
-              <p>
-                <a href="#" class="signin-link">Sign in</a> to view your saved
-                maps.
-              </p>
-            </div>
-          </div><!-- .dropdown-menu -->
         </div><!-- .control-map-selector -->
       </div><!-- #map -->
       <!-- //.row-->
@@ -408,15 +380,15 @@
     </div>
     <!-- // user profile-->
 
-    <!-- user profile -->
+    <!-- fork map -->
     <div class="fork-map-container hide">
       <div class="row">
         <header class="col-xs-12 col-md-4">
           <h2>Fork this map</h2>
           <ul>
-            <li><span class="num-forks"></span> forks</li>
-            <li><span class="num-markers"></span> markers</li>
-            <li><span class="num-contributors"></span> contributors</li>
+            <li><span class="num-forks">0</span> forks</li>
+            <li><span class="num-markers">0</span> markers</li>
+            <li><span class="num-contributors">0</span> contributors</li>
           </ul>
           <button class="btn btn-primary fork-button">Fork it</button>
         </header>
@@ -429,7 +401,42 @@
         </article>
       </div>
     </div>
-    <!-- // user profile-->
+    <!-- // fork map -->
+
+    <!-- select map -->
+    <div class="select-map-container hide">
+      <div class="row">
+        <header class="col-xs-12 col-md-4">
+          <h2>Rename this map</h2>
+          <form class="rename-map-form"
+            method="POST"
+            action="/map/title"
+            enctype="multipart/form-data"
+          >
+            <div class="form-group">
+              <label for="mapTitle">Rename this map:</label>
+              <input
+                class="form-control"
+                type="text"
+                name="mapTitle"
+                id="mapTitle"
+                maxlength="50"
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </form>
+        </header>
+        <article class="col-12 col-md-8">
+          <h2>More maps</h2>
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-primary"><a href="/">Create a new map</a></li>
+            <div class="more-maps">
+            </div>
+          </ul>
+        </article>
+      </div>
+    </div>
+    <!-- // select map -->
 
     <!-- error message -->
     <div class="error-container hide">

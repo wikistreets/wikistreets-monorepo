@@ -14,7 +14,8 @@ const multer = require('multer')
 
 // mongoose schemas and models
 const { User } = require('../models/user')
-const { Issue } = require('../models/issue')
+// const { Issue } = require('../models/issue')
+const { Map } = require('../models/map')
 
 /**
  * Sign a JWT token with the user's id and our issuer details
@@ -101,6 +102,26 @@ const userRouter = ({ config }) => {
       message: 'you are logged in via JWT!!!',
       user: req.user.email,
     })
+  })
+
+  // route for HTTP GET requests to a user's JSON data
+  router.get('/me', passportJWT, async (req, res) => {
+    const userId = req.user._id
+    let user = await User.findOne({
+      _id: userId,
+    })
+      .populate('maps', ['title', 'publicId'])
+      .catch((err) => {
+        return res.status(500).json({
+          status: false,
+          message:
+            'Sorry... something bad happened on our end!  Please try again.',
+          error: 'Sorry... something bad happened on our end!  ',
+        })
+      })
+
+    console.log(`USER: ${user}`)
+    res.json(user)
   })
 
   return router

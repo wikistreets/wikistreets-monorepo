@@ -43,6 +43,7 @@ const app = {
       userSignin: '/users/signin',
       userSignup: '/users/signup',
       userSecret: '/users/secret',
+      getUserMe: '/users/me',
       getMapUrl: '/map/data',
       postIssueUrl: '/markers/create',
       getUserUrl: '/markers/user',
@@ -57,6 +58,9 @@ const app = {
       baseUrl:
         'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}',
     },
+  },
+  user: {
+    maps: [],
   },
   map: {
     id: {
@@ -294,7 +298,7 @@ app.infoPanel.open = (content) => {}
 app.infoPanel.close = () => {}
 app.markers.wipeMe = () => {
   // wipe out the me marker
-  console.log('wiping')
+  // console.log('wiping')
   if (app.markers.me) {
     app.markers.me.remove()
     app.markers.me = null
@@ -398,6 +402,17 @@ app.map.fetch = async () => {
     })
 }
 
+app.user.fetch = async () => {
+  // console.log('fetching user data')
+  // fetch data from wikistreets api
+  return app.myFetch(`${app.apis.wikistreets.getUserMe}`).then((data) => {
+    app.user.maps = data.maps
+
+    // console.log(`RESPONSE: ${JSON.stringify(data, null, 2)}`)
+    return data
+  })
+}
+
 async function initMap() {
   // instantiate map
   const coords = [
@@ -463,34 +478,9 @@ async function initMap() {
   // allow infoWindow to close when icon clicked
   $('.info-window .close-icon').click(collapseInfoWindow)
 
-  // update list of maps when user expands map selector dropdown
-  $('.control-map-selector.dropdown').on('show.bs.dropdown', () => {
-    console.log('opening map selector')
-  })
-
-  // update visible map title when user renames it
-  $('.control-map-selector form').submit((e) => {
-    e.preventDefault()
-    const mapTitle = $('.control-map-selector #mapTitle').val()
-    if (!mapTitle) return
-
-    app.map.title = mapTitle
-    $('.map-title').text(mapTitle) // update the visible name
-    $('#map-title-field').val('') // clear the field
-    //$('.control-map-selector').dropdown('hide') // hide the dropdown
-    $('.dropdown .dropdown-toggle').dropdown('toggle')
-
-    // send new title to server, if user logged in and map already has markers
-    if (app.auth.getToken() && app.markers.markers.length) {
-      let formData = new FormData(e.target)
-      app.myFetch(
-        `${app.apis.wikistreets.mapTitleUrl}/${app.map.id.get()}`,
-        'POST',
-        formData
-      )
-    } else {
-      //      console.log('not sending')
-    }
+  // check that user is logged in when they try to expand the map selector
+  $('.control-map-selector').click(() => {
+    app.auth.getToken() ? openMapSelectorPanel() : openSigninPanel()
   })
 
   $('.signin-link').click((e) => {
@@ -818,7 +808,7 @@ const collapseInfoWindow = async (e) => {
 
 const meMarkerButtonClick = () => {
   // open the info window
-  expandInfoWindow().then(async () => {})
+  expandInfoWindow(80, 20).then(async () => {})
 }
 
 const openIssueForm = async (point = false) => {
@@ -1272,6 +1262,76 @@ const openForkPanel = () => {
 
   // open the info window
   expandInfoWindow()
+}
+
+// show the list of this user's maps and option to rename this map
+const openMapSelectorPanel = async () => {
+  // update list of maps when user expands map selector dropdown
+  // console.log('opening map selector')
+
+  // get this user's data from server
+  const data = await app.user.fetch()
+
+  // copy the user map selector html into the infowindow
+  const infoWindowHTML = $('.select-map-container').html()
+  $('.info-window-content').html(infoWindowHTML)
+
+  // extract the maps
+  const maps = data.maps
+
+  // place links to the maps into the map selector
+  maps.map((data, i, arr) => {
+    // remove any previous message that there are no maps
+    $('.no-maps-message').hide()
+
+    // create new link to the map
+    const mapTitle = data.title ? data.title : app.copy.anonymousmaptitle
+    const el = $(
+      `<li class="list-group-item"><a href="/map/${data.publicId}">${mapTitle}</a></li>`
+    )
+    el.appendTo('.info-window-content .more-maps')
+  })
+
+  if (!maps.length) {
+    // create new link
+    const el = $(
+      `<li class="list-group-item no-maps-message">You have no saved maps... yet.</li>`
+    )
+    el.appendTo('.info-window-content .more-maps')
+  }
+
+  // open the info window
+  expandInfoWindow()
+
+  // update visible map title when user renames it
+  $('.info-window-content .rename-map-form').submit((e) => {
+    e.preventDefault()
+    const mapTitle = $('.info-window-content .rename-map-form #mapTitle').val()
+    if (!mapTitle) return
+
+    app.map.title = mapTitle
+    $('.map-title').text(mapTitle) // update the visible name
+    $('.info-window-content .rename-map-form #mapTitle').val('') // clear the field
+
+    // send new title to server, if user logged in and map already has markers
+    if (app.auth.getToken() && app.markers.markers.length) {
+      const apiUrl = `${app.apis.wikistreets.mapTitleUrl}/${app.map.id.get()}`
+      // console.log(`sending data to: ${apiUrl}`)
+      let formData = new FormData(e.target)
+      formData.set('mapTitle', mapTitle) // hacking it.. don't know why this is necessary
+      // console.log('CLIENT MAP TITLE: ' + formData.get('mapTitle'))
+      app.myFetch(
+        `${app.apis.wikistreets.mapTitleUrl}/${app.map.id.get()}`,
+        'POST',
+        formData
+      )
+    } else {
+      console.log('not sending to server')
+    }
+
+    // close the infowindow
+    collapseInfoWindow()
+  })
 }
 
 // enable bootstrap tooltips
