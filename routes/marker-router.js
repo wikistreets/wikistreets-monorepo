@@ -211,6 +211,7 @@ const markerRouter = ({ config }) => {
           { $addToSet: { maps: mapId } },
           function (e) {
             const err = "Error saving map to user's list of maps"
+            console.log(`ERROR: ${err} - ${e}`)
             return res.status(400).json({
               status: false,
               message: err,
