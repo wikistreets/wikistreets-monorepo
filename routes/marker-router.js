@@ -17,6 +17,7 @@ const { User } = require('../models/user')
 // image editing service
 const { ImageService } = require('../services/ImageService')
 const handleImages = require('../middlewares/handle-images.js') // our own image handler
+const user = require('../models/user')
 
 const markerRouter = ({ config }) => {
   // create an express router
@@ -143,18 +144,6 @@ const markerRouter = ({ config }) => {
         comments: req.body.comments,
       }
 
-      // // add road or sidewalk issues, if present
-      // if (req.body.sidewalk_issues) {
-      //   data.sidewalkIssues = Array.isArray(req.body.sidewalk_issues)
-      //     ? req.body.sidewalk_issues
-      //     : [req.body.sidewalk_issues]
-      // }
-      // if (req.body.road_issues) {
-      //   data.roadIssues = Array.isArray(req.body.road_issues)
-      //     ? req.body.road_issues
-      //     : [req.body.road_issues]
-      // }
-
       // reject posts with no map
       if (!mapId) {
         const err = 'No map specified.'
@@ -165,12 +154,7 @@ const markerRouter = ({ config }) => {
         })
       }
       // reject posts with no useful data
-      else if (
-        !data.photos.length &&
-        !data.comments
-        // !data.sidewalkIssues &&
-        // !data.roadIssues
-      ) {
+      else if (!data.photos.length && !data.comments) {
         const err = 'You submitted an empty post.... please try again.'
         return res.status(400).json({
           status: false,
@@ -188,23 +172,25 @@ const markerRouter = ({ config }) => {
         })
       }
 
+      // if we've reached here, the marker is valid...
       try {
         // create an Issue object
         const issue = new Issue(data)
 
         console.log(`ISSUE: ${JSON.stringify(issue, null, 2)}`)
 
-        // set up changes we want to make
+        // set up changes we want to make to the overall map
         let updates = {
+          // save the most recently viewed center point of the map
           centerPoint: {
             lat: req.body.lat,
             lng: req.body.lng,
           },
-          $push: { issues: issue },
+          $push: { issues: issue }, // add the new issue to the map
         }
         if (mapTitle) updates.mapTitle = mapTitle // add map title if present
 
-        // check whether the map exists already
+        // save the updated map, if existent, or new map if not
         const map = await Map.findOneAndUpdate(
           { publicId: mapId },
           updates,
@@ -218,13 +204,29 @@ const markerRouter = ({ config }) => {
         // tack on the current user to the issue
         issue.user = req.user
 
+        // side-effect...
+        // save this map to the user's list of maps
+        User.update(
+          { _id: req.user._id },
+          { $addToSet: { maps: mapId } },
+          function (err) {
+            const err = "Error saving map to user's list of maps"
+            return res.status(400).json({
+              status: false,
+              message: err,
+              err: err,
+            })
+          }
+        )
+
+        // return the response to client
         res.json({
           status: true,
           message: 'success',
           data: issue,
         })
       } catch (err) {
-        // try new Issue
+        // failed to save the new issue...
         console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
         // delete any uploaded files if the entire route fails for some reason
         if (req.files && req.files.length > 0) {

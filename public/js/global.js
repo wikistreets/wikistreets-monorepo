@@ -19,6 +19,7 @@ const app = {
     userprofile: 'Details about this user',
     forkmapinstructions: 'Click the button to fork this map',
     forkmaperror: 'Sign in the fork this map',
+    anonymousmaptitle: 'anonymous map',
   },
   mode: 'default', // default, issuedetails, issuelocate
   browserGeolocation: {
@@ -292,6 +293,7 @@ app.browserGeolocation.update = async () => {
 app.infoPanel.open = (content) => {}
 app.infoPanel.close = () => {}
 app.markers.wipeMe = () => {
+  // wipe out the me marker
   console.log('wiping')
   if (app.markers.me) {
     app.markers.me.remove()
@@ -365,14 +367,15 @@ app.markers.place = (data, cluster) => {
 }
 
 app.markers.activate = (marker = app.markers.current) => {
+  // make one of the markers appear 'active'
   app.markers.current = marker
   marker.setIcon(app.markers.icons[marker.issueType].active)
   marker.setZIndexOffset(app.markers.zIndex.active)
 }
 
 app.markers.deactivate = (marker = app.markers.current) => {
-  // console.log('deactivating')
   // return selected marker to default state
+  // console.log('deactivating')
   if (marker) {
     // de-highlight the current marker
     marker.setZIndexOffset(app.markers.zIndex.default)
@@ -401,6 +404,7 @@ async function initMap() {
     app.browserGeolocation.coords.lat,
     app.browserGeolocation.coords.lng,
   ]
+  // set up the leaflet.js map view
   app.map.element = new L.map(app.map.htmlElementId, {
     zoomControl: false,
     doubleClickZoom: false,
@@ -434,8 +438,8 @@ async function initMap() {
     app.map.title = data.title
     $('.map-title').text(app.map.title)
   } else {
-    // no title for this map
-    $('.map-title').text('anonymous map')
+    // no title for this map... use a generic title
+    $('.map-title').text(app.copy.anonymousmaptitle)
   }
 
   // create marker cluster

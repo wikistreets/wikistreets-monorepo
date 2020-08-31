@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 const bcrypt = require('bcryptjs')
+const { mapSchema } = require('./map')
 
 // a user
 const userSchema = new Schema({
@@ -18,6 +19,7 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  maps: [mapSchema],
   date: { type: Date, default: Date.now },
 })
 
