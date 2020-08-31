@@ -1336,7 +1336,10 @@ const openMapSelectorPanel = async () => {
 
 // enable bootstrap tooltips
 $(function () {
-  $('[data-toggle="tooltip"]').tooltip({
-    trigger: 'hover',
-  })
+  $('[data-toggle="tooltip"]').tooltip()
+})
+
+// hide tooltips on mobile after clicked
+$('[rel="tooltip"]').on('click', function () {
+  $(this).tooltip('hide')
 })
