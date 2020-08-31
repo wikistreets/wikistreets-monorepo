@@ -1340,6 +1340,6 @@ $(function () {
 })
 
 // hide tooltips on mobile after clicked
-$('[rel="tooltip"]').on('click', function () {
+$('[data-toggle="tooltip"]').on('click', function () {
   $(this).tooltip('hide')
 })
