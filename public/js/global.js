@@ -1340,6 +1340,8 @@ $(function () {
 })
 
 // hide tooltips on mobile after clicked
-$('[data-toggle="tooltip"]').on('click', function () {
-  $(this).tooltip('hide')
+$('[data-toggle="tooltip"], .map-control').on('click', function () {
+  $(this).tooltip('hide') // hide any tooltips on this element
+  $('.tooltip').hide() // trying another method
+  $('.tooltip').tooltip('hide') // trying another method
 })
