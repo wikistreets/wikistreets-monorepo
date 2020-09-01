@@ -466,7 +466,7 @@ async function initMap() {
     app.map.numForks = data.forks ? data.forks.length : 0
     app.map.forkedFrom = data.forkedFrom ? data.forkedFrom : null
   } catch (e) {
-    console.log('No map metadata')
+    // console.log('No map metadata')
   }
 
   // set the map title, if any
