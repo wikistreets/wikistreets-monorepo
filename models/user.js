@@ -19,6 +19,7 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  numPosts: { type: Number, default: 0 },
   maps: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
   date: { type: Date, default: Date.now },
 })

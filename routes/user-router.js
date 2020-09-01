@@ -124,6 +124,29 @@ const userRouter = ({ config }) => {
     res.json(user)
   })
 
+  // route for HTTP GET requests to a user's JSON data
+  router.get('/:userId', async (req, res) => {
+    const userId = req.params.userId
+    let user = await User.findOne(
+      {
+        _id: userId,
+      },
+      { maps: true, numPosts: true, handle: true }
+    )
+      .populate('maps', ['title', 'publicId'])
+      .catch((err) => {
+        return res.status(500).json({
+          status: false,
+          message:
+            'Sorry... something bad happened on our end!  Please try again.',
+          error: 'Sorry... something bad happened on our end!  ',
+        })
+      })
+
+    console.log(`USER: ${user}`)
+    res.json(user)
+  })
+
   return router
 }
 

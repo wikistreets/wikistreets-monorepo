@@ -101,6 +101,7 @@ const mapRouter = ({ config }) => {
       newMap.isNew = true // flag it as new
       newMap.publicId = uuidv4() // generate a new random-ish public id for this map
       newMap.forks = [] // wipe out list of forks
+      newMap.forkedFrom = map._id // track from whence this fork came
       const fork = new Map(newMap)
 
       // save it
@@ -138,6 +139,7 @@ const mapRouter = ({ config }) => {
       publicId: mapId,
     })
       .populate('issues.user')
+      .populate('forkedFrom', ['title', 'publicId'])
       .catch((err) => {
         return res.status(500).json({
           status: false,

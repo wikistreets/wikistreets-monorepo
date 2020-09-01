@@ -207,12 +207,20 @@ const markerRouter = ({ config }) => {
         // update this map's list of contributors
         map.contributors.pull(req.user._id) // first remove from list
         map.contributors.push(req.user) // re-append to list
-        map.save() // save changes
+        map.save() // save changes to map
 
         // add this map to the user's list of maps
         req.user.maps.pull(map._id) // first remove from list
         req.user.maps.push(map) // re-append to list
-        req.user.save() // save changes
+
+        // increment the number of posts this user has created
+        req.user = await User.findOneAndUpdate(
+          { _id: req.user._id },
+          { $inc: { numPosts: 1 } },
+          { new: true }
+        )
+
+        req.user.save() // save changes to user
 
         // return the response to client
         res.json({

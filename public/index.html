@@ -370,11 +370,15 @@
       <div class="row">
         <header class="col-xs-12 col-md-4">
           <h2 class="handle"></h2>
-          <p><span class="num-posts"></span> posts</p>
+          <ul class="list-group">
+            <li class="list-group-item"><span class="num-posts">0</span> posts</li>
+            <li class="list-group-item"><span class="num-maps">0</span> maps</li>
+          </ul>
         </header>
         <article class="col-12 col-md-8">
-          <h2>Recent posts</h2>
-          <ul class="posts"></ul>
+          <h2><span class="handle"></span> maps</h2>
+          <ul class="more-maps list-group">
+          </ul>
         </article>
       </div>
     </div>
@@ -409,6 +413,9 @@
         <header class="map-details-container col-xs-12 col-md-4">
           <h2 class="map-title">Map Name</h2>
           (<a href="#" class="rename-map-link">Rename this map</a>)
+          <p class="forked-from-container hide">
+            Forked from <span class="forked-from-link"></span>
+          </p>
           <ul class="list-group">
             <li class="list-group-item"><span class="num-markers">0</span> markers</li>
             <li class="list-group-item"><span class="num-contributors">0</span> contributors</li>

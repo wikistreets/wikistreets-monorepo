@@ -1,3 +1,5 @@
+// const { map } = require('lodash')
+
 // app settings
 const app = {
   auth: {
@@ -50,7 +52,7 @@ const app = {
       getUserMe: '/users/me',
       getMapUrl: '/map/data',
       postIssueUrl: '/markers/create',
-      getUserUrl: '/markers/user',
+      getUserUrl: '/users',
       mapTitleUrl: '/map/title',
       forkMapUrl: '/map/fork',
       staticMapUrl: '/map',
@@ -461,6 +463,7 @@ async function initMap() {
   app.map.dateModified = formatDate(data.date)
   app.map.numContributors = data.contributors ? data.contributors.length : 1
   app.map.numForks = data.forks ? data.forks.length : 0
+  app.map.forkedFrom = data.forkedFrom ? data.forkedFrom : null
 
   // set the map title, if any
   if (data.title) {
@@ -690,16 +693,6 @@ const showInfoWindow = (marker, data) => {
   // give attribution to author
   const attribution = `Posted by <a class="user-link" user-id="${data.user._id}" href="#">${data.user.handle}</a> on ${date}`
 
-  // handle click on username event
-  $('.info-window .instructions .user-link').click((e) => {
-    e.preventDefault()
-
-    // get target userid
-    const userId = $(e.target).attr('user-id')
-
-    openUserProfile(data.user.handle, userId)
-  })
-
   //loop through each photo in data and prepare an img tag for it
   let imgString = ''
   data.photos.map((val, i, arr) => {
@@ -726,20 +719,6 @@ const showInfoWindow = (marker, data) => {
     </div>
     <!-- <ul class="list-group list-group-flush"> -->
     `
-
-  // contentString += !data.sidewalkIssues.length
-  //   ? ''
-  //   : `
-  //       <li class="list-group-item">Sidewalk: ${data.sidewalkIssues.join(
-  //         ', '
-  //       )}</li>
-  //   `
-  // contentString += !data.roadIssues.length
-  //   ? ''
-  //   : `
-  //       <li class="list-group-item">Road: ${data.roadIssues.join(', ')}</li>
-  //   `
-
   contentString += `
     <!-- </ul> -->
 </div>
@@ -753,6 +732,16 @@ const showInfoWindow = (marker, data) => {
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
     app.map.element.panTo(marker.getLatLng())
+
+    // handle click on username event
+    $('.info-window .user-link').click((e) => {
+      e.preventDefault()
+
+      // get target userid
+      const userId = $(e.target).attr('user-id')
+
+      openUserProfile(data.user.handle, userId)
+    })
   })
 } // showInfoWindow
 
@@ -1225,23 +1214,44 @@ const openUserProfile = async (handle, userId) => {
   app
     .myFetch(`${app.apis.wikistreets.getUserUrl}/${userId}`)
     .then((data) => {
-      const numIssues = data.length
+      const numIssues = data.numPosts
 
       // copy the user profile html into the infowindow
       const infoWindowHTML = $('.user-profile-container').html()
       $('.info-window-content').html(infoWindowHTML)
+
+      // populate the details
       $('.info-window-content .handle').text(handle)
       $('.info-window-content .num-posts').text(numIssues)
+      $('.info-window-content .num-maps').text(data.maps.length)
 
-      // fill out the user profile's list of markers
-      data.map((issue, i) => {
-        const date = formatDate(issue.date)
-        // give attribution to author
-        $(`<li>${issue.address} <small>posted ${date}</small></li>`).appendTo(
-          '.info-window-content .posts'
+      // fill out the user profile's list of maps
+      // extract the maps
+      const maps = data.maps
+      maps.reverse() // reverse order with most recent first
+
+      // place links to the maps into the map selector
+      maps.map((data, i, arr) => {
+        // remove any previous message that there are no maps
+        $('.no-maps-message').hide()
+
+        // create new link to the map
+        const mapTitle = data.title ? data.title : app.copy.anonymousmaptitle
+        const el = $(
+          `<li class="list-group-item"><a href="/map/${data.publicId}">${mapTitle}</a></li>`
         )
+        el.appendTo('.info-window-content .more-maps')
       })
 
+      if (!maps.length) {
+        // create new link
+        const el = $(
+          `<li class="list-group-item no-maps-message">${handle} has no saved maps... yet.</li>`
+        )
+        el.appendTo('.info-window-content .more-maps')
+      }
+
+      // console.log('expanding')
       // open the info window
       expandInfoWindow(50, 50, app.copy.userprofile)
     })
@@ -1303,6 +1313,16 @@ const openMapSelectorPanel = async () => {
   // populate this map's details
   const mapTitle = app.map.title ? app.map.title : app.copy.anonymousmaptitle
   $('.info-window-content .map-title').html(mapTitle)
+  if (app.map.forkedFrom) {
+    // show where this map was forked from, if relevant
+    const forkedFromTitle = app.map.forkedFrom.title
+      ? app.map.forkedFrom.title
+      : app.copy.anonymousmaptitle
+    $('.info-window-content .forked-from-container').show()
+    $(
+      `<a href="/map/${app.map.forkedFrom.publicId}">${forkedFromTitle}</a>`
+    ).appendTo('.info-window-content .forked-from-link')
+  }
   $('.info-window-content .num-markers').html(app.markers.markers.length)
   $('.info-window-content .num-contributors').html(app.map.numContributors)
   $('.info-window-content .num-forks').html(app.map.numForks)
