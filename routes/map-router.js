@@ -100,6 +100,7 @@ const mapRouter = ({ config }) => {
       delete newMap._id // remove old id
       newMap.isNew = true // flag it as new
       newMap.publicId = uuidv4() // generate a new random-ish public id for this map
+      newMap.forks = [] // wipe out list of forks
       const fork = new Map(newMap)
 
       // save it
@@ -119,6 +120,14 @@ const mapRouter = ({ config }) => {
           return res.json(map)
         }
       })
+
+      // add this fork to the user's list of maps
+      req.user.maps.push(fork) // append to list
+      req.user.save() // save changes
+
+      // update original map's list of forks
+      map.forks.push(fork) // re-append to list
+      map.save() // save changes
     })
   })
 

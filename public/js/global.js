@@ -20,7 +20,10 @@ const app = {
     userprofile: 'Details about this user',
     forkmapinstructions: 'Click the button to fork this map',
     forkmaperror: 'Sign in the fork this map',
+    selectmapinstructions: 'Manage maps',
     anonymousmaptitle: 'anonymous map',
+    searchaddressinstructions: 'Find address',
+    geopositionfailure: 'Geoposition currently unavailable',
   },
   mode: 'default', // default, issuedetails, issuelocate
   browserGeolocation: {
@@ -85,6 +88,9 @@ const app = {
       default: 14,
       issuelocate: 16,
     },
+    numContributors: 0,
+    numForks: 0,
+    dateModified: '',
   },
   controls: {
     newIssue: {
@@ -396,6 +402,7 @@ app.map.fetch = async () => {
   return app
     .myFetch(`${app.apis.wikistreets.getMapUrl}/${app.map.id.get()}`)
     .then((data) => {
+      // get markers
       app.issues.issues = data.issues
 
       //      console.log(`RESPONSE: ${data}`)
@@ -449,6 +456,11 @@ async function initMap() {
     //console.log('init map panning')
     app.map.element.panTo(data.centerPoint)
   }
+
+  // scrape map metadata
+  app.map.dateModified = formatDate(data.date)
+  app.map.numContributors = data.contributors ? data.contributors.length : 1
+  app.map.numForks = data.forks ? data.forks.length : 0
 
   // set the map title, if any
   if (data.title) {
@@ -1037,7 +1049,11 @@ const openSearchAddressForm = () => {
   })
 
   // open the info window
-  expandInfoWindow(50, 50, 'Find address').then(async () => {})
+  expandInfoWindow(
+    50,
+    50,
+    app.copy.searchaddressinstructions
+  ).then(async () => {})
 }
 
 const openGeopositionUnavailableForm = () => {
@@ -1058,11 +1074,7 @@ const openGeopositionUnavailableForm = () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // open the info window
-  expandInfoWindow(
-    50,
-    50,
-    'Geoposition currently unavailable'
-  ).then(async () => {})
+  expandInfoWindow(50, 50, app.copy.geopositionfailure).then(async () => {})
 }
 
 const panToPersonalLocation = () => {
@@ -1255,6 +1267,13 @@ const openForkPanel = () => {
   const infoWindowHTML = $('.fork-map-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
+  // populate this map's details
+  const mapTitle = app.map.title ? app.map.title : app.copy.anonymousmaptitle
+  $('.info-window-content .map-title').html(mapTitle)
+  $('.info-window-content .num-markers').html(app.markers.markers.length)
+  $('.info-window-content .num-contributors').html(app.map.numContributors)
+  $('.info-window-content .num-forks').html(app.map.numForks)
+
   // activate fork button
   $('.info-window .fork-button').click(async (e) => {
     e.preventDefault()
@@ -1280,6 +1299,23 @@ const openMapSelectorPanel = async () => {
   // copy the user map selector html into the infowindow
   const infoWindowHTML = $('.select-map-container').html()
   $('.info-window-content').html(infoWindowHTML)
+
+  // populate this map's details
+  const mapTitle = app.map.title ? app.map.title : app.copy.anonymousmaptitle
+  $('.info-window-content .map-title').html(mapTitle)
+  $('.info-window-content .num-markers').html(app.markers.markers.length)
+  $('.info-window-content .num-contributors').html(app.map.numContributors)
+  $('.info-window-content .num-forks').html(app.map.numForks)
+  // enaable rename map link
+  $('.info-window-content .rename-map-link').click((e) => {
+    // show the rename map form
+    $('.info-window-content .map-details-container').hide()
+    $('.info-window-content .rename-map-container').show()
+  })
+
+  // populate this user's maps content
+  // show the user's name
+  $('.user-handle').html(`${data.handle}'s`)
 
   // extract the maps
   const maps = data.maps
@@ -1308,6 +1344,7 @@ const openMapSelectorPanel = async () => {
   // open the info window
   expandInfoWindow(50, 50, app.copy.selectmapinstructions)
 
+  // populate rename map content
   // update visible map title when user renames it
   $('.info-window-content .rename-map-form').submit((e) => {
     e.preventDefault()

@@ -384,11 +384,11 @@
     <div class="fork-map-container hide">
       <div class="row">
         <header class="col-xs-12 col-md-4">
-          <h2>Fork this map</h2>
-          <ul>
-            <li><span class="num-forks">0</span> forks</li>
-            <li><span class="num-markers">0</span> markers</li>
-            <li><span class="num-contributors">0</span> contributors</li>
+          <h2 class="map-title">Map Name</h2>
+          <ul class="list-group">
+            <li class="list-group-item"><span class="num-markers">0</span> markers</li>
+            <li class="list-group-item"><span class="num-contributors">0</span> contributors</li>
+            <li class="list-group-item"><span class="num-forks">0</span> forks</li>
           </ul>
           <button class="btn btn-primary fork-button">Fork it</button>
         </header>
@@ -406,7 +406,16 @@
     <!-- select map -->
     <div class="select-map-container hide">
       <div class="row">
-        <header class="col-xs-12 col-md-4">
+        <header class="map-details-container col-xs-12 col-md-4">
+          <h2 class="map-title">Map Name</h2>
+          (<a href="#" class="rename-map-link">Rename this map</a>)
+          <ul class="list-group">
+            <li class="list-group-item"><span class="num-markers">0</span> markers</li>
+            <li class="list-group-item"><span class="num-contributors">0</span> contributors</li>
+            <li class="list-group-item"><span class="num-forks">0</span> forks</li>
+          </ul>
+        </header>
+        <header class="rename-map-container hide col-xs-12 col-md-4">
           <h2>Rename this map</h2>
           <form class="rename-map-form"
             method="POST"
@@ -414,7 +423,7 @@
             enctype="multipart/form-data"
           >
             <div class="form-group">
-              <label for="mapTitle">Rename this map:</label>
+              <label for="mapTitle">New name:</label>
               <input
                 class="form-control"
                 type="text"
@@ -427,9 +436,9 @@
           </form>
         </header>
         <article class="col-12 col-md-8">
-          <h2>More maps</h2>
+          <h2><span class="user-handle">My</span> maps</h2>
+          <a class="btn btn-primary" href="/">Create a new map</a>
           <ul class="list-group">
-            <li class="list-group-item list-group-item-primary"><a href="/">Create a new map</a></li>
             <div class="more-maps">
             </div>
           </ul>

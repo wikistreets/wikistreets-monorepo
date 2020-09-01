@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 const { issueSchema } = require('./issue')
+const { userSchema } = require('./user')
 
 const coordinateSchema = new Schema({
   lat: Number,
@@ -21,6 +22,8 @@ const mapSchema = new Schema({
   centerPoint: coordinateSchema,
   description: String,
   issues: [issueSchema],
+  contributors: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  forks: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
   date: { type: Date, default: Date.now },
 })
 
