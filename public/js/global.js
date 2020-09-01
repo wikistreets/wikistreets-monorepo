@@ -460,10 +460,14 @@ async function initMap() {
   }
 
   // scrape map metadata
-  app.map.dateModified = formatDate(data.date)
-  app.map.numContributors = data.contributors ? data.contributors.length : 1
-  app.map.numForks = data.forks ? data.forks.length : 0
-  app.map.forkedFrom = data.forkedFrom ? data.forkedFrom : null
+  try {
+    app.map.dateModified = formatDate(data.date)
+    app.map.numContributors = data.contributors ? data.contributors.length : 1
+    app.map.numForks = data.forks ? data.forks.length : 0
+    app.map.forkedFrom = data.forkedFrom ? data.forkedFrom : null
+  } catch (e) {
+    console.log('No map metadata')
+  }
 
   // set the map title, if any
   if (data.title) {
