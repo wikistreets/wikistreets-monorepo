@@ -205,21 +205,27 @@ const markerRouter = ({ config }) => {
         issue.user = req.user
 
         // side-effect...
-        // save this map to the user's list of maps
+        // first remove this map from the list so we can then save it in last position later
+        req.user.maps.pull(map._id)
+        // now add back in
+        req.user.maps.push(map)
+        req.user.save()
 
-        User.update(
-          { _id: req.user._id },
-          { $addToSet: { maps: map } },
-          function (e) {
-            const err = "Error saving map to user's list of maps"
-            console.log(`ERROR: ${err} - ${e}`)
-            return res.status(400).json({
-              status: false,
-              message: err,
-              err: err,
-            })
-          }
-        )
+        // User.update(
+        //   { _id: req.user._id },
+        //   { $addToSet: { maps: map } },
+        //   function (e) {
+        //     const err = "Error saving map to user's list of maps"
+        //     console.log(`ERROR: ${err} - ${e}`)
+        //     console.log(`USER ID: ${req.user._id}`)
+        //     console.log(`Map IDS: ${req.body.mapId} - ${map._id}`)
+        //     return res.status(400).json({
+        //       status: false,
+        //       message: err,
+        //       err: err,
+        //     })
+        //   }
+        // )
 
         // return the response to client
         res.json({

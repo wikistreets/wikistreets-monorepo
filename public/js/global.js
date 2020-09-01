@@ -8,6 +8,7 @@ const app = {
   copy: {
     aboutus: 'Maps for everyone',
     issuelocatestart: 'Drag the person to mark the spot',
+    issuecreate: 'Create a post',
     searchaddress: 'Enter an address',
     signin: 'Log in to make maps',
     signinerror:
@@ -407,6 +408,7 @@ app.user.fetch = async () => {
   // fetch data from wikistreets api
   return app.myFetch(`${app.apis.wikistreets.getUserMe}`).then((data) => {
     app.user.maps = data.maps
+    app.user.maps.reverse() // put most recent map first
 
     // console.log(`RESPONSE: ${JSON.stringify(data, null, 2)}`)
     return data
@@ -675,7 +677,6 @@ const showInfoWindow = (marker, data) => {
   const date = formatDate(data.date)
   // give attribution to author
   const attribution = `Posted by <a class="user-link" user-id="${data.user._id}" href="#">${data.user.handle}</a> on ${date}`
-  $('.info-window .instructions').html(attribution)
 
   // handle click on username event
   $('.info-window .instructions .user-link').click((e) => {
@@ -736,7 +737,7 @@ const showInfoWindow = (marker, data) => {
   $('.info-window-content').html(contentString)
 
   // console.log('opening infowindow');
-  expandInfoWindow(70, 30).then(() => {
+  expandInfoWindow(70, 30, attribution).then(() => {
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
     app.map.element.panTo(marker.getLatLng())
@@ -753,7 +754,14 @@ const hideAllTooltips = () => {
   $('.tooltip').tooltip('hide') // trying another method
 }
 
-const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
+const expandInfoWindow = async (
+  infoWindowHeight = 50,
+  mapHeight = 50,
+  title = 'Welcome!'
+) => {
+  // show instructions
+  $('.info-window .instructions').html(title)
+
   $('.info-window').show()
   $('.info-window')
     .stop()
@@ -823,7 +831,7 @@ const collapseInfoWindow = async (e) => {
 
 const meMarkerButtonClick = () => {
   // open the info window
-  expandInfoWindow(70, 30).then(async () => {})
+  expandInfoWindow(70, 30, app.copy.issuecreate).then(async () => {})
 }
 
 const openIssueForm = async (point = false) => {
@@ -908,6 +916,8 @@ const openIssueForm = async (point = false) => {
     // console.log(street);
     app.browserGeolocation.street = street
     $('.street-address').html(street)
+    // update address in form
+    $('.address').val(street)
 
     // update hidden from elements
     $('.lat').val(app.browserGeolocation.coords.lat)
@@ -924,9 +934,6 @@ const openIssueForm = async (point = false) => {
   // copy the issue form into the infowindow
   const infoWindowHTML = $('.issue-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
-
-  // update address in form
-  $('.address').val(street)
 
   // deal with form submissions
   $('.info-window-content form.issue-form').on('submit', async (e) => {
@@ -1030,7 +1037,7 @@ const openSearchAddressForm = () => {
   })
 
   // open the info window
-  expandInfoWindow(40, 60).then(async () => {})
+  expandInfoWindow(50, 50, 'Find address').then(async () => {})
 }
 
 const openGeopositionUnavailableForm = () => {
@@ -1046,15 +1053,16 @@ const openGeopositionUnavailableForm = () => {
     app.markers.wipeMe()
   }
 
-  // show instructions
-  $('.info-window .instructions').html('Geoposition currently unavailable')
-
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.geoposition-error-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
   // open the info window
-  expandInfoWindow().then(async () => {})
+  expandInfoWindow(
+    50,
+    50,
+    'Geoposition currently unavailable'
+  ).then(async () => {})
 }
 
 const panToPersonalLocation = () => {
@@ -1110,9 +1118,6 @@ const formatDate = (date) => {
 
 // authorize the current user
 const openSigninPanel = async () => {
-  // show instructions
-  $('.info-window .instructions').html(app.copy.signin)
-
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.signin-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -1151,14 +1156,11 @@ const openSigninPanel = async () => {
   })
 
   // open the info window
-  expandInfoWindow().then(async () => {})
+  expandInfoWindow(50, 50, app.copy.signin).then(async () => {})
 }
 
 // create a new user account
 const openSignupPanel = async () => {
-  // show instructions
-  $('.info-window .instructions').html(app.copy.signup)
-
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.signup-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -1192,20 +1194,17 @@ const openSignupPanel = async () => {
   })
 
   // open the info window
-  expandInfoWindow().then(async () => {})
+  expandInfoWindow(50, 50, app.copy.signup).then(async () => {})
 }
 
 // create a new user account
 const openAboutUsForm = async () => {
-  // show instructions
-  $('.info-window .instructions').html(app.copy.aboutus)
-
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.about-us-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
   // open the info window
-  expandInfoWindow().then()
+  expandInfoWindow(50, 50, app.copy.aboutus).then()
 }
 
 // show a particular user's profile
@@ -1215,9 +1214,6 @@ const openUserProfile = async (handle, userId) => {
     .myFetch(`${app.apis.wikistreets.getUserUrl}/${userId}`)
     .then((data) => {
       const numIssues = data.length
-
-      // show instructions
-      $('.info-window .instructions').html(app.copy.userprofile)
 
       // copy the user profile html into the infowindow
       const infoWindowHTML = $('.user-profile-container').html()
@@ -1235,7 +1231,7 @@ const openUserProfile = async (handle, userId) => {
       })
 
       // open the info window
-      expandInfoWindow()
+      expandInfoWindow(50, 50, app.copy.userprofile)
     })
     .catch((err) => {
       console.error(JSON.stringify(err, null, 2))
@@ -1244,23 +1240,17 @@ const openUserProfile = async (handle, userId) => {
 
 // show a particular user's profile
 const openErrorPanel = (message) => {
-  // show instructions
-  $('.info-window .instructions').html(app.copy.createissueerror)
-
   // copy the user profile html into the infowindow
   const infoWindowHTML = $('.error-container').html()
   $('.info-window-content').html(infoWindowHTML)
   $('.error-message').html(message)
 
   // open the info window
-  expandInfoWindow()
+  expandInfoWindow(50, 50, app.copy.createissueerror)
 }
 
 // show a particular user's profile
 const openForkPanel = () => {
-  // show instructions
-  $('.info-window .instructions').html(app.copy.forkmapinstructions)
-
   // copy the user profile html into the infowindow
   const infoWindowHTML = $('.fork-map-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -1276,7 +1266,7 @@ const openForkPanel = () => {
   })
 
   // open the info window
-  expandInfoWindow()
+  expandInfoWindow(50, 50, app.copy.forkmapinstructions)
 }
 
 // show the list of this user's maps and option to rename this map
@@ -1316,7 +1306,7 @@ const openMapSelectorPanel = async () => {
   }
 
   // open the info window
-  expandInfoWindow()
+  expandInfoWindow(50, 50, app.copy.selectmapinstructions)
 
   // update visible map title when user renames it
   $('.info-window-content .rename-map-form').submit((e) => {
