@@ -19,7 +19,7 @@ const app = {
     signuperror:
       'An account exists with that email address.  Please sign in or create a new account',
     createissueerror: 'Something unusual happened!',
-    userprofile: 'Details about this user',
+    userprofile: 'About this user',
     forkmapinstructions: 'Click the button to fork this map',
     forkmaperror: 'Sign in the fork this map',
     selectmapinstructions: 'Manage maps',
