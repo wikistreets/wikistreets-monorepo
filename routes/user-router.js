@@ -66,6 +66,7 @@ const userRouter = ({ config }) => {
 
     // create a new user
     const user = new User({ email, handle, password })
+    user.password = await user.encryptPassword(user.password) // encrypt the password
     // console.log(`password during signup pre-pre saving: ${user.password}`)
     await user
       .save()

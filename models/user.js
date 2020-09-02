@@ -25,20 +25,34 @@ const userSchema = new Schema({
 })
 
 // passport middleware function is run before saving a new user
-userSchema.pre('save', async function (next) {
+// userSchema.pre('save', async function (next) {
+//   try {
+//     // generate a salt with 10 rounds
+//     const salt = await bcrypt.genSalt(10)
+
+//     // hash the password using this salt
+//     const passwordHash = await bcrypt.hash(this.password, salt)
+//     // console.log(`password during signup pre-save: ${this.password} => ${passwordHash}`)
+//     this.password = passwordHash // replace original with hashed version
+//     next()
+//   } catch (err) {
+//     next(err)
+//   }
+// })
+
+// a method to encrypt the password
+userSchema.methods.encryptPassword = async function (originalPassword) {
   try {
     // generate a salt with 10 rounds
     const salt = await bcrypt.genSalt(10)
 
     // hash the password using this salt
-    const passwordHash = await bcrypt.hash(this.password, salt)
-    // console.log(`password during signup pre-save: ${this.password} => ${passwordHash}`)
-    this.password = passwordHash // replace original with hashed version
-    next()
+    const passwordHash = await bcrypt.hash(originalPassword, salt)
+    return passwordHash
   } catch (err) {
-    next(err)
+    throw new Error(err)
   }
-})
+}
 
 // a method to check the password
 userSchema.methods.isValidPassword = async function (newPassword) {
