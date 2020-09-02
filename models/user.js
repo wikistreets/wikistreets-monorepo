@@ -32,6 +32,7 @@ userSchema.pre('save', async function (next) {
 
     // hash the password using this salt
     const passwordHash = await bcrypt.hash(this.password, salt)
+    // console.log(`password during signup pre-save: ${this.password} => ${passwordHash}`)
     this.password = passwordHash // replace original with hashed version
     next()
   } catch (err) {

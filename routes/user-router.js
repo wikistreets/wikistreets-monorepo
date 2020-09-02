@@ -66,6 +66,7 @@ const userRouter = ({ config }) => {
 
     // create a new user
     const user = new User({ email, handle, password })
+    // console.log(`password during signup pre-pre saving: ${user.password}`)
     await user
       .save()
       .catch((err) =>
@@ -76,7 +77,7 @@ const userRouter = ({ config }) => {
 
     // respond with new signed token
     const token = signJwtToken(user, config.jwt)
-
+    // console.log(`sending back token: ${token}`)
     res.json({
       token,
       handle: user.handle,
@@ -120,7 +121,7 @@ const userRouter = ({ config }) => {
         })
       })
 
-    console.log(`USER: ${user}`)
+    // console.log(`USER: ${user}`)
     res.json(user)
   })
 
@@ -143,7 +144,7 @@ const userRouter = ({ config }) => {
         })
       })
 
-    console.log(`USER: ${user}`)
+    // console.log(`USER: ${user}`)
     res.json(user)
   })
 

@@ -212,6 +212,7 @@ const markerRouter = ({ config }) => {
         // add this map to the user's list of maps
         req.user.maps.pull(map._id) // first remove from list
         req.user.maps.push(map) // re-append to list
+        req.user.save()
 
         // increment the number of posts this user has created
         req.user = await User.findOneAndUpdate(
