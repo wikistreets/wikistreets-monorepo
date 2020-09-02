@@ -994,13 +994,13 @@ const openIssueForm = async (point = false) => {
         app.markers.wipeMe()
       })
       .catch((err) => {
-        // console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
         // boot user out of login
         // app.auth.setToken(''); // wipe out JWT token
         // openSigninPanel()
         // open error panel
         openErrorPanel(
-          'Hmmm... something went wrong.  Please try posting again with up to 3 images.'
+          'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
         )
       })
   })
