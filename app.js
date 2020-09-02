@@ -19,9 +19,9 @@ const server = ({ config }) => {
 
   // load general-purpose middleware
   app.use(cors()) // allow cross-origin resource sharing
-
-  app.use(bodyParser.json()) // decode JSON-formatted incoming POST data
-  app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' })) // decode url-encoded incoming POST data
+  const maxFilesize = `${config.markers.maxImageFileSize}mb` // e.g. '50mb'
+  app.use(bodyParser.json({ limit: maxFilesize })) // decode JSON-formatted incoming POST data
+  app.use(bodyParser.urlencoded({ extended: true, limit: maxFilesize })) // decode url-encoded incoming POST data
 
   // log all incoming HTTP(S) requests, except when testing
   if (config.mode != 'test') {
