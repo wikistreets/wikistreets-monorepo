@@ -835,6 +835,9 @@ const collapseInfoWindow = async (e) => {
 }
 
 const meMarkerButtonClick = () => {
+  // insert the street address into the form
+  $('.address').val(app.browserGeolocation.street)
+
   // open the info window
   expandInfoWindow(70, 30, app.copy.issuecreate).then(async () => {})
 }
@@ -886,13 +889,10 @@ const openIssueForm = async (point = false) => {
   }
 
   // update street address, lat, and lng
-  const street = await getStreetAddress({
-    lat: point.lat,
-    lng: point.lng,
-  })
-  // console.log(street);
+  const street = await getStreetAddress(app.browserGeolocation.coords)
   app.browserGeolocation.street = street
   $('.street-address').html(street)
+  // update address in form
   $('.address').val(street)
   $('.lat').val(app.browserGeolocation.coords.lat)
   $('.lng').val(app.browserGeolocation.coords.lng)
