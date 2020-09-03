@@ -450,9 +450,6 @@ async function initMap() {
   // get the map data from server
   const data = await app.map.fetch()
 
-  // extract the issues
-  const issues = data.issues
-
   // recenter on map centerpoint
   if (data.centerPoint) {
     //console.log('init map panning')
@@ -482,6 +479,9 @@ async function initMap() {
   const cluster = app.markers.cluster
     ? app.markers.cluster
     : app.markers.createCluster()
+
+  // extract the issues
+  const issues = data.issues
 
   // place new markers down
   app.markers.place(issues, cluster)
@@ -705,8 +705,11 @@ const showInfoWindow = (marker, data) => {
         `
   })
 
+  // do some cleanup of the text comment
+  data.comments = data.comments.replace('\n', '<br />')
+
   contentString += `
-<div class="card col-12 col-md-5">
+<div class="card col-12">
     <!--<img class="edit-icon" src="/static/images/material_design_icons/edit-24px.svg" /> -->
     <div class="card-body">
         <h2 class="card-title">${data.address}</h2>
