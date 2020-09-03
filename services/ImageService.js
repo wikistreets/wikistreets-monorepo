@@ -9,28 +9,35 @@ const { resolve } = require('path')
 // create a promisified version of fs.unlink
 const fsunlink = util.promisify(fs.unlink)
 
+// function to correct jpeg orientation
+const reorientJpeg = async (buffer, quality = 100) => {
+  await jo
+    .rotate(buffer, { quality: quality })
+    .then(({ buffer, orientation, dimensions, quality }) => {
+      console.log(`Orientation was ${orientation}`)
+      console.log(
+        `Dimensions after rotation: ${dimensions.width}x${dimensions.height}`
+      )
+      console.log(`Quality: ${quality}`)
+      // ...Do whatever you need with the resulting buffer...
+      return buffer
+    })
+    .catch((error) => {
+      console.log('An error occurred when rotating the file: ' + error.message)
+      return false
+    })
+}
+
+// the image resizing, reorienting class
 function ImageService({ config }) {
   this.store = async (buffer) => {
     // store buffer to image file
     const filename = this.filename()
     const filepath = this.filepath(filename)
 
-    // autorotate
-    await jo
-      .rotate(buffer, { quality: 100 })
-      .then(({ buffer, orientation, dimensions, quality }) => {
-        // console.log(`Orientation was ${orientation}`)
-        // console.log(
-        //   `Dimensions after rotation: ${dimensions.width}x${dimensions.height}`
-        // )
-        // console.log(`Quality: ${quality}`)
-        // ...Do whatever you need with the resulting buffer...
-      })
-      .catch((error) => {
-        // console.log(
-        //   'An error occurred when rotating the file: ' + error.message
-        // )
-      })
+    // autorotate jpegs
+    reoriented = await reorientJpeg(buffer) // returns false if messed up
+    buffer = reoriented ? reoriented : buffer
 
     // resize and store image
     await sharp(buffer)
