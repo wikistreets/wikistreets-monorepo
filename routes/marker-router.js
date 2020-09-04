@@ -125,6 +125,53 @@ const markerRouter = ({ config }) => {
   // });
 
   // route for HTTP POST requests to create a new marker
+  router.get(
+    '/delete/:issueId',
+    passportJWT, // jwt authentication
+    async (req, res, next) => {
+      // extract necessary info
+      const mapId = req.query.mapId // get mapId from query string
+      const issueId = req.params.issueId
+      if (mapId && issueId) {
+        // remove the issue from the map
+        const map = await Map.findOneAndUpdate(
+          { publicId: mapId },
+          {
+            $pull: { issues: { _id: issueId } }, // remove the issue from the map
+          },
+          { new: true } // new = return doc as it is after update, upsert = insert new doc if none exists
+        )
+          .then((map) => {
+            // console.log(JSON.stringify(map, null, 2))
+            // save changes
+            map.save()
+            // return the response to client
+            res.json({
+              status: true,
+              message: 'success',
+            })
+          })
+          .catch((err) => {
+            // invalid map or issue id
+            return res.status(400).json({
+              status: false,
+              message: err,
+              err: err,
+            })
+          })
+      } else {
+        // invalid map or issue id
+        const err = 'Invalid map or issue identifiers.'
+        return res.status(400).json({
+          status: false,
+          message: err,
+          err: err,
+        })
+      }
+    }
+  )
+
+  // route for HTTP POST requests to create a new marker
   router.post(
     '/create',
     passportJWT, // jwt authentication

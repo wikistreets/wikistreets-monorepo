@@ -105,6 +105,23 @@ ul {
   z-index: 200;
 }
 
+.info-window .context-menu.dropdown button,
+.info-window .context-menu.dropdown button:focus,
+.info-window .context-menu.dropdown.show button.btn-secondary.dropdown-toggle {
+  background-color: transparent;
+  border-color: transparent;
+  outline: transparent;
+  color: black;
+  position: absolute;
+  top: 0;
+  right: 0;
+  box-shadow: none;
+}
+.info-window .context-menu.dropdown button.dropdown-toggle:after {
+  content: ''; /* remove divot */
+  display: none;
+}
+
 .info-window-content {
   margin-top: 70px;
 }

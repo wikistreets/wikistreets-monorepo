@@ -52,6 +52,7 @@ const app = {
       getUserMe: '/users/me',
       getMapUrl: '/map/data',
       postIssueUrl: '/markers/create',
+      deleteIssueUrl: '/markers/delete',
       getUserUrl: '/users',
       mapTitleUrl: '/map/title',
       forkMapUrl: '/map/fork',
@@ -344,14 +345,14 @@ app.markers.wipe = () => {
 }
 app.markers.createCluster = () => {
   // create a marker cluster
-  app.markers.markerCluster = L.markerClusterGroup({
+  app.markers.cluster = L.markerClusterGroup({
     spiderfyOnMaxZoom: false,
     disableClusteringAtZoom: 18,
   })
   // add marker cluster to map
-  app.map.element.addLayer(app.markers.markerCluster)
+  app.map.element.addLayer(app.markers.cluster)
   // return cluster
-  return app.markers.markerCluster
+  return app.markers.cluster
 }
 app.markers.place = (data, cluster) => {
   // make a marker from each data point
@@ -381,6 +382,10 @@ app.markers.place = (data, cluster) => {
         } else {
           marker.issueType = 'unknownText'
         }
+
+        // add a unique id to each marker for later reference
+        marker._id = `marker-${point._id}`
+        // console.log(marker._id)
 
         // add to the marker cluster
         cluster.addLayer(marker)
@@ -738,10 +743,16 @@ const showInfoWindow = (marker, data) => {
 
   // do some cleanup of the text comment
   data.comments = data.comments.replace('\n', '<br />')
-
   contentString += `
 <div class="card col-12">
-    <!--<img class="edit-icon" src="/static/images/material_design_icons/edit-24px.svg" /> -->
+    <div class="context-menu dropdown">
+      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        ...
+      </button>
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+        <a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>
+      </div>
+    </div>
     <div class="card-body">
         <h2 class="card-title">${data.address}</h2>
     </div>
@@ -780,6 +791,38 @@ const showInfoWindow = (marker, data) => {
 
       openUserProfile(data.user.handle, userId)
     })
+  })
+
+  // activate delete button
+  $('.delete-issue-link').click((e) => {
+    // grab the id of the issue to delete
+    const issueId = $(e.target).attr('ws-issue-id')
+    // send delete request to server
+    app
+      .myFetch(`${app.apis.wikistreets.deleteIssueUrl}/${issueId}`)
+      .then((res) => {
+        // console.log(JSON.stringify(res, null, 2))
+        if (res.status == true) {
+          // remove the marker from the map
+          const targetId = `marker-${issueId}`
+          app.markers.markers.map((marker, i, arr) => {
+            // look for the marker to delete
+            // console.log(`${targetId} - ${marker._id}`)
+            if (marker._id == targetId) {
+              // console.log('found it!')
+              // delete it!
+              const index = app.markers.markers.indexOf(marker) // find its index
+              if (index > -1) {
+                app.markers.markers.splice(marker, 1)
+              }
+              app.markers.cluster.removeLayer(marker) // remove from map
+
+              // close any open info window
+              collapseInfoWindow()
+            }
+          })
+        }
+      })
   })
 } // showInfoWindow
 
