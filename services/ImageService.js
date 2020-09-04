@@ -35,7 +35,7 @@ function ImageService({ config }) {
     const filename = this.filename()
     const filepath = this.filepath(filename)
 
-    // autorotate jpegs
+    // auto-rotate jpegs
     reoriented = await reorientJpeg(buffer) // returns false if messed up
     buffer = reoriented ? reoriented : buffer
 

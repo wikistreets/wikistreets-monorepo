@@ -156,7 +156,7 @@ const mapRouter = ({ config }) => {
         issues: [],
       }
     }
-    console.log(`MAP: ${map}`)
+    // console.log(`MAP: ${map}`)
     res.json(map)
   })
 

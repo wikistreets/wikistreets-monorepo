@@ -260,6 +260,28 @@ app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
   return res
 }
 
+// get the title of the map, or a generic title if none exists
+app.map.getTitle = () => {
+  title = app.map.title ? app.map.title : app.copy.anonymousmaptitle
+  return title
+}
+
+// convert a string to title case
+const toTitleCase = (str) => {
+  return str.replace(/\w\S*/g, function (txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+  })
+}
+
+// set the title of the map
+app.map.setTitle = (title) => {
+  // store it if it's valid
+  if (title) app.map.title = title
+  else title = app.copy.anonymousmaptitle // use generic title, if none
+  $('head title').html(`${toTitleCase(title)} - Wikistreets`) // window title
+  $('.map-title').text(title) // update the visible name
+}
+
 // get the center point of the map
 app.map.getCenter = () => {
   // update current center marker street address
@@ -467,13 +489,7 @@ async function initMap() {
   }
 
   // set the map title, if any
-  if (data.title) {
-    app.map.title = data.title
-    $('.map-title').text(app.map.title)
-  } else {
-    // no title for this map... use a generic title
-    $('.map-title').text(app.copy.anonymousmaptitle)
-  }
+  app.map.setTitle(data.title)
 
   // create marker cluster
   const cluster = app.markers.cluster
@@ -674,6 +690,21 @@ function geocodePosition(pos) {
       console.log(`Error: ${status}`)
     }
   })
+}
+
+// show details of the map from which this map was forked
+const showForkedFromInfo = () => {
+  if (app.map.forkedFrom) {
+    // show where this map was forked from, if relevant
+    const forkedFromTitle = app.map.forkedFrom.title
+      ? app.map.forkedFrom.title
+      : app.copy.anonymousmaptitle
+    // show a link
+    $('.info-window-content .forked-from-container').show()
+    $(
+      `<a href="/map/${app.map.forkedFrom.publicId}">${forkedFromTitle}</a>`
+    ).appendTo('.info-window-content .forked-from-link')
+  }
 }
 
 const showInfoWindow = (marker, data) => {
@@ -1285,7 +1316,8 @@ const openForkPanel = () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // populate this map's details
-  const mapTitle = app.map.title ? app.map.title : app.copy.anonymousmaptitle
+  const mapTitle = app.map.getTitle()
+  if (app.map.forkedFrom) showForkedFromInfo() // show forked info if any
   $('.info-window-content .map-title').html(mapTitle)
   $('.info-window-content .num-markers').html(app.markers.markers.length)
   $('.info-window-content .num-contributors').html(app.map.numContributors)
@@ -1318,18 +1350,9 @@ const openMapSelectorPanel = async () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // populate this map's details
-  const mapTitle = app.map.title ? app.map.title : app.copy.anonymousmaptitle
+  const mapTitle = app.map.getTitle()
+  if (app.map.forkedFrom) showForkedFromInfo() // show forked info if any
   $('.info-window-content .map-title').html(mapTitle)
-  if (app.map.forkedFrom) {
-    // show where this map was forked from, if relevant
-    const forkedFromTitle = app.map.forkedFrom.title
-      ? app.map.forkedFrom.title
-      : app.copy.anonymousmaptitle
-    $('.info-window-content .forked-from-container').show()
-    $(
-      `<a href="/map/${app.map.forkedFrom.publicId}">${forkedFromTitle}</a>`
-    ).appendTo('.info-window-content .forked-from-link')
-  }
   $('.info-window-content .num-markers').html(app.markers.markers.length)
   $('.info-window-content .num-contributors').html(app.map.numContributors)
   $('.info-window-content .num-forks').html(app.map.numForks)
@@ -1378,8 +1401,7 @@ const openMapSelectorPanel = async () => {
     const mapTitle = $('.info-window-content .rename-map-form #mapTitle').val()
     if (!mapTitle) return
 
-    app.map.title = mapTitle
-    $('.map-title').text(mapTitle) // update the visible name
+    app.map.setTitle(mapTitle)
     $('.info-window-content .rename-map-form #mapTitle').val('') // clear the field
 
     // send new title to server, if user logged in and map already has markers
