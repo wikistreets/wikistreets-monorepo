@@ -8,7 +8,7 @@ const app = {
     getToken: () => localStorage.getItem('token'),
   },
   copy: {
-    aboutus: 'Maps for everyone',
+    aboutus: 'Wikistreets',
     issuelocatestart: 'Drag the person to mark the spot',
     issuecreate: 'Create a post',
     searchaddress: 'Enter an address',
@@ -714,7 +714,7 @@ const showForkedFromInfo = () => {
 
 const createPhotoCarousel = (photos) => {
   // abort if no photos
-  if (photos.length == 0) return
+  if (photos.length == 0) return ''
 
   // loop through photos
   let slides = ''
@@ -780,15 +780,13 @@ const showInfoWindow = (marker, data) => {
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ...
       </button>
-      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
         <a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>
       </div>
     </div>
     <div class="card-body">
         <h2 class="card-title">${data.address}</h2>
-    </div>
-    ${imgString}
-    <div class="card-body">
+        ${imgString}
     `
   contentString += !data.comments
     ? ''
