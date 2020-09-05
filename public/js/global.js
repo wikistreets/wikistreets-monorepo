@@ -712,6 +712,42 @@ const showForkedFromInfo = () => {
   }
 }
 
+const createPhotoCarousel = (photos) => {
+  // abort if no photos
+  if (photos.length == 0) return
+
+  // loop through photos
+  let slides = ''
+  let indicators = ''
+  photos.map((photo, i, arr) => {
+    // generate a carousel slide and an indicator for each photo
+    let activeClass = i == 0 ? 'active' : '' // activate first slide only
+    let slide = `
+      <div class="carousel-item ${activeClass}">
+        <img src="/static/uploads/${photo.filename}" class="d-block w-100">
+      </div>
+`
+    let indicator = `
+          <li data-target="#photo-carousel-0" data-slide-to="${i}" class="${activeClass}"></li>
+`
+    slides = slides + slide
+    indicators = indicators + indicator
+  })
+  // remove indicators and previous/next buttons if only one photo
+  if (photos.length == 1) {
+    indicators = ''
+    $('.carousel-control-prev, .carousel-control-next').hide()
+  } else {
+    $('.carousel-control-prev, .carousel-control-next').show()
+  }
+  // place slides and indicators into the HTML carousel template
+  $('#carouselTemplate .carousel-indicators').html(indicators)
+  $('#carouselTemplate .carousel-inner').html(slides)
+
+  // return the update carousel html code
+  return $('#carouselTemplate').html()
+}
+
 const showInfoWindow = (marker, data) => {
   // close form if open
   app.mode = 'issuedetails' // in case it was set previously
@@ -734,12 +770,14 @@ const showInfoWindow = (marker, data) => {
   const attribution = `Posted by <a class="user-link" user-id="${data.user._id}" href="#">${data.user.handle}</a> on ${date}`
 
   //loop through each photo in data and prepare an img tag for it
-  let imgString = ''
-  data.photos.map((val, i, arr) => {
-    imgString += `
-            <img class="card-img-top" src="/static/uploads/${val.filename}" />
-        `
-  })
+  // let imgString = ''
+  // data.photos.map((val, i, arr) => {
+  //   imgString += `
+  //           <img class="card-img-top" src="/static/uploads/${val.filename}" />
+  //       `
+  // })
+  let imgString = createPhotoCarousel(data.photos)
+  console.log(imgString)
 
   // do some cleanup of the text comment
   data.comments = data.comments.replace('\n', '<br />')
@@ -775,6 +813,9 @@ const showInfoWindow = (marker, data) => {
 
   // update the infoWindow content
   $('.info-window-content').html(contentString)
+
+  // activate the carousel
+  $('.info-window-content .carousel').carousel()
 
   // console.log('opening infowindow');
   expandInfoWindow(70, 30, attribution).then(() => {

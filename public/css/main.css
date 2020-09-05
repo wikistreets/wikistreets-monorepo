@@ -78,18 +78,7 @@ ul {
   list-style-position: inside;
 }
 
-.alert.instructions {
-  position: absolute;
-  width: 100%;
-  top: 0;
-  left: 0;
-  margin: 0;
-  color: white;
-  background-color: black;
-}
-.alert.instructions a {
-  color: white;
-}
+/* info window content */
 
 .info-window {
   display: none;
@@ -98,8 +87,8 @@ ul {
   bottom: 0;
   width: 100%;
   height: 50px;
-  background-color: white;
-  border-top: 1px solid black;
+  background-color: black;
+  border-top: 1px solid white;
   padding: 0px 40px 0 40px;
   margin-bottom: 0px;
   z-index: 200;
@@ -111,7 +100,7 @@ ul {
   background-color: transparent;
   border-color: transparent;
   outline: transparent;
-  color: black;
+  color: white;
   position: absolute;
   top: 0;
   right: 0;
@@ -127,6 +116,8 @@ ul {
 }
 .info-window-content .card {
   padding-top: 10px;
+  background-color: black;
+  color: white;
 }
 
 .info-window .close-icon {
@@ -157,6 +148,32 @@ ul {
   font-size: 14pt;
 }
 
+.alert.instructions {
+  border-radius: 0;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  margin: 0;
+  color: white;
+  background-color: black;
+  border-color: black;
+}
+.alert.instructions a {
+  color: white;
+}
+
+/* photo carousel */
+.carousel {
+  width: 100%;
+  /* height: 300px; */
+}
+.carousel .carousel-inner img {
+  width: 100%;
+  height: 30em;
+  object-fit: contain;
+  overflow: hidden;
+}
 /* custom map controls */
 
 .control-map-selector {
