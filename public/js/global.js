@@ -769,15 +769,8 @@ const showInfoWindow = (marker, data) => {
   // give attribution to author
   const attribution = `Posted by <a class="user-link" user-id="${data.user._id}" href="#">${data.user.handle}</a> on ${date}`
 
-  //loop through each photo in data and prepare an img tag for it
-  // let imgString = ''
-  // data.photos.map((val, i, arr) => {
-  //   imgString += `
-  //           <img class="card-img-top" src="/static/uploads/${val.filename}" />
-  //       `
-  // })
   let imgString = createPhotoCarousel(data.photos)
-  console.log(imgString)
+  // console.log(imgString)
 
   // do some cleanup of the text comment
   data.comments = data.comments.replace('\n', '<br />')
