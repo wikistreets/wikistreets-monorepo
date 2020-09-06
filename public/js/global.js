@@ -536,12 +536,7 @@ async function initMap() {
     app.auth.getToken() ? openIssueForm() : openSigninPanel()
   })
 
-  // pop open issue form when control icon clicked
-  $('.control-fork-map').click(() => {
-    app.auth.getToken() ? openForkPanel() : openSigninPanel()
-  })
-
-  // pop open issue form when control icon clicked
+  // geolocate when icon clicked
   $('.control-find-location').click(async () => {
     // center on browser's geoposition
     panToPersonalLocation()
@@ -772,10 +767,10 @@ const showInfoWindow = (marker, data) => {
   let imgString = createPhotoCarousel(data.photos)
   // console.log(imgString)
 
-  // do some cleanup of the text comment
-  data.comments = data.comments.replace('\n', '<br />')
-  contentString += `
-<div class="card col-12">
+  // generate the context menu
+  let contextMenuString = !app.auth.getToken()
+    ? ''
+    : `
     <div class="context-menu dropdown">
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ...
@@ -784,6 +779,13 @@ const showInfoWindow = (marker, data) => {
         <a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>
       </div>
     </div>
+  `
+
+  // do some cleanup of the text comment
+  data.comments = data.comments.replace('\n', '<br />')
+  contentString += `
+<div class="card col-12">
+    ${contextMenuString}
     <div class="card-body">
         <h2 class="card-title">${data.address}</h2>
         ${imgString}
@@ -1384,6 +1386,17 @@ const openErrorPanel = (message) => {
   expandInfoWindow(50, 50, app.copy.createissueerror)
 }
 
+const activateForkButton = () => {
+  $('.info-window .fork-button').click(async (e) => {
+    e.preventDefault()
+    const mapData = await app.myFetch(
+      `${app.apis.wikistreets.forkMapUrl}/${app.map.id.get()}`
+    )
+    //console.log(`FORK SERVER RESPONSE: ${result}`)
+    window.location.href = `${app.apis.wikistreets.staticMapUrl}/${mapData.publicId}`
+  })
+}
+
 // show a particular user's profile
 const openForkPanel = () => {
   // copy the user profile html into the infowindow
@@ -1398,15 +1411,8 @@ const openForkPanel = () => {
   $('.info-window-content .num-contributors').html(app.map.numContributors)
   $('.info-window-content .num-forks').html(app.map.numForks)
 
-  // activate fork button
-  $('.info-window .fork-button').click(async (e) => {
-    e.preventDefault()
-    const mapData = await app.myFetch(
-      `${app.apis.wikistreets.forkMapUrl}/${app.map.id.get()}`
-    )
-    //console.log(`FORK SERVER RESPONSE: ${result}`)
-    window.location.href = `${app.apis.wikistreets.staticMapUrl}/${mapData.publicId}`
-  })
+  // activate fork links
+  activateForkButton()
 
   // open the info window
   expandInfoWindow(50, 50, app.copy.forkmapinstructions)
@@ -1431,11 +1437,15 @@ const openMapSelectorPanel = async () => {
   $('.info-window-content .num-markers').html(app.markers.markers.length)
   $('.info-window-content .num-contributors').html(app.map.numContributors)
   $('.info-window-content .num-forks').html(app.map.numForks)
-  // enaable rename map link
+  // enable rename map link
   $('.info-window-content .rename-map-link').click((e) => {
     // show the rename map form
     $('.info-window-content .map-details-container').hide()
     $('.info-window-content .rename-map-container').show()
+  })
+  // enable fork map link
+  $('.info-window-content .fork-map-link').click(() => {
+    app.auth.getToken() ? openForkPanel() : openSigninPanel()
   })
 
   // populate this user's maps content

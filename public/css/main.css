@@ -6,6 +6,7 @@ body {
   padding: 0;
   color: #cccccc;
   background-color: black;
+  overflow: hidden;
   font-family: 'DDG_ProximaNova', 'DDG_ProximaNova_UI_0', 'DDG_ProximaNova_UI_1',
     'DDG_ProximaNova_UI_2', 'DDG_ProximaNova_UI_3', 'DDG_ProximaNova_UI_4',
     'DDG_ProximaNova_UI_5', 'DDG_ProximaNova_UI_6', 'Proxima Nova',
@@ -16,8 +17,10 @@ body {
   clear: both; /* clearfix hack */
 }
 
+/* logo */
+
 h1.logo {
-  font-size: 18px;
+  font-size: 16px;
   border-radius: 10px;
   text-transform: lowercase;
   text-align: center;
@@ -38,6 +41,9 @@ h1.logo:hover {
   /* text-decoration: underline; */
   color: #007bff;
 }
+
+/* general styles */
+
 a {
   color: #cccccc;
   text-decoration: underline;
@@ -51,22 +57,6 @@ a:hover {
   background-color: black;
   margin-top: 10px;
 }
-
-#map {
-  border: 1px solid black;
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  z-index: 1;
-}
-
-.hide {
-  display: none;
-}
-
-/* general styles */
 
 section {
   margin-bottom: 20px;
@@ -89,6 +79,93 @@ ul {
 .list-group-item {
   background-color: transparent;
   padding: 0.05rem 0.75rem;
+}
+
+/* the map! */
+.issue-map {
+  position: relative;
+}
+
+#map {
+  border: 1px solid black;
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
+}
+
+.hide {
+  display: none;
+}
+
+/* map controls */
+
+.control-map-selector {
+  position: absolute;
+  cursor: pointer;
+  bottom: 0px;
+  width: 300px;
+  left: 50%;
+  margin: 0 auto;
+  z-index: 101;
+}
+.control-map-selector button.map-title {
+  background-color: black;
+  width: 240px;
+  margin-left: -120px;
+}
+
+/* .map-controls {
+  position: absolute;
+  left: 0;
+  bottom: 50px;
+  z-index: 100;
+}
+ */
+.map-control {
+  cursor: pointer;
+  position: absolute;
+  z-index: 101;
+}
+
+.control-add-issue {
+  width: 40px;
+  left: 50%;
+  margin: 0 auto;
+  bottom: 50px;
+}
+.control-add-issue img {
+  margin-left: -20px;
+  width: 100%;
+}
+.control-find-location {
+  width: 40px;
+  top: 50px;
+  right: 50px;
+}
+.control-find-location img {
+  /* margin-left: -20px; */
+  width: 100%;
+}
+.control-fork-map {
+  float: left;
+  transform: rotate(90deg);
+}
+.control-search-address {
+  float: left;
+  display: none; /* not yet functional */
+}
+.control-download-data {
+  float: left;
+}
+
+.map-controls img {
+  min-width: 30px;
+  max-width: 50px;
+  min-height: 30px;
+  max-height: 50px;
 }
 
 /* info window content */
@@ -206,61 +283,6 @@ ul {
   height: 400px;
   object-fit: contain;
   overflow: hidden;
-}
-/* custom map controls */
-
-.control-map-selector {
-  position: absolute;
-  cursor: pointer;
-  bottom: 0px;
-  left: 0;
-  margin: 0 auto;
-  z-index: 101;
-}
-.control-map-selector .dropdown-menu {
-  width: 300px;
-}
-.control-map-selector input[type='text'] {
-  width: 100%;
-}
-.control-map-selector button.map-title {
-  background-color: black;
-}
-
-.map-controls {
-  position: absolute;
-  left: 0;
-  bottom: 50px;
-  z-index: 100;
-}
-
-.map-control {
-  margin-left: 17px;
-}
-
-.control-add-issue {
-  float: left;
-}
-.control-find-location {
-  float: left;
-}
-.control-fork-map {
-  float: left;
-  transform: rotate(90deg);
-}
-.control-search-address {
-  float: left;
-  display: none; /* not yet functional */
-}
-.control-download-data {
-  float: left;
-}
-
-.map-controls img {
-  min-width: 30px;
-  max-width: 50px;
-  min-height: 30px;
-  max-height: 50px;
 }
 
 /* Leaflet extra markers */

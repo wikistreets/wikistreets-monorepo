@@ -73,17 +73,15 @@
     <section class="issue-map">
       <div id="map">loading map...</div>
 
-        <div class="control-map-selector dropdown">
-          <button
-            class="map-title btn btn-secondary dropdown-toggle"
-            type="button"
-            id="dropdownMenuButton"
-            aria-haspopup="true"
-            aria-expanded="false"
-          ></button>
-        </div><!-- .control-map-selector -->
-      </div><!-- #map -->
-      <!-- //.row-->
+      <div class="control-map-selector dropdown">
+        <button
+          class="map-title btn btn-secondary dropdown-toggle"
+          type="button"
+          id="dropdownMenuButton"
+          aria-haspopup="true"
+          aria-expanded="false"
+        ></button>
+      </div>
 
       <div class="map-controls">
         <div class="map-control control-add-issue">
@@ -99,14 +97,14 @@
         <div class="map-control control-find-location">
           <img
             data-toggle="tooltip"
-            data-placement="top"
+            data-placement="left"
             alt="Find my location"
             title="Find my location"
-            src="/static/images/material_design_icons/gps_off-24px.svg"
+            src="/static/images/material_design_icons/gps_fixed-24px.svg"
           />
         </div>
 
-        <div class="map-control control-search-address">
+        <div class="map-control control-search-address hide">
           <img
             data-toggle="tooltip"
             data-placement="top"
@@ -116,7 +114,7 @@
           />
         </div>
 
-        <div class="map-control control-fork-map">
+        <div class="map-control control-fork-map hide">
           <img
             data-toggle="tooltip"
             data-placement="top"
@@ -176,13 +174,8 @@
     <!-- geolocation error -->
     <div class="geoposition-error-container hide">
       <h2>Could not locate you</h2>
-      <p>
-        Geolocation will not be available until we receive a security certificate to
-        allow us to send data securely over the web ... stay tuned! 
-      </p>
-      <p>
-        You are welcome to manually drag the map instead for now... sorry.
-      </p>
+      <p>We were not able to locate you using your device's GPS.</p>
+      <p>You are welcome to try again or manually drag the map.</p>
     </div>
     <!-- // geolocation error -->
 
@@ -299,10 +292,14 @@
         <input type="hidden" name="lng" class="lng" />
 
         <div class="row">
-
           <section class="col-12 col-md-6 col-lg-4 submit-container">
             <h2>Location name</h2>
-            <input type="text" class="address" name="address" placeholder="Name this location"/>
+            <input
+              type="text"
+              class="address"
+              name="address"
+              placeholder="Name this location"
+            />
             <br /><br />
             <h2>Post a message here</h2>
             <textarea
@@ -324,7 +321,12 @@
 
         <div class="map-popup-container hide">
           <p>near <strong class="street-address"></strong></p>
-          <button onclick="meMarkerButtonClick()" class="btn btn-primary me-marker-go-button">Create post at this location</button>
+          <button
+            onclick="meMarkerButtonClick()"
+            class="btn btn-primary me-marker-go-button"
+          >
+            Create post at this location
+          </button>
           <p>... or drag marker somewhere else!</p>
         </div>
       </form>
@@ -342,18 +344,20 @@
             <li>Snap and map photos</li>
             <li>Share if you want</li>
             <li>Don't share if you don't want</li>
-            <li>Fork (i.e. copy) any map </li>
+            <li>Fork (i.e. copy) any map</li>
           </ul>
         </header>
         <article class="col-12">
           <small>
             &copy; 2020. All rights reserved.
             <br />
-            Created by <a href="http://plasticpast.com">Plastic Past</a>. 
+            Created by <a href="http://plasticpast.com">Plastic Past</a>.
             <br />
-            By using this app, you agree to the following terms and conditions: that you assume all liability for your usage of this app; that we make no promises or guarantees to you of any kind;  that we will
-            do whatever we want with your data;  and that we may change these terms at
-            any moment when it suits us.
+            By using this app, you agree to the following terms and conditions:
+            that you assume all liability for your usage of this app; that we
+            make no promises or guarantees to you of any kind; that we will do
+            whatever we want with your data; and that we may change these terms
+            at any moment when it suits us.
           </small>
         </article>
       </div>
@@ -367,14 +371,17 @@
         <header class="col-xs-12 col-md-4">
           <h2 class="handle"></h2>
           <ul class="list-group">
-            <li class="list-group-item"><span class="num-posts">0</span> posts</li>
-            <li class="list-group-item"><span class="num-maps">0</span> maps</li>
+            <li class="list-group-item">
+              <span class="num-posts">0</span> posts
+            </li>
+            <li class="list-group-item">
+              <span class="num-maps">0</span> maps
+            </li>
           </ul>
         </header>
         <article class="col-12 col-md-8">
           <h2><span class="handle"></span>'s maps</h2>
-          <ul class="more-maps list-group">
-          </ul>
+          <ul class="more-maps list-group"></ul>
         </article>
       </div>
     </div>
@@ -389,9 +396,15 @@
             Forked from <span class="forked-from-link"></span>
           </p>
           <ul class="list-group">
-            <li class="list-group-item"><span class="num-markers">0</span> markers</li>
-            <li class="list-group-item"><span class="num-contributors">0</span> contributors</li>
-            <li class="list-group-item"><span class="num-forks">0</span> forks</li>
+            <li class="list-group-item">
+              <span class="num-markers">0</span> markers
+            </li>
+            <li class="list-group-item">
+              <span class="num-contributors">0</span> contributors
+            </li>
+            <li class="list-group-item">
+              <span class="num-forks">0</span> forks
+            </li>
           </ul>
           <button class="btn btn-primary fork-button">Fork it</button>
         </header>
@@ -416,14 +429,25 @@
             Forked from <span class="forked-from-link"></span>
           </p>
           <ul class="list-group">
-            <li class="list-group-item"><span class="num-markers">0</span> markers</li>
-            <li class="list-group-item"><span class="num-contributors">0</span> contributors</li>
-            <li class="list-group-item"><span class="num-forks">0</span> forks</li>
+            <li class="list-group-item">
+              <span class="num-markers">0</span> markers
+            </li>
+            <li class="list-group-item">
+              <span class="num-contributors">0</span> contributors
+            </li>
+            <li class="list-group-item">
+              <span class="num-forks">0</span> forks (<a
+                href="#"
+                class="fork-map-link"
+                >fork this map</a
+              >)
+            </li>
           </ul>
         </header>
         <header class="rename-map-container hide col-xs-12 col-md-4">
           <h2>Rename this map</h2>
-          <form class="rename-map-form"
+          <form
+            class="rename-map-form"
             method="POST"
             action="/map/title"
             enctype="multipart/form-data"
@@ -445,8 +469,7 @@
           <h2><span class="user-handle">My</span> maps</h2>
           <a class="btn btn-primary" href="/">Create a new map</a>
           <ul class="list-group">
-            <div class="more-maps">
-            </div>
+            <div class="more-maps"></div>
           </ul>
         </article>
       </div>
@@ -457,31 +480,44 @@
     <div id="carouselTemplate" class="photo-carousel-container hide">
       <div id="photo-carousel-0" class="carousel slide" data-ride="carousel">
         <ol class="carousel-indicators">
-          <li data-target="#photo-carousel-0" data-slide-to="0" class="active"></li>
+          <li
+            data-target="#photo-carousel-0"
+            data-slide-to="0"
+            class="active"
+          ></li>
           <li data-target="#photo-carousel-0" data-slide-to="1"></li>
           <li data-target="#photo-carousel-0" data-slide-to="2"></li>
         </ol>
         <div class="carousel-inner">
           <div class="carousel-item active">
-            <img src="..." class="d-block w-100">
+            <img src="..." class="d-block w-100" />
           </div>
           <div class="carousel-item">
-            <img src="..." class="d-block w-100">
+            <img src="..." class="d-block w-100" />
           </div>
           <div class="carousel-item">
-            <img src="..." class="d-block w-100">
+            <img src="..." class="d-block w-100" />
           </div>
         </div>
-        <a class="carousel-control-prev" href="#photo-carousel-0" role="button" data-slide="prev">
+        <a
+          class="carousel-control-prev"
+          href="#photo-carousel-0"
+          role="button"
+          data-slide="prev"
+        >
           <span class="carousel-control-prev-icon" aria-hidden="true"></span>
           <span class="sr-only">Previous</span>
         </a>
-        <a class="carousel-control-next" href="#photo-carousel-0" role="button" data-slide="next">
+        <a
+          class="carousel-control-next"
+          href="#photo-carousel-0"
+          role="button"
+          data-slide="next"
+        >
           <span class="carousel-control-next-icon" aria-hidden="true"></span>
           <span class="sr-only">Next</span>
         </a>
       </div>
-
     </div>
     <!-- // .photo-carousel-container -->
 
