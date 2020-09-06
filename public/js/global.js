@@ -575,6 +575,9 @@ async function initMap() {
 
     // remove me marker, if present
     app.markers.wipeMe()
+
+    // show the map controls
+    $('.map-control').fadeIn()
   })
 
   app.map.element.on('moveend', async function (e) {
@@ -950,6 +953,9 @@ const meMarkerButtonClick = () => {
   // insert the street address into the form
   $('.address').val(app.browserGeolocation.street)
 
+  // close popup
+  // app.markers.me.closePopup()
+
   // open the info window
   expandInfoWindow(70, 30, app.copy.issuecreate).then(async () => {})
 }
@@ -978,6 +984,9 @@ const openIssueForm = async (point = false) => {
     // if no point specified, use the center of map
     point = app.map.element.getCenter()
   }
+
+  // hide the map controls
+  $('.map-control').fadeOut()
 
   //console.log('issue form panning')
   app.map.element.panTo(point)
@@ -1013,6 +1022,7 @@ const openIssueForm = async (point = false) => {
   marker.bindPopup($('.map-popup-container').html()).openPopup()
 
   app.markers.me.on('dragstart', async () => {
+    // close the marker popup
     app.markers.me.closePopup()
   })
 
