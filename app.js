@@ -31,6 +31,9 @@ const server = ({ config }) => {
   // make 'public' directory publicly readable
   app.use('/static', express.static('public'))
 
+  // serve up favicon
+  app.use('/favicon.ico', express.static('public/favicon.ico'))
+
   // load routes, passing relevant configuration settings as necessary
   app.use(['/', '/map'], mapRouter({ config })) // requests for a map
   app.use('/markers', markerRouter({ config })) // requests for just marker data
