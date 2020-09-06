@@ -38,14 +38,16 @@ h1.logo {
   color: white;
   cursor: pointer;
 }
-/* h1.logo:hover {
+h1.logo:hover {
   /* text-decoration: underline; */
-  color: #007bff;
-} */
+  /* color: #007bff; */
+}
 
 /* general styles */
 
-a {
+a,
+a:link,
+a:visited {
   color: #cccccc;
   text-decoration: underline;
 }
