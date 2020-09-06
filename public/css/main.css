@@ -20,15 +20,16 @@ body {
 /* logo */
 
 h1.logo {
-  font-size: 16px;
+  font-size: 18px;
   border-radius: 10px;
   text-transform: lowercase;
   text-align: center;
-  width: 100px;
+  width: 110px;
   margin: 0 auto;
   position: fixed;
   z-index: 10;
   padding-top: 10px;
+  padding-bottom: 2px;
   top: -10px;
   left: 50%;
   margin-left: -50px; /* half the width */

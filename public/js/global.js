@@ -114,7 +114,8 @@ const app = {
       state: 'disabled',
       icons: {
         disabled: '/static/images/material_design_icons/gps_off-24px.svg',
-        enabled: '/static/images/material_design_icons/gps_not_fixed-24px.svg',
+        // enabled: '/static/images/material_design_icons/gps_not_fixed-24px.svg',
+        enabled: '/static/images/material_design_icons/gps_fixed-24px.svg',
         active: '/static/images/material_design_icons/gps_fixed-24px.svg',
       },
     },
