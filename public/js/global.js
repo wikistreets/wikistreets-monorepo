@@ -950,14 +950,14 @@ const collapseInfoWindow = async (e) => {
 }
 
 const meMarkerButtonClick = async () => {
-  // update street address
-  const street = await getStreetAddress(app.browserGeolocation.coords)
-  // console.log(street);
-  app.browserGeolocation.street = street
-  $('.street-address').html(street)
-  $('.address').val(street)
-  $('.lat').val(app.browserGeolocation.coords.lat)
-  $('.lng').val(app.browserGeolocation.coords.lng)
+  // // update street address
+  // const street = await getStreetAddress(app.browserGeolocation.coords)
+  // // console.log(street);
+  // app.browserGeolocation.street = street
+  // $('.street-address').html(street)
+  // $('.address').val(street)
+  // $('.lat').val(app.browserGeolocation.coords.lat)
+  // $('.lng').val(app.browserGeolocation.coords.lng)
 
   // close popup
   // app.markers.me.closePopup()
