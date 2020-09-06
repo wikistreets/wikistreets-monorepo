@@ -38,10 +38,10 @@ h1.logo {
   color: white;
   cursor: pointer;
 }
-h1.logo:hover {
+/* h1.logo:hover {
   /* text-decoration: underline; */
   color: #007bff;
-}
+} */
 
 /* general styles */
 
