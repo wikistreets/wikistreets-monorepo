@@ -949,10 +949,15 @@ const collapseInfoWindow = async (e) => {
   return $('.issue-map, #map').promise()
 }
 
-const meMarkerButtonClick = () => {
-  // insert the street address into the form
-  $('.address').val(app.browserGeolocation.street)
+const meMarkerButtonClick = async () => {
+  // update street address
+  const street = await getStreetAddress(app.browserGeolocation.coords)
+  // console.log(street);
+  app.browserGeolocation.street = street
   $('.street-address').html(street)
+  $('.address').val(street)
+  $('.lat').val(app.browserGeolocation.coords.lat)
+  $('.lng').val(app.browserGeolocation.coords.lng)
 
   // close popup
   // app.markers.me.closePopup()
@@ -1010,11 +1015,11 @@ const openIssueForm = async (point = false) => {
     lng: point.lng,
   }
 
-  // update street address, lat, and lng
+  // update street address
   const street = await getStreetAddress(app.browserGeolocation.coords)
+  // console.log(street);
   app.browserGeolocation.street = street
   $('.street-address').html(street)
-  // update address in form
   $('.address').val(street)
   $('.lat').val(app.browserGeolocation.coords.lat)
   $('.lng').val(app.browserGeolocation.coords.lng)
