@@ -952,12 +952,13 @@ const collapseInfoWindow = async (e) => {
 const meMarkerButtonClick = () => {
   // insert the street address into the form
   $('.address').val(app.browserGeolocation.street)
+  $('.street-address').html(street)
 
   // close popup
   // app.markers.me.closePopup()
 
   // open the info window
-  expandInfoWindow(70, 30, app.copy.issuecreate).then(async () => {})
+  expandInfoWindow(60, 40, app.copy.issuecreate).then(async () => {})
 }
 
 const openIssueForm = async (point = false) => {
@@ -1061,6 +1062,10 @@ const openIssueForm = async (point = false) => {
   // copy the issue form into the infowindow
   const infoWindowHTML = $('.issue-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
+
+  // update address
+  $('.street-address').html(street)
+  $('.address').val(street)
 
   // deal with form submissions
   $('.info-window-content form.issue-form').on('submit', async (e) => {
@@ -1433,6 +1438,15 @@ const openForkPanel = () => {
 const openMapSelectorPanel = async () => {
   // update list of maps when user expands map selector dropdown
   // console.log('opening map selector')
+
+  // undo me markers, if any
+  if (app.markers.me) {
+    app.markers.me.remove()
+    app.markers.me = null
+  }
+
+  // make sure controls are visible
+  $('.map-control').show()
 
   // get this user's data from server
   const data = await app.user.fetch()
