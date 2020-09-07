@@ -86,7 +86,7 @@ ul {
 
 /* the map! */
 .issue-map {
-  position: relative;
+  /* position: relative; */
 }
 
 #map {
@@ -145,8 +145,8 @@ ul {
 }
 .control-find-location {
   width: 40px;
-  top: 50px;
-  right: 50px;
+  top: 30px;
+  right: 30px;
 }
 .control-find-location img {
   /* margin-left: -20px; */
@@ -178,11 +178,11 @@ ul {
   position: fixed;
   overflow: auto;
   bottom: 0;
-  width: 100%;
+  width: 100vw;
   height: 50px;
   background-color: black;
   /* border-top: 1px solid white; */
-  padding: 0px 40px 0 40px;
+  padding: 0px 20px 0 20px;
   margin-bottom: 0px;
   z-index: 200;
 }
@@ -218,7 +218,7 @@ ul {
 }
 
 .info-window-content {
-  margin-top: 70px;
+  margin-top: 20px;
 }
 .info-window-content article,
 .info-window-content header {
