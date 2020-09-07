@@ -31,7 +31,7 @@ const app = {
   browserGeolocation: {
     enabled: false,
     coords: {
-      // default geolocation near center of croton
+      // default geolocation near center of croton-on-hudson
       lat: 41.1974622,
       lng: -73.8802434,
     },
@@ -219,7 +219,6 @@ const app = {
     },
   },
 }
-
 // add methods
 
 // send request to the server with auth and mapId attached
@@ -295,6 +294,19 @@ app.map.getCenter = () => {
   return coords
 }
 
+// save the current coordinates of the map
+app.browserGeolocation.setCoords = (lat, lng) => {
+  app.browserGeolocation.coords = {
+    lat: lat,
+    lng: lng,
+  }
+}
+
+// get the last known coordinates of the map
+app.browserGeolocation.getCoords = () => {
+  return app.browserGeolocation.coords
+}
+
 app.controls.gps.setState = (state) => {
   // console.log(`setting state to ${state}.`)
   app.controls.gps.state = state
@@ -312,7 +324,7 @@ app.browserGeolocation.update = async () => {
       // store coords
       // console.log(`GPS available: ${coords.lat}, ${coords.lng}`);
       app.browserGeolocation.enabled = true
-      app.browserGeolocation.coords = coords
+      app.browserGeolocation.setCoords(coords.lat, coords.lng)
       // update interface
       app.controls.gps.setState('enabled')
       return coords
@@ -453,16 +465,14 @@ app.user.fetch = async () => {
 }
 
 async function initMap() {
-  // instantiate map
-  const coords = [
-    app.browserGeolocation.coords.lat,
-    app.browserGeolocation.coords.lng,
-  ]
+  // instantiate map centered on last known coords
+  const coords = app.browserGeolocation.getCoords()
+
   // set up the leaflet.js map view
   app.map.element = new L.map(app.map.htmlElementId, {
     zoomControl: false,
     doubleClickZoom: false,
-  }).setView(coords, app.map.zoom.default)
+  }).setView([coords.lat, coords.lng], app.map.zoom.default)
 
   // load map tiles
   L.tileLayer(app.apis.mapbox.baseUrl, {
@@ -584,7 +594,7 @@ async function initMap() {
     // console.log('map moved');
     // // get the center address of the map
     const coords = app.map.getCenter()
-    app.browserGeolocation.coords = coords
+    app.browserGeolocation.setCoords(coords.lat, coords.lng)
 
     // // if locator mode, update street address
     // if (app.mode == 'issuelocate') {
@@ -996,7 +1006,7 @@ const openIssueForm = async (point = false) => {
 
   //console.log('issue form panning')
   app.map.element.panTo(point)
-  const coords = [point.lat, point.lng]
+  let coords = [point.lat, point.lng]
   const marker = L.marker(coords, {
     zIndexOffset: app.markers.zIndex.me,
     riseOffset: app.markers.zIndex.me,
@@ -1009,20 +1019,18 @@ const openIssueForm = async (point = false) => {
   marker.setIcon(app.markers.icons.me.default)
   app.markers.me = marker
 
-  // get the center address of the map
-  app.browserGeolocation.coords = {
-    lat: point.lat,
-    lng: point.lng,
-  }
+  // save these coordinates as latest
+  app.browserGeolocation.setCoords(point.lat, point.lng)
+  // retrieve the well-formatted coords object
+  coords = app.browserGeolocation.getCoords()
 
   // update street address
-  const street = await getStreetAddress(app.browserGeolocation.coords)
-  // console.log(street);
+  const street = await getStreetAddress(coords)
   app.browserGeolocation.street = street
   $('.street-address').html(street)
   $('.address').val(street)
-  $('.lat').val(app.browserGeolocation.coords.lat)
-  $('.lng').val(app.browserGeolocation.coords.lng)
+  $('.lat').val(coords.lat)
+  $('.lng').val(coords.lng)
 
   // attach a popup
   marker.bindPopup($('.map-popup-container').html()).openPopup()
@@ -1042,10 +1050,11 @@ const openIssueForm = async (point = false) => {
 
     // center map on the me marker
     //console.log('dragend panning...')
-    app.map.element.panTo(app.browserGeolocation.coords)
+    let coords = app.browserGeolocation.getCoords()
+    app.map.element.panTo(coords)
 
     // update street address
-    const street = await getStreetAddress(app.browserGeolocation.coords)
+    const street = await getStreetAddress(coords)
     // console.log(street);
     app.browserGeolocation.street = street
     $('.street-address').html(street)
@@ -1053,8 +1062,8 @@ const openIssueForm = async (point = false) => {
     $('.address').val(street)
 
     // update hidden from elements
-    $('.lat').val(app.browserGeolocation.coords.lat)
-    $('.lng').val(app.browserGeolocation.coords.lng)
+    $('.lat').val(coords.lat)
+    $('.lng').val(coords.lng)
 
     //re-open popup ... make sure it has the updated street first
     app.markers.me.setPopupContent($('.map-popup-container').html())

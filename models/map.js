@@ -9,24 +9,27 @@ const coordinateSchema = new Schema({
 })
 
 // a map
-const mapSchema = new Schema({
-  publicId: {
-    type: String,
-    lowercase: true,
-    required: true,
+const mapSchema = new Schema(
+  {
+    publicId: {
+      type: String,
+      lowercase: true,
+      required: true,
+    },
+    title: {
+      type: String,
+      lowercase: true,
+    },
+    centerPoint: coordinateSchema,
+    description: String,
+    issues: [issueSchema],
+    contributors: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    forks: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
+    forkedFrom: { type: Schema.Types.ObjectId, ref: 'Map' },
+    // date: { type: Date, default: Date.now },
   },
-  title: {
-    type: String,
-    lowercase: true,
-  },
-  centerPoint: coordinateSchema,
-  description: String,
-  issues: [issueSchema],
-  contributors: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  forks: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
-  forkedFrom: { type: Schema.Types.ObjectId, ref: 'Map' },
-  date: { type: Date, default: Date.now },
-})
+  { timestamps: true }
+)
 
 module.exports = {
   mapSchema: mapSchema,

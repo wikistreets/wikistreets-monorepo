@@ -135,8 +135,10 @@ const mapRouter = ({ config }) => {
   // route for HTTP GET requests to the map JSON data
   router.get('/map/data/:mapId', async (req, res) => {
     const mapId = req.params.mapId
+    const sinceDate = req.query.since // optional param to retrieve only issues since a given date
     let map = await Map.findOne({
       publicId: mapId,
+      sinceDate: sinceDate,
     })
       .populate('issues.user')
       .populate('forkedFrom', ['title', 'publicId'])
@@ -168,6 +170,7 @@ const mapRouter = ({ config }) => {
   // redirect requests for a home page to a map with a random identifier
   router.get(['/', '/map'], (req, res) => {
     const mapId = uuidv4() // randomish identifier
+    // load map page anew with new id
     res.redirect(`/map/${mapId}`)
   })
 
