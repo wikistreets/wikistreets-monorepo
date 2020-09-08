@@ -499,7 +499,7 @@ async function initMap() {
   // console.log(JSON.stringify(data, null, 2))
   // scrape map metadata
   try {
-    app.map.numContributors = data.contributors ? data.contributors.length : 1
+    app.map.numContributors = data.contributors ? data.contributors.length : 0
     app.map.numForks = data.forks ? data.forks.length : 0
     app.map.forkedFrom = data.forkedFrom ? data.forkedFrom : null
     // store original timestamps
@@ -1298,6 +1298,7 @@ const getBrowserGeolocation = (options) => {
 }
 
 const formatDate = (date) => {
+  if (!date) return 'never'
   // format the date
   const d = new Date(date)
   const dtf = new Intl.DateTimeFormat('en', {
@@ -1516,8 +1517,8 @@ const openForkPanel = () => {
   // create a list item for the selected map
   const selectedMapListItem = createMapListItem(mapData, true)
 
-  // add the fork button to it
-  forkItButton.appendTo(selectedMapListItem)
+  // add the fork button to it, if the map has markers
+  if (mapData.numMarkers > 0) forkItButton.appendTo(selectedMapListItem)
 
   // show the updated map data
   $('.info-window .map-list-container').html(selectedMapListItem)
