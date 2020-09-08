@@ -250,8 +250,20 @@ app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
     }
     options.body = data
   } else if (requestType == 'GET') {
-    // attach map ID to GET request url query string
-    url += `?mapId=${mapId}`
+    // convert data object to query string params
+    let queryParams = []
+    queryParams.push(`mapId=${mapId}`) // add map id
+    // loop through object fields
+    const keys = Object.keys(data) // get keys
+    keys.forEach((key, index) => {
+      const val = courses[key]
+      // add to params
+      queryParams.push(`${key}=${val}`)
+      // console.log(`${key}: ${courses[key]}`)
+    })
+    // assemble the query and tack it on the URL
+    let query = queryParams.join('&')
+    url = url += `?${query}`
   }
 
   // fetch from server
@@ -401,7 +413,8 @@ app.markers.place = (data, cluster) => {
         // console.log(marker._id)
 
         // add to the marker cluster
-        cluster.addLayer(marker)
+        // cluster.addLayer(marker)
+        app.map.element.addLayer(marker)
 
         // de-highlight the current marker
         marker.setZIndexOffset(app.markers.zIndex.default)
@@ -439,17 +452,16 @@ app.markers.deactivate = (marker = app.markers.current) => {
   app.markers.current = null
 }
 
-app.map.fetch = async () => {
+app.map.fetch = async (sinceDate = null) => {
   // fetch data from wikistreets api
-  return app
-    .myFetch(`${app.apis.wikistreets.getMapUrl}/${app.map.id.get()}`)
-    .then((data) => {
-      // get markers
-      app.issues.issues = data.issues
+  let apiUrl = `${app.apis.wikistreets.getMapUrl}/${app.map.id.get()}`
+  return app.myFetch(apiUrl).then((data) => {
+    // get markers
+    app.issues.issues = data.issues
 
-      //      console.log(`RESPONSE: ${data}`)
-      return data
-    })
+    // console.log(`RESPONSE: ${JSON.stringify(data, null, 2)}`)
+    return data
+  })
 }
 
 app.user.fetch = async () => {
@@ -496,12 +508,12 @@ async function initMap() {
 
   // scrape map metadata
   try {
-    app.map.dateModified = formatDate(data.date)
     app.map.numContributors = data.contributors ? data.contributors.length : 1
     app.map.numForks = data.forks ? data.forks.length : 0
     app.map.forkedFrom = data.forkedFrom ? data.forkedFrom : null
-  } catch (e) {
-    // console.log('No map metadata')
+    app.map.dateModified = formatDate(data.updatedAt)
+  } catch (err) {
+    console.log(`Metadata error: ${err}`)
   }
 
   // set the map title, if any
@@ -802,6 +814,7 @@ const showInfoWindow = (marker, data) => {
     ${contextMenuString}
     <div class="card-body">
         <h2 class="card-title">${data.address}</h2>
+        <p class="instructions">${attribution}</p>
         ${imgString}
     `
   contentString += !data.comments
@@ -1469,6 +1482,12 @@ const openMapSelectorPanel = async () => {
   const infoWindowHTML = $('.select-map-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
+  // grab the template we will use for all map list items
+  const mapListItemTemplate = $(
+    '.map-list-item-template',
+    $('.info-window-content')
+  ).clone()
+
   // populate this map's details
   const mapTitle = app.map.getTitle()
   if (app.map.forkedFrom) showForkedFromInfo() // show forked info if any
@@ -1478,6 +1497,7 @@ const openMapSelectorPanel = async () => {
   $('.info-window-content .num-forks').html(app.map.numForks)
   // enable rename map link
   $('.info-window-content .rename-map-link').click((e) => {
+    e.preventDefault()
     // show the rename map form
     $('.info-window-content .map-details-container').hide()
     $('.info-window-content .rename-map-container').show()
@@ -1499,19 +1519,24 @@ const openMapSelectorPanel = async () => {
     // remove any previous message that there are no maps
     $('.no-maps-message').hide()
 
+    // start by cloning the template
+    let mapListing = mapListItemTemplate.clone()
     // create new link to the map
     const mapTitle = data.title ? data.title : app.copy.anonymousmaptitle
-    const el = $(
-      `<li class="list-group-item"><a href="/map/${data.publicId}">${mapTitle}</a></li>`
-    )
-    el.appendTo('.info-window-content .more-maps')
+    $('.map-title', mapListing).html(mapTitle) // inject the map title
+    $('.map-title', mapListing).attr('href', `/map/${data.publicId}`) // activate link
+    $('.num-markers', mapListing).html(data.issues.length)
+    $('.num-contributors', mapListing).html(data.contributors.length)
+    $('.num-forks', mapListing).html(data.forks.length)
+    $('.fork-map-link', mapListing).replaceWith('forks') // get rid of link
+
+    // add to page
+    mapListing.appendTo('.info-window-content .more-maps')
   })
 
   if (!maps.length) {
     // create new link
-    const el = $(
-      `<li class="list-group-item no-maps-message">You have no saved maps... yet.</li>`
-    )
+    const el = $(`<p class="no-maps-message">You have no maps... yet.</p>`)
     el.appendTo('.info-window-content .more-maps')
   }
 

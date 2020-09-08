@@ -86,8 +86,6 @@
       <div class="map-controls">
         <div class="map-control control-add-issue">
           <img
-            data-toggle="tooltip"
-            data-placement="top"
             alt="Place a new marker"
             title="Place a new marker"
             src="/static/images/material_design_icons/add_circle_outline-24px.svg"
@@ -145,12 +143,9 @@
       <!-- info window icons -->
       <!-- <img class="close-icon" src="/static/images/material_design_icons/close-24px.svg" /> -->
 
-      <address
-        class="hide instructions street-address alert alert-info"
-        role="alert"
-      >
+      <p class="hide instructions street-address alert alert-info" role="alert">
         Welcome!
-      </address>
+      </p>
 
       <section class="info-window-content"></section>
     </section>
@@ -181,6 +176,7 @@
 
     <!-- signin form -->
     <div class="signin-form-container hide">
+      <h2>Log in</h2>
       <div class="feedback-message alert alert-danger hide"></div>
       <div class="row">
         <form
@@ -226,6 +222,7 @@
 
     <!-- signup form -->
     <div class="signup-form-container hide">
+      <h2>Sign up</h2>
       <div class="feedback-message alert alert-danger hide"></div>
       <div class="row">
         <form
@@ -278,9 +275,6 @@
 
     <!-- issue form -->
     <div class="issue-form-container hide">
-      <!-- <div class="row">
-                <h2 class="col-12">Report an issue at <span class="street-address"></span></h2>
-            </div> -->
       <form
         class="issue-form"
         action="/markers/create"
@@ -293,7 +287,7 @@
 
         <div class="row">
           <section class="col-12 col-md-6 col-lg-4 submit-container">
-            <h2>Location name</h2>
+            <h2>Post title</h2>
             <input
               type="text"
               class="address"
@@ -337,7 +331,7 @@
     <div class="about-us-container hide">
       <div class="row">
         <header class="col-xs-12 col-md-6">
-          <!-- <h2>Wikistreets</h2> -->
+          <h2>Wikistreets</h2>
           <ul>
             <li>Maps for everyone</li>
             <li>Works at home or on the road</li>
@@ -423,26 +417,26 @@
     <div class="select-map-container hide">
       <div class="row">
         <header class="map-details-container col-xs-12 col-md-4">
-          <h2 class="map-title">Map Name</h2>
-          (<a href="#" class="rename-map-link">Rename this map</a>)
-          <p class="forked-from-container hide">
-            Forked from <span class="forked-from-link"></span>
-          </p>
-          <ul class="list-group">
-            <li class="list-group-item">
-              <span class="num-markers">0</span> markers
-            </li>
-            <li class="list-group-item">
-              <span class="num-contributors">0</span> contributors
-            </li>
-            <li class="list-group-item">
-              <span class="num-forks">0</span> forks (<a
+          <article class="map-list-item-template">
+            <h2>
+              <a
+                class="map-title rename-map-link"
+                title="Rename map"
+                alt="Rename map"
                 href="#"
-                class="fork-map-link"
-                >fork this map</a
-              >)
-            </li>
-          </ul>
+                >Map title</a
+              >
+            </h2>
+            <p class="forked-from-container hide">
+              Forked from <span class="forked-from-link"></span>
+            </p>
+            <p>
+              <span class="num-markers">0</span> markers |
+              <span class="num-contributors">0</span> contributors |
+              <span class="num-forks">0</span>
+              <a href="#" class="fork-map-link">forks</a>
+            </p>
+          </article>
         </header>
         <header class="rename-map-container hide col-xs-12 col-md-4">
           <h2>Rename this map</h2>

@@ -59,6 +59,7 @@ a:hover {
 .btn.btn-primary {
   background-color: black;
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 section {
@@ -223,6 +224,10 @@ ul {
 .info-window-content article,
 .info-window-content header {
   margin-bottom: 0.55em;
+}
+.info-window-content h2 a.map-title {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .info-window-content .card {

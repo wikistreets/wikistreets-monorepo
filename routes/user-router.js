@@ -112,7 +112,13 @@ const userRouter = ({ config }) => {
     let user = await User.findOne({
       _id: userId,
     })
-      .populate('maps', ['title', 'publicId'])
+      .populate('maps', [
+        'title',
+        'publicId',
+        'issues',
+        'contributors',
+        'forks',
+      ])
       .catch((err) => {
         return res.status(500).json({
           status: false,
