@@ -734,7 +734,11 @@ const showForkedFromInfo = (mapData, mapListing) => {
   }
 }
 
-const createMapListItem = (mapData, showForkedFrom = false) => {
+const createMapListItem = (
+  mapData,
+  showForkedFrom = false,
+  showForkLink = true
+) => {
   // console.log(JSON.stringify(mapData, null, 2))
   // start by cloning the template
   const mapListing = $(
@@ -752,7 +756,12 @@ const createMapListItem = (mapData, showForkedFrom = false) => {
   $('.num-markers', mapListing).html(mapData.numMarkers)
   $('.num-contributors', mapListing).html(mapData.numContributors)
   $('.num-forks', mapListing).html(mapData.numForks)
-  $('.fork-map-link', mapListing).replaceWith('forks') // get rid of link
+  if (!showForkLink) {
+    // disable the fork link
+    $('.fork-map-link', mapListing).replaceWith('forks') // get rid of link
+  } else {
+    // enable the fork link
+  }
   $('.createdat', mapListing).html(formatDate(mapData.createdAt))
   $('.updatedat', mapListing).html(formatDate(mapData.updatedAt))
 
@@ -1487,13 +1496,31 @@ const openForkPanel = () => {
   const infoWindowHTML = $('.fork-map-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
+  // grab fork button for later
+  const forkItButton = $('.btn-primary', $('.info-window-content'))
+
+  // prepare map data
   // populate this map's details
-  const mapTitle = app.map.getTitle()
-  if (app.map.forkedFrom) showForkedFromInfo() // show forked info if any
-  $('.info-window-content .map-title').html(mapTitle)
-  $('.info-window-content .num-markers').html(app.markers.markers.length)
-  $('.info-window-content .num-contributors').html(app.map.numContributors)
-  $('.info-window-content .num-forks').html(app.map.numForks)
+  const mapData = {
+    title: app.map.getTitle(),
+    publicId: app.map.publicId,
+    numMarkers: app.markers.markers.length,
+    forks: app.map.forks,
+    numForks: app.map.numForks,
+    forkedFrom: app.map.forkedFrom,
+    numContributors: app.map.numContributors,
+    createdAt: app.map.timestamps.createdAt,
+    updatedAt: app.map.timestamps.updatedAt,
+  }
+
+  // create a list item for the selected map
+  const selectedMapListItem = createMapListItem(mapData, true)
+
+  // add the fork button to it
+  forkItButton.appendTo(selectedMapListItem)
+
+  // show the updated map data
+  $('.info-window .map-list-container').html(selectedMapListItem)
 
   // activate fork links
   activateForkButton()
@@ -1545,8 +1572,8 @@ const openMapSelectorPanel = async () => {
   $('.rename-map-link', selectedMapListItem).click((e) => {
     e.preventDefault()
     // show the rename map form
-    $('.map-details-container', selectedMapListItem).hide()
-    $('.rename-map-container', selectedMapListItem).show()
+    $('.map-details-container').hide()
+    $('.rename-map-container').show()
   })
   // enable fork map link
   $('.fork-map-link', selectedMapListItem).click(() => {
@@ -1595,7 +1622,7 @@ const openMapSelectorPanel = async () => {
 
   // populate rename map content
   // update visible map title when user renames it
-  $('.rename-map-form', selectedMapListItem).submit((e) => {
+  $('.rename-map-form').submit((e) => {
     e.preventDefault()
     const mapTitle = $('.info-window-content .rename-map-form #mapTitle').val()
     if (!mapTitle) return
