@@ -739,7 +739,7 @@ const createMapListItem = (mapData, showForkedFrom = false) => {
   // start by cloning the template
   const mapListing = $(
     '.map-list-item-template',
-    $('.info-window-content')
+    $('.select-map-container')
   ).clone()
   mapListing.removeClass('.map-list-item-template')
 
@@ -1415,17 +1415,32 @@ const openUserProfile = async (handle, userId) => {
       maps.reverse() // reverse order with most recent first
 
       // place links to the maps into the map selector
+      $('.info-window-content .more-maps').html('') // wipe out any previously-generated list
+      let mapListTemporaryContainer = $('<div>')
       maps.map((data, i, arr) => {
         // remove any previous message that there are no maps
         $('.no-maps-message').hide()
+        // console.log(JSON.stringify(data, null, 2))
 
-        // create new link to the map
-        const mapTitle = data.title ? data.title : app.copy.anonymousmaptitle
-        const el = $(
-          `<li class="list-group-item"><a href="/map/${data.publicId}">${mapTitle}</a></li>`
-        )
-        el.appendTo('.info-window-content .more-maps')
+        // prepare some metadata about the map
+        data.numForks = data.forks ? data.forks.length : 0
+        data.numContributors = data.contributors ? data.contributors.length : 0
+        data.numMarkers = data.issues ? data.issues.length : 0
+
+        // create and populate the map list item
+        const mapListing = createMapListItem(data, true)
+
+        // concatenate to list of maps
+        mapListing.appendTo(mapListTemporaryContainer)
       })
+      // append entire map list to page
+      mapListTemporaryContainer.appendTo('.info-window-content .more-maps')
+
+      if (!maps.length) {
+        // create new link
+        const el = $(`<p class="no-maps-message">You have no maps... yet.</p>`)
+        el.appendTo('.info-window-content .more-maps')
+      }
 
       if (!maps.length) {
         // create new link
