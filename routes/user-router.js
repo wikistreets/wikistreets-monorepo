@@ -115,6 +115,10 @@ const userRouter = ({ config }) => {
       .populate('maps', [
         'title',
         'publicId',
+        'createdAt',
+        'updatedAt',
+        'forkedFrom.publicId',
+        'forkedFrom.title',
         'issues',
         'contributors',
         'forks',
@@ -135,13 +139,17 @@ const userRouter = ({ config }) => {
   // route for HTTP GET requests to a user's JSON data
   router.get('/:userId', async (req, res) => {
     const userId = req.params.userId
-    let user = await User.findOne(
-      {
-        _id: userId,
-      },
-      { maps: true, numPosts: true, handle: true }
-    )
-      .populate('maps', ['title', 'publicId'])
+    let user = await User.findOne({
+      _id: userId,
+    })
+      .populate('maps', [
+        'title',
+        'publicId',
+        'createdAt',
+        'updatedAt',
+        'forkedFrom.publicId',
+        'forkedFrom.title',
+      ])
       .catch((err) => {
         return res.status(500).json({
           status: false,
@@ -151,7 +159,7 @@ const userRouter = ({ config }) => {
         })
       })
 
-    // console.log(`USER: ${user}`)
+    // console.log(`USER: ${JSON.stringify(user, null, 2)}`)
     res.json(user)
   })
 

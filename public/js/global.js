@@ -391,17 +391,8 @@ app.markers.place = (data, cluster) => {
           zIndexOffset: app.markers.zIndex.default,
           riseOffset: app.markers.zIndex.default,
           riseOnHover: true,
-        }) //.addTo(app.map.element);
+        })
 
-        // add the issue type as a property of the
-        // if (point.roadIssues.length && point.roadIssues[0] != null) {
-        //   marker.issueType = 'street'
-        // } else if (
-        //   point.sidewalkIssues.length &&
-        //   point.sidewalkIssues[0] != null
-        // ) {
-        //   marker.issueType = 'sidewalk'
-        // } else
         if (point.photos && point.photos.length) {
           marker.issueType = 'unknownPhoto'
         } else {
@@ -412,9 +403,8 @@ app.markers.place = (data, cluster) => {
         marker._id = `marker-${point._id}`
         // console.log(marker._id)
 
-        // add to the marker cluster
-        // cluster.addLayer(marker)
-        app.map.element.addLayer(marker)
+        // cluster.addLayer(marker) // add to the marker cluster
+        app.map.element.addLayer(marker) // add directly to map
 
         // de-highlight the current marker
         marker.setZIndexOffset(app.markers.zIndex.default)
@@ -489,7 +479,7 @@ async function initMap() {
   // load map tiles
   L.tileLayer(app.apis.mapbox.baseUrl, {
     attribution:
-      'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      'Map data &copy; <a target="_new" href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a target="_new" href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a target="_new" href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 21,
     id: 'mapbox/streets-v11',
     tileSize: 512,
@@ -506,12 +496,20 @@ async function initMap() {
     app.map.element.panTo(data.centerPoint)
   }
 
+  // console.log(JSON.stringify(data, null, 2))
   // scrape map metadata
   try {
     app.map.numContributors = data.contributors ? data.contributors.length : 1
     app.map.numForks = data.forks ? data.forks.length : 0
     app.map.forkedFrom = data.forkedFrom ? data.forkedFrom : null
-    app.map.dateModified = formatDate(data.updatedAt)
+    // store original timestamps
+    app.map.timestamps = {
+      updatedAt: data.updatedAt,
+      createdAt: data.createdAt,
+    }
+    // also store formatted dates
+    app.map.updatedAt = formatDate(data.updatedAt)
+    app.map.createdAt = formatDate(data.createdAt)
   } catch (err) {
     console.log(`Metadata error: ${err}`)
   }
@@ -719,18 +717,46 @@ function geocodePosition(pos) {
 }
 
 // show details of the map from which this map was forked
-const showForkedFromInfo = () => {
-  if (app.map.forkedFrom) {
+const showForkedFromInfo = (mapData, mapListing) => {
+  if (mapData.forkedFrom) {
     // show where this map was forked from, if relevant
-    const forkedFromTitle = app.map.forkedFrom.title
-      ? app.map.forkedFrom.title
+    const forkedFromTitle = mapData.forkedFrom.title
+      ? mapData.forkedFrom.title
       : app.copy.anonymousmaptitle
     // show a link
-    $('.info-window-content .forked-from-container').show()
+    const forkedFromLink = $('.forked-from-link', mapListing)
     $(
-      `<a href="/map/${app.map.forkedFrom.publicId}">${forkedFromTitle}</a>`
-    ).appendTo('.info-window-content .forked-from-link')
+      `<a href="/map/${mapData.forkedFrom.publicId}">${forkedFromTitle}</a>`
+    ).appendTo(forkedFromLink)
+    $('.forked-from-container', mapListing).show()
+    $('.forked-from-container', mapListing).removeClass('hide')
+    return mapListing
   }
+}
+
+const createMapListItem = (mapData, showForkedFrom = false) => {
+  // console.log(JSON.stringify(mapData, null, 2))
+  // start by cloning the template
+  const mapListing = $(
+    '.map-list-item-template',
+    $('.info-window-content')
+  ).clone()
+  mapListing.removeClass('.map-list-item-template')
+
+  // create new link to the map
+  const mapTitle = mapData.title ? mapData.title : app.copy.anonymousmaptitle
+  $('.map-title', mapListing).html(mapTitle) // inject the map title
+  $('.map-title', mapListing).attr('href', `/map/${mapData.publicId}`) // activate link
+  if (showForkedFrom && mapData.forkedFrom)
+    showForkedFromInfo(mapData, mapListing) // show forked info if any
+  $('.num-markers', mapListing).html(mapData.numMarkers)
+  $('.num-contributors', mapListing).html(mapData.numContributors)
+  $('.num-forks', mapListing).html(mapData.numForks)
+  $('.fork-map-link', mapListing).replaceWith('forks') // get rid of link
+  $('.createdat', mapListing).html(formatDate(mapData.createdAt))
+  $('.updatedat', mapListing).html(formatDate(mapData.updatedAt))
+
+  return mapListing
 }
 
 const createPhotoCarousel = (photos) => {
@@ -1478,32 +1504,37 @@ const openMapSelectorPanel = async () => {
   // get this user's data from server
   const data = await app.user.fetch()
 
+  // console.log(JSON.stringify(data, null, 2))
+
   // copy the user map selector html into the infowindow
   const infoWindowHTML = $('.select-map-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
-  // grab the template we will use for all map list items
-  const mapListItemTemplate = $(
-    '.map-list-item-template',
-    $('.info-window-content')
-  ).clone()
-
   // populate this map's details
-  const mapTitle = app.map.getTitle()
-  if (app.map.forkedFrom) showForkedFromInfo() // show forked info if any
-  $('.info-window-content .map-title').html(mapTitle)
-  $('.info-window-content .num-markers').html(app.markers.markers.length)
-  $('.info-window-content .num-contributors').html(app.map.numContributors)
-  $('.info-window-content .num-forks').html(app.map.numForks)
+  const mapData = {
+    title: app.map.getTitle(),
+    publicId: app.map.publicId,
+    numMarkers: app.markers.markers.length,
+    forks: app.map.forks,
+    numForks: app.map.numForks,
+    forkedFrom: app.map.forkedFrom,
+    numContributors: app.map.numContributors,
+    createdAt: app.map.timestamps.createdAt,
+    updatedAt: app.map.timestamps.updatedAt,
+  }
+
+  // create a list item for the selected map
+  const selectedMapListItem = createMapListItem(mapData, true)
+
   // enable rename map link
-  $('.info-window-content .rename-map-link').click((e) => {
+  $('.rename-map-link', selectedMapListItem).click((e) => {
     e.preventDefault()
     // show the rename map form
-    $('.info-window-content .map-details-container').hide()
-    $('.info-window-content .rename-map-container').show()
+    $('.map-details-container', selectedMapListItem).hide()
+    $('.rename-map-container', selectedMapListItem).show()
   })
   // enable fork map link
-  $('.info-window-content .fork-map-link').click(() => {
+  $('.fork-map-link', selectedMapListItem).click(() => {
     app.auth.getToken() ? openForkPanel() : openSigninPanel()
   })
 
@@ -1511,30 +1542,32 @@ const openMapSelectorPanel = async () => {
   // show the user's name
   $('.user-handle').html(`${data.handle}'s`)
 
+  // show the updated map data
+  $('.info-window .map-list-item-template').replaceWith(selectedMapListItem)
+
   // extract the maps
   const maps = data.maps
 
   // place links to the maps into the map selector
+  $('.info-window-content .more-maps').html('') // wipe out any previously-generated list
+  let mapListTemporaryContainer = $('<div>')
   maps.map((data, i, arr) => {
     // remove any previous message that there are no maps
     $('.no-maps-message').hide()
 
-    // start by cloning the template
-    let mapListing = mapListItemTemplate.clone()
-    // create new link to the map
-    const mapTitle = data.title ? data.title : app.copy.anonymousmaptitle
-    $('.map-title', mapListing).html(mapTitle) // inject the map title
-    $('.map-title', mapListing).attr('href', `/map/${data.publicId}`) // activate link
-    $('.num-markers', mapListing).html(data.issues ? data.issues.length : 0)
-    $('.num-contributors', mapListing).html(
-      data.contributors ? data.contributors.length : 0
-    )
-    $('.num-forks', mapListing).html(data.forks ? data.forks.length : 0)
-    $('.fork-map-link', mapListing).replaceWith('forks') // get rid of link
+    // prepare some metadata about the map
+    data.numForks = data.forks ? data.forks.length : 0
+    data.numContributors = data.contributors ? data.contributors.length : 0
+    data.numMarkers = data.issues ? data.issues.length : 0
 
-    // add to page
-    mapListing.appendTo('.info-window-content .more-maps')
+    // create and populate the map list item
+    const mapListing = createMapListItem(data, true)
+
+    // concatenate to list of maps
+    mapListing.appendTo(mapListTemporaryContainer)
   })
+  // append entire map list to page
+  mapListTemporaryContainer.appendTo('.info-window-content .more-maps')
 
   if (!maps.length) {
     // create new link
@@ -1547,7 +1580,7 @@ const openMapSelectorPanel = async () => {
 
   // populate rename map content
   // update visible map title when user renames it
-  $('.info-window-content .rename-map-form').submit((e) => {
+  $('.rename-map-form', selectedMapListItem).submit((e) => {
     e.preventDefault()
     const mapTitle = $('.info-window-content .rename-map-form #mapTitle').val()
     if (!mapTitle) return
