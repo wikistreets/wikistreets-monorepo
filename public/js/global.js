@@ -1525,9 +1525,11 @@ const openMapSelectorPanel = async () => {
     const mapTitle = data.title ? data.title : app.copy.anonymousmaptitle
     $('.map-title', mapListing).html(mapTitle) // inject the map title
     $('.map-title', mapListing).attr('href', `/map/${data.publicId}`) // activate link
-    $('.num-markers', mapListing).html(data.issues.length)
-    $('.num-contributors', mapListing).html(data.contributors.length)
-    $('.num-forks', mapListing).html(data.forks.length)
+    $('.num-markers', mapListing).html(data.issues ? data.issues.length : 0)
+    $('.num-contributors', mapListing).html(
+      data.contributors ? data.contributors.length : 0
+    )
+    $('.num-forks', mapListing).html(data.forks ? data.forks.length : 0)
     $('.fork-map-link', mapListing).replaceWith('forks') // get rid of link
 
     // add to page
