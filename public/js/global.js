@@ -1011,29 +1011,31 @@ const collapseInfoWindow = async (e) => {
   })
 
   // animate the map to take up full screen
-  $('.issue-map, #map').animate(
-    {
-      height: '100vh',
-    },
-    () => {
-      // update mode
-      app.mode = 'default'
+  $('.issue-map, #map')
+    .stop()
+    .animate(
+      {
+        height: '100vh',
+      },
+      () => {
+        // update mode
+        app.mode = 'default'
 
-      // inform the map that it has been dynamically resized
-      app.map.element.invalidateSize(true)
+        // inform the map that it has been dynamically resized
+        app.map.element.invalidateSize(true)
 
-      // re-center on current marker, if any
-      if (app.markers.current) {
-        // void the current marker
-        app.markers.deactivate()
+        // re-center on current marker, if any
+        if (app.markers.current) {
+          // void the current marker
+          app.markers.deactivate()
 
-        setTimeout(() => {
-          //console.log('collapse panning')
-          app.map.element.panTo(app.markers.current.getLatLng())
-        }, 250)
+          setTimeout(() => {
+            //console.log('collapse panning')
+            app.map.element.panTo(app.markers.current.getLatLng())
+          }, 250)
+        }
       }
-    }
-  )
+    )
 
   // resolve the promise once the animation is complete
   return $('.issue-map, #map').promise()
