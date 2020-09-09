@@ -59,7 +59,7 @@ function ImageService({ config }) {
 
   this.filename = () => {
     // generate a unique id for this image
-    return `${uuidv4()}.png`
+    return `${uuidv4()}.jpg`
   }
 
   this.filepath = (filename) => {
