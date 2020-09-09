@@ -1211,6 +1211,9 @@ const openIssueForm = async (point = false) => {
         // put the new issue data into an array and pass to the place method
         app.markers.place([res.data], cluster)
 
+        // bring back the map controls
+        $('.map-control').show()
+
         // close any open infowindow except the issue form
         collapseInfoWindow()
 
