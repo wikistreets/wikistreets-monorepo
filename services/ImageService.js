@@ -36,8 +36,8 @@ function ImageService({ config }) {
     const filepath = this.filepath(filename)
 
     // auto-rotate jpegs
-    reoriented = await reorientJpeg(buffer) // returns false if messed up
-    buffer = reoriented ? reoriented : buffer
+    // reoriented = await reorientJpeg(buffer) // returns false if messed up
+    // buffer = reoriented ? reoriented : buffer
 
     // resize and store image
     await sharp(buffer)
@@ -45,7 +45,7 @@ function ImageService({ config }) {
         fit: sharp.fit.inside,
         withoutEnlargement: true,
       })
-      .toFormat('png')
+      .toFormat('jpg')
       .toFile(filepath)
 
     // return filename
