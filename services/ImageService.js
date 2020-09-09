@@ -37,6 +37,7 @@ function ImageService({ config }) {
 
     // auto-rotate jpegs
     reoriented = await reorientJpeg(buffer) // returns false if messed up
+    if (!reoriented) console.log('no buffer from jpeg-autorotate')
     buffer = reoriented ? reoriented : buffer
 
     // resize and store image

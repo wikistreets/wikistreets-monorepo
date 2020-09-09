@@ -232,7 +232,7 @@ const markerRouter = ({ config }) => {
         // create an Issue object
         const issue = new Issue(data)
 
-        console.log(`ISSUE: ${JSON.stringify(issue, null, 2)}`)
+        // console.log(`ISSUE: ${JSON.stringify(issue, null, 2)}`)
 
         // set up changes we want to make to the overall map
         let updates = {
@@ -254,7 +254,7 @@ const markerRouter = ({ config }) => {
           console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
         })
 
-        console.log(`MAP: ${JSON.stringify(map, null, 2)}`)
+        // console.log(`MAP: ${JSON.stringify(map, null, 2)}`)
 
         // tack on the current user to the issue
         issue.user = req.user
