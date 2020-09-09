@@ -436,7 +436,7 @@ app.markers.place = (data, cluster) => {
       }, i * latency) // setTimeout
     } // if marker doesn't yet exist
     else {
-      console.log(`skipping marker ${point._id}`)
+      // console.log(`skipping marker ${point._id}`)
     }
   }) // data.map
 }
@@ -556,7 +556,7 @@ async function initMap() {
 
   // do this again every 15 seconds
   setInterval(() => {
-    console.log('loading new markers')
+    // console.log('loading new markers')
     populateMap(false) // don't re-center the map
   }, 15000)
 
@@ -932,23 +932,16 @@ const showInfoWindow = (marker, data) => {
         // console.log(JSON.stringify(res, null, 2))
         if (res.status == true) {
           // remove the marker from the map
-          const targetId = `marker-${issueId}`
-          app.markers.markers.map((marker, i, arr) => {
-            // look for the marker to delete
-            // console.log(`${targetId} - ${marker._id}`)
-            if (marker._id == targetId) {
-              // console.log('found it!')
-              // delete it!
-              const index = app.markers.markers.indexOf(marker) // find its index
-              if (index > -1) {
-                app.markers.markers.splice(marker, 1)
-              }
-              app.markers.cluster.removeLayer(marker) // remove from map
+          const targetMarker = app.markers.findById(issueId)
+          if (targetMarker) {
+            // remove if present
+            app.markers.markers.splice(targetMarker, 1)
+            app.markers.cluster.removeLayer(targetMarker) // remove from any map cluster
+            app.map.element.removeLayer(targetMarker) // remove from map
+          }
 
-              // close any open info window
-              collapseInfoWindow()
-            }
-          })
+          // close any open info window
+          collapseInfoWindow()
         }
       })
   })
