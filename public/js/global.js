@@ -292,7 +292,7 @@ app.map.setTitle = (title) => {
   if (title) app.map.title = title
   else title = app.copy.anonymousmaptitle // use generic title, if none
   $('head title').html(`${toTitleCase(title)} - Wikistreets`) // window title
-  $('.map-title').text(title) // update the visible name
+  $('.map-title.selected-map').text(title) // update the visible name
 }
 
 // get the center point of the map
@@ -769,7 +769,8 @@ const showForkedFromInfo = (mapData, mapListing) => {
 const createMapListItem = (
   mapData,
   showForkedFrom = false,
-  showForkLink = true
+  showForkLink = true,
+  isSelectedMap = false
 ) => {
   // console.log(JSON.stringify(mapData, null, 2))
   // start by cloning the template
@@ -778,6 +779,10 @@ const createMapListItem = (
     $('.select-map-container')
   ).clone()
   mapListing.removeClass('.map-list-item-template')
+
+  // give selected class, if necessary
+  if (isSelectedMap) $('h2 a', mapListing).addClass('selected-map')
+  else $('h2 a', mapListing).removeClass('selected-map')
 
   // create new link to the map
   const mapTitle = mapData.title ? mapData.title : app.copy.anonymousmaptitle
@@ -1557,7 +1562,7 @@ const openForkPanel = () => {
   }
 
   // create a list item for the selected map
-  const selectedMapListItem = createMapListItem(mapData, true, false)
+  const selectedMapListItem = createMapListItem(mapData, true, false, true)
 
   // add the fork button to it, if the map has markers
   if (mapData.numMarkers > 0) {
@@ -1611,7 +1616,7 @@ const openMapSelectorPanel = async () => {
   }
 
   // create a list item for the selected map
-  const selectedMapListItem = createMapListItem(mapData, true, true)
+  const selectedMapListItem = createMapListItem(mapData, true, true, true)
 
   // enable rename map link
   $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
