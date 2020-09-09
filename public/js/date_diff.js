@@ -43,6 +43,8 @@ const DateDiff = {
   },
 
   asAge: function (d1) {
+    if (!d1) return 'now' // no date!
+
     d1 = this.toDate(d1)
     // figure out the age of the given date in either days, weeks, months, or years
     const d2 = this.dateNow() // date now
