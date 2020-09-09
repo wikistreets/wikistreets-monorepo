@@ -1024,11 +1024,13 @@ const collapseInfoWindow = async (e) => {
 
       // re-center on current marker, if any
       if (app.markers.current) {
-        //console.log('collapse panning')
-        app.map.element.panTo(app.markers.current.getLatLng())
-
         // void the current marker
         app.markers.deactivate()
+
+        setTimeout(() => {
+          //console.log('collapse panning')
+          app.map.element.panTo(app.markers.current.getLatLng())
+        }, 250)
       }
     }
   )
