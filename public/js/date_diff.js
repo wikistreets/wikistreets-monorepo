@@ -72,6 +72,7 @@ const DateDiff = {
     else if (weeks >= 1) return `${weeks} week${weeksPlural} ago`
     else if (days > 1) return `${days} days ago`
     else if (days == 1) return `yesterday`
-    else if (days == 0) return `${hours} hours ago`
+    else if (days == 0 && hours > 2) return `${hours} hours ago`
+    else if (days == 0) return `just now`
   },
 }
