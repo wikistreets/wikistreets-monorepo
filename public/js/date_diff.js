@@ -58,7 +58,9 @@ const DateDiff = {
     // figure out the age of the given date in either days, weeks, months, or years
     const d2 = this.dateNow() // date now
     const hours = this.inHours(d1, d2, true)
+    const hoursPlural = hours > 1 ? 's' : ''
     const days = this.inDays(d1, d2, true)
+    const daysPlural = days > 1 ? 's' : ''
     const weeks = this.inWeeks(d1, d2, true)
     const weeksPlural = weeks > 1 ? 's' : ''
     const months = this.inMonths(d1, d2)
@@ -70,9 +72,9 @@ const DateDiff = {
     if (years >= 1) return `${years} year${yearsPlural} ago`
     else if (months >= 1) return `${months} month${monthsPlural} ago`
     else if (weeks >= 1) return `${weeks} week${weeksPlural} ago`
-    else if (days > 1) return `${days} days ago`
+    else if (days > 1) return `${days} day${daysPlural} ago`
     else if (days == 1) return `yesterday`
-    else if (days == 0 && hours > 2) return `${hours} hours ago`
+    else if (days == 0 && hours > 1) return `${hours} hour${hoursPlural} ago`
     else if (days == 0) return `just now`
   },
 }
