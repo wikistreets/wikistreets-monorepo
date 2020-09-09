@@ -379,46 +379,65 @@ app.markers.createCluster = () => {
   // return cluster
   return app.markers.cluster
 }
+app.markers.findById = (issueId) => {
+  // find an existing marker by its id
+  issueId = `marker-${issueId}` // markers on the map have been given this prefix
+  let match = false
+  app.markers.markers.map((data, i, arr) => {
+    // console.log(`${data._id} && ${issueId}`)
+    if (data._id == issueId) {
+      // console.log('matching marker found')
+      match = data
+    }
+  })
+  return match
+}
 app.markers.place = (data, cluster) => {
   // make a marker from each data point
   const latency = 25 // latency between marker animation drops
   data.map((point, i, arr) => {
-    // add delay before dropping marker onto map
-    setTimeout(() => {
-      if (point.position != undefined && point.position != null) {
-        const coords = [point.position.lat, point.position.lng]
-        const marker = L.marker(coords, {
-          zIndexOffset: app.markers.zIndex.default,
-          riseOffset: app.markers.zIndex.default,
-          riseOnHover: true,
-        })
+    // check whether this marker already exists on map
+    if (!app.markers.findById(point._id)) {
+      // add delay before dropping marker onto map
+      setTimeout(() => {
+        if (point.position != undefined && point.position != null) {
+          const coords = [point.position.lat, point.position.lng]
+          const marker = L.marker(coords, {
+            zIndexOffset: app.markers.zIndex.default,
+            riseOffset: app.markers.zIndex.default,
+            riseOnHover: true,
+          })
 
-        if (point.photos && point.photos.length) {
-          marker.issueType = 'unknownPhoto'
-        } else {
-          marker.issueType = 'unknownText'
-        }
+          if (point.photos && point.photos.length) {
+            marker.issueType = 'unknownPhoto'
+          } else {
+            marker.issueType = 'unknownText'
+          }
 
-        // add a unique id to each marker for later reference
-        marker._id = `marker-${point._id}`
-        // console.log(marker._id)
+          // add a unique id to each marker for later reference
+          marker._id = `marker-${point._id}`
+          // console.log(marker._id)
 
-        // cluster.addLayer(marker) // add to the marker cluster
-        app.map.element.addLayer(marker) // add directly to map
+          // cluster.addLayer(marker) // add to the marker cluster
+          app.map.element.addLayer(marker) // add directly to map
 
-        // de-highlight the current marker
-        marker.setZIndexOffset(app.markers.zIndex.default)
-        marker.setIcon(app.markers.icons[marker.issueType].default)
+          // de-highlight the current marker
+          marker.setZIndexOffset(app.markers.zIndex.default)
+          marker.setIcon(app.markers.icons[marker.issueType].default)
 
-        // add to list of markers
-        app.markers.markers.push(marker)
+          // add to list of markers
+          app.markers.markers.push(marker)
 
-        // // detect click events
-        marker.on('click', (e) => {
-          showInfoWindow(marker, point)
-        })
-      } // if
-    }, i * latency) // setTimeout
+          // // detect click events
+          marker.on('click', (e) => {
+            showInfoWindow(marker, point)
+          })
+        } // if
+      }, i * latency) // setTimeout
+    } // if marker doesn't yet exist
+    else {
+      console.log(`skipping marker ${point._id}`)
+    }
   }) // data.map
 }
 
@@ -466,34 +485,12 @@ app.user.fetch = async () => {
   })
 }
 
-async function initMap() {
-  // instantiate map centered on last known coords
-  const coords = app.browserGeolocation.getCoords()
-
-  // set up the leaflet.js map view
-  app.map.element = new L.map(app.map.htmlElementId, {
-    // attributionControl: false,
-    zoomControl: false,
-    doubleClickZoom: false,
-  }).setView([coords.lat, coords.lng], app.map.zoom.default)
-  app.map.element.attributionControl.setPrefix('')
-
-  // load map tiles
-  L.tileLayer(app.apis.mapbox.baseUrl, {
-    attribution:
-      '&copy; <a target="_new" href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a target="_new" href="https://www.openstreetmap.org/copyright">ODbL</a>, Imagery &copy; <a target="_new" href="https://www.mapbox.com/">Mapbox</a>',
-    maxZoom: 21,
-    id: 'mapbox/streets-v11',
-    tileSize: 512,
-    zoomOffset: -1,
-    accessToken: app.apis.mapbox.apiKey,
-  }).addTo(app.map.element)
-
+const populateMap = async (recenter = true) => {
   // get the map data from server
   const data = await app.map.fetch()
 
   // recenter on map centerpoint
-  if (data.centerPoint) {
+  if (recenter && data.centerPoint) {
     //console.log('init map panning')
     app.map.element.panTo(data.centerPoint)
   }
@@ -529,6 +526,39 @@ async function initMap() {
 
   // place new markers down
   app.markers.place(issues, cluster)
+}
+
+async function initMap() {
+  // instantiate map centered on last known coords
+  const coords = app.browserGeolocation.getCoords()
+
+  // set up the leaflet.js map view
+  app.map.element = new L.map(app.map.htmlElementId, {
+    // attributionControl: false,
+    zoomControl: false,
+    doubleClickZoom: false,
+  }).setView([coords.lat, coords.lng], app.map.zoom.default)
+  app.map.element.attributionControl.setPrefix('')
+
+  // load map tiles
+  L.tileLayer(app.apis.mapbox.baseUrl, {
+    attribution:
+      '&copy; <a target="_new" href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a target="_new" href="https://www.openstreetmap.org/copyright">ODbL</a>, Imagery &copy; <a target="_new" href="https://www.mapbox.com/">Mapbox</a>',
+    maxZoom: 21,
+    id: 'mapbox/streets-v11',
+    tileSize: 512,
+    zoomOffset: -1,
+    accessToken: app.apis.mapbox.apiKey,
+  }).addTo(app.map.element)
+
+  // load and add map data and markers to the map
+  populateMap()
+
+  // do this again every 15 seconds
+  setInterval(() => {
+    console.log('loading new markers')
+    populateMap(false) // don't re-center the map
+  }, 15000)
 
   // find browser's geolocation
   //app.browserGeolocation.update();
