@@ -63,6 +63,7 @@
 
     <!-- CUSTOM -->
     <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
+    <script type="text/javascript" src="/static/js/date_diff.js"></script>
     <script type="text/javascript" src="/static/js/global.js"></script>
   </head>
   <body>
@@ -94,8 +95,6 @@
 
         <div class="map-control control-find-location">
           <img
-            data-toggle="tooltip"
-            data-placement="left"
             alt="Find my location"
             title="Find my location"
             src="/static/images/material_design_icons/gps_fixed-24px.svg"
@@ -261,13 +260,23 @@
             />
           </div>
           <button type="submit" class="btn btn-primary">Sign up</button>
-          <br /><br />
         </form>
         <article class="col-xs-12 col-md-6">
           <h2>Already have an account?</h2>
           <p>
             <a href="#" class="signin-link">Log in</a> to an existing account.
           </p>
+          <p>
+            <small>
+              By using this app, you agree to the following terms and
+              conditions: that you assume all liability for your usage of this
+              app; that you are at least 18 years old; that we make no promises or guarantees to you of any kind;
+              that we will do whatever we want with your data; and that we may
+              change these terms at any moment when it suits us.
+            </small>
+          </p>
+
+
         </article>
       </div>
     </div>
@@ -344,14 +353,27 @@
         <article class="col-12">
           <small>
             &copy; 2020. All rights reserved.
-            <br />
-            Created by <a href="http://plasticpast.com">Plastic Past</a>.
-            <br />
-            By using this app, you agree to the following terms and conditions:
-            that you assume all liability for your usage of this app; that we
-            make no promises or guarantees to you of any kind; that we will do
-            whatever we want with your data; and that we may change these terms
-            at any moment when it suits us.
+            <p>
+              Created by <a href="http://plasticpast.com">Plastic Plastic
+              <br />
+              &copy;
+              <a target="_new" href="https://www.openstreetmap.org/"
+                >OpenStreetMap</a
+              >
+              contributors
+              <a target="_new" href="https://www.openstreetmap.org/copyright">ODbL</a>
+              | Imagery &copy;
+              <a target="_new" href="https://www.mapbox.com/">Mapbox</a>
+              | Map interactions by
+              <a target="_new" href="https://leaflet.js">Leaflet</a>
+            </p>
+            <p>
+              By using this app, you agree to the following terms and
+              conditions: that you assume all liability for your usage of this
+              app; that you are at least 18 years old; that we make no promises or guarantees to you of any kind;
+              that we will do whatever we want with your data; and that we may
+              change these terms at any moment when it suits us.
+            </p>
           </small>
         </article>
       </div>
@@ -401,6 +423,7 @@
             </li>
           </ul>
           <button class="btn btn-primary fork-button">Fork it</button>
+          <a class="cancel-link" href="#">Cancel</a>
         </header>
         <article class="col-12 col-md-8">
           <h2>About forks</h2>
@@ -460,6 +483,7 @@
               />
             </div>
             <button type="submit" class="btn btn-primary">Save</button>
+            <a class="cancel-link" href="#">Cancel</a>
           </form>
         </header>
         <article class="col-12 col-md-8">

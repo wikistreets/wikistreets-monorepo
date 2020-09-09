@@ -1,5 +1,6 @@
 // express
 const express = require('express')
+const { body, validationResult } = require('express-validator')
 const uuidv4 = require('uuid/v4')
 const path = require('path')
 const multer = require('multer') // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
@@ -54,10 +55,20 @@ const mapRouter = ({ config }) => {
     '/map/title/:mapId',
     passportJWT,
     upload.none(),
+    [body('mapTitle').not().isEmpty().trim().escape()],
     async (req, res) => {
       const mapId = req.body.mapId
       const mapTitle = req.body.mapTitle
-      console.log(`MAP TITLE: ${mapTitle}`)
+
+      // check for validation errors
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Please enter a more reasonable map title.',
+        })
+      }
+
+      // console.log(`MAP TITLE: ${mapTitle}`)
       const map = await Map.findOneAndUpdate(
         { publicId: mapId },
         { title: mapTitle }

@@ -1,5 +1,6 @@
 // express
 const express = require('express')
+const { body, validationResult } = require('express-validator')
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const passportConfig = require('../passportConfig')
@@ -177,6 +178,13 @@ const markerRouter = ({ config }) => {
     passportJWT, // jwt authentication
     upload.array('files', config.markers.maxFiles), // multer file upload
     handleImages(markerImageService), // sharp file editing
+    [
+      body('lat').not().isEmpty().trim(),
+      body('lng').not().isEmpty().trim(),
+      body('address').trim().escape(),
+      body('comments').trim().escape(),
+      body('mapTitle').trim().escape(),
+    ],
     async (req, res, next) => {
       const mapId = req.body.mapId
       const mapTitle = req.body.mapTitle
@@ -202,7 +210,7 @@ const markerRouter = ({ config }) => {
       }
       // reject posts with no useful data
       else if (!data.photos.length && !data.comments) {
-        const err = 'You submitted an empty post.... please try again.'
+        const err = 'You submitted an empty post.... please be reasonable.'
         return res.status(400).json({
           status: false,
           message: err,
@@ -211,7 +219,7 @@ const markerRouter = ({ config }) => {
       }
       // reject posts with no address or lat/lng
       else if (!data.address || !data.position.lat || !data.position.lng) {
-        const err = 'Please include an address in your post'
+        const err = 'Please include a title with your post'
         return res.status(400).json({
           status: false,
           message: err,

@@ -61,6 +61,10 @@ a:hover {
   margin-top: 10px;
   margin-bottom: 10px;
 }
+.cancel-link {
+  margin-left: 20px;
+  margin-right: 20px;
+}
 
 section {
   margin-bottom: 20px;
@@ -121,6 +125,10 @@ ul {
   margin-left: -120px;
 }
 
+.leaflet-control-attribution,
+.leaflet-control-attribution a {
+  color: #aaa;
+}
 /* .map-controls {
   position: absolute;
   left: 0;
@@ -282,7 +290,7 @@ ul {
 /* photo carousel */
 .carousel {
   width: 100%;
-  height: 400px;
+  height: 50vh;
   /* height: 300px; */
 }
 .carousel .carousel-inner img {

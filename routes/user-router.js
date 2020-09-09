@@ -1,5 +1,6 @@
 // express
 const express = require('express')
+const { body, validationResult } = require('express-validator')
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const passportConfig = require('../passportConfig')
@@ -52,38 +53,55 @@ const userRouter = ({ config }) => {
   const upload = multer()
 
   // user registration
-  router.post('/signup', upload.none(), async (req, res) => {
-    // extract salient details from the request
-    const { email, handle, password } = req.body
+  router.post(
+    '/signup',
+    upload.none(),
+    [
+      body('email').isEmail().normalizeEmail(),
+      body('password').isLength({ min: 5 }),
+      body('handle').isLength({ min: 5 }).escape(),
+    ],
+    async (req, res) => {
+      // extract salient details from the request
+      const { email, handle, password } = req.body
 
-    // check whether user already exists and immediately send error if so
-    const userExists = await User.findOne({ email })
-    if (userExists) {
-      return res
-        .status(403)
-        .send({ error: 'An account with this email address already exists.' })
-    }
+      // check for validation errors
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Please enter a more reasonable email, handle, and password.',
+        })
+      }
 
-    // create a new user
-    const user = new User({ email, handle, password })
-    user.password = await user.encryptPassword(user.password) // encrypt the password
-    // console.log(`password during signup pre-pre saving: ${user.password}`)
-    await user
-      .save()
-      .catch((err) =>
-        res
+      // check whether user already exists and immediately send error if so
+      const userExists = await User.findOne({ email })
+      if (userExists) {
+        return res
           .status(403)
-          .send({ error: 'Please enter a username, handle, and password.' })
-      )
+          .send({ error: 'An account with this email address already exists.' })
+      }
 
-    // respond with new signed token
-    const token = signJwtToken(user, config.jwt)
-    // console.log(`sending back token: ${token}`)
-    res.json({
-      token,
-      handle: user.handle,
-    })
-  })
+      // create a new user
+      const user = new User({ email, handle, password })
+      user.password = await user.encryptPassword(user.password) // encrypt the password
+      // console.log(`password during signup pre-pre saving: ${user.password}`)
+      await user
+        .save()
+        .catch((err) =>
+          res
+            .status(403)
+            .send({ error: 'Please enter a username, handle, and password.' })
+        )
+
+      // respond with new signed token
+      const token = signJwtToken(user, config.jwt)
+      // console.log(`sending back token: ${token}`)
+      res.json({
+        token,
+        handle: user.handle,
+      })
+    }
+  )
 
   // user login
   router.post('/signin', upload.none(), passportSignIn, (req, res) => {

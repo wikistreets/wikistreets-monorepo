@@ -472,14 +472,16 @@ async function initMap() {
 
   // set up the leaflet.js map view
   app.map.element = new L.map(app.map.htmlElementId, {
+    // attributionControl: false,
     zoomControl: false,
     doubleClickZoom: false,
   }).setView([coords.lat, coords.lng], app.map.zoom.default)
+  app.map.element.attributionControl.setPrefix('')
 
   // load map tiles
   L.tileLayer(app.apis.mapbox.baseUrl, {
     attribution:
-      'Map data &copy; <a target="_new" href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a target="_new" href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a target="_new" href="https://www.mapbox.com/">Mapbox</a>',
+      '&copy; <a target="_new" href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a target="_new" href="https://www.openstreetmap.org/copyright">ODbL</a>, Imagery &copy; <a target="_new" href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 21,
     id: 'mapbox/streets-v11',
     tileSize: 512,
@@ -508,8 +510,8 @@ async function initMap() {
       createdAt: data.createdAt,
     }
     // also store formatted dates
-    app.map.updatedAt = formatDate(data.updatedAt)
-    app.map.createdAt = formatDate(data.createdAt)
+    app.map.updatedAt = DateDiff.asAge(data.updatedAt)
+    app.map.createdAt = DateDiff.asAge(data.createdAt)
   } catch (err) {
     console.log(`Metadata error: ${err}`)
   }
@@ -762,8 +764,8 @@ const createMapListItem = (
   } else {
     // enable the fork link
   }
-  $('.createdat', mapListing).html(formatDate(mapData.createdAt))
-  $('.updatedat', mapListing).html(formatDate(mapData.updatedAt))
+  $('.createdat', mapListing).html(DateDiff.asAge(mapData.createdAt))
+  $('.updatedat', mapListing).html(DateDiff.asAge(mapData.updatedAt))
 
   return mapListing
 }
@@ -821,9 +823,9 @@ const showInfoWindow = (marker, data) => {
   let contentString = ''
 
   // format the date the marker was created
-  const date = formatDate(data.date)
+  const date = DateDiff.asAge(data.date)
   // give attribution to author
-  const attribution = `Posted by <a class="user-link" user-id="${data.user._id}" href="#">${data.user.handle}</a> on ${date}`
+  const attribution = `Posted by <a class="user-link" user-id="${data.user._id}" href="#">${data.user.handle}</a> ${date}.`
 
   let imgString = createPhotoCarousel(data.photos)
   // console.log(imgString)
@@ -1374,7 +1376,17 @@ const openSignupPanel = async () => {
     return app
       .myFetch(app.apis.wikistreets.userSignup, 'POST', formData)
       .then((res) => {
-        //console.log(`SUCCESS: ${res}`)
+        // check for error
+        if (res.error) {
+          console.error(`ERROR: ${JSON.stringify(res.error, null, 2)}`)
+
+          // show instructions
+          $('.info-window .feedback-message').html(res.error)
+          $('.info-window .feedback-message').removeClass('hide')
+          return
+        }
+
+        console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
         app.auth.setToken(res.token)
         $('.handle').text(res.handle)
         collapseInfoWindow()
@@ -1385,6 +1397,7 @@ const openSignupPanel = async () => {
         // show instructions
         $('.info-window .feedback-message').html(app.copy.signuperror)
         $('.info-window .feedback-message').removeClass('hide')
+        $('.info-window .feedback-message').show()
       })
   })
 
@@ -1438,7 +1451,7 @@ const openUserProfile = async (handle, userId) => {
         data.numMarkers = data.issues ? data.issues.length : 0
 
         // create and populate the map list item
-        const mapListing = createMapListItem(data, true)
+        const mapListing = createMapListItem(data, true, false)
 
         // concatenate to list of maps
         mapListing.appendTo(mapListTemporaryContainer)
@@ -1489,6 +1502,11 @@ const activateForkButton = () => {
     //console.log(`FORK SERVER RESPONSE: ${result}`)
     window.location.href = `${app.apis.wikistreets.staticMapUrl}/${mapData.publicId}`
   })
+
+  $('.info-window .cancel-link').click(async (e) => {
+    e.preventDefault()
+    openMapSelectorPanel() // switch to map list view
+  })
 }
 
 // show a particular user's profile
@@ -1499,6 +1517,7 @@ const openForkPanel = () => {
 
   // grab fork button for later
   const forkItButton = $('.btn-primary', $('.info-window-content'))
+  const cancelForkButton = $('.cancel-link', $('.info-window-content'))
 
   // prepare map data
   // populate this map's details
@@ -1515,11 +1534,13 @@ const openForkPanel = () => {
   }
 
   // create a list item for the selected map
-  const selectedMapListItem = createMapListItem(mapData, true)
+  const selectedMapListItem = createMapListItem(mapData, true, false)
 
   // add the fork button to it, if the map has markers
-  if (mapData.numMarkers > 0) forkItButton.appendTo(selectedMapListItem)
-
+  if (mapData.numMarkers > 0) {
+    forkItButton.appendTo(selectedMapListItem)
+    cancelForkButton.appendTo(selectedMapListItem)
+  }
   // show the updated map data
   $('.info-window .map-list-container').html(selectedMapListItem)
 
@@ -1567,15 +1588,23 @@ const openMapSelectorPanel = async () => {
   }
 
   // create a list item for the selected map
-  const selectedMapListItem = createMapListItem(mapData, true)
+  const selectedMapListItem = createMapListItem(mapData, true, true)
 
   // enable rename map link
+  $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
   $('.rename-map-link', selectedMapListItem).click((e) => {
     e.preventDefault()
     // show the rename map form
-    $('.map-details-container').hide()
-    $('.rename-map-container').show()
+    $('.info-window-content .map-details-container').hide()
+    $('.info-window-content .rename-map-container').show()
   })
+  $('.rename-map-form .cancel-link', $('.info-window-content')).click((e) => {
+    e.preventDefault()
+    // revert to the map list view
+    $('.info-window-content .map-details-container').show()
+    $('.info-window-content .rename-map-container').hide()
+  })
+
   // enable fork map link
   $('.fork-map-link', selectedMapListItem).click(() => {
     app.auth.getToken() ? openForkPanel() : openSigninPanel()
@@ -1604,7 +1633,7 @@ const openMapSelectorPanel = async () => {
     data.numMarkers = data.issues ? data.issues.length : 0
 
     // create and populate the map list item
-    const mapListing = createMapListItem(data, true)
+    const mapListing = createMapListItem(data, true, false)
 
     // concatenate to list of maps
     mapListing.appendTo(mapListTemporaryContainer)
