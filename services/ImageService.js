@@ -11,21 +11,22 @@ const fsunlink = util.promisify(fs.unlink)
 
 // function to correct jpeg orientation
 const reorientJpeg = async (buffer, quality = 100) => {
-  await jo
+  const modified = await jo
     .rotate(buffer, { quality: quality })
     .then(({ buffer, orientation, dimensions, quality }) => {
       console.log(`Orientation was ${orientation}`)
-      console.log(
-        `Dimensions after rotation: ${dimensions.width}x${dimensions.height}`
-      )
-      console.log(`Quality: ${quality}`)
+      // console.log(
+      //   `Dimensions after rotation: ${dimensions.width}x${dimensions.height}`
+      // )
+      // console.log(`Quality: ${quality}`)
       // ...Do whatever you need with the resulting buffer...
       return buffer
     })
     .catch((error) => {
       console.log('An error occurred when rotating the file: ' + error.message)
-      return false
+      return buffer
     })
+  return modified
 }
 
 // the image resizing, reorienting class
