@@ -882,24 +882,24 @@ const showInfoWindow = (marker, data) => {
   // do some cleanup of the text comment
   data.comments = data.comments.replace('\n', '<br />')
   contentString += `
-<div class="card col-12">
-    ${contextMenuString}
-    <div class="card-body">
-        <h2 class="card-title">${data.address}</h2>
+<div class="issue-detail">
+    <header>
+        ${contextMenuString}
+        <h2>${data.address}</h2>
         <p class="instructions">${attribution}</p>
-        ${imgString}
+    </header>
+    <article>
+    ${imgString}
     `
   contentString += !data.comments
     ? ''
     : `
-        <p class="card-text">${data.comments}</p>
+        <p>${data.comments}</p>
     `
   contentString += `
-    </div>
-    <!-- <ul class="list-group list-group-flush"> -->
-    `
+    </article>
+  `
   contentString += `
-    <!-- </ul> -->
 </div>
     `
 
@@ -1021,18 +1021,19 @@ const collapseInfoWindow = async (e) => {
         // update mode
         app.mode = 'default'
 
-        // inform the map that it has been dynamically resized
-        app.map.element.invalidateSize(true)
-
         // re-center on current marker, if any
         if (app.markers.current) {
-          // void the current marker
-          app.markers.deactivate()
-
           setTimeout(() => {
-            //console.log('collapse panning')
-            app.map.element.panTo(app.markers.current.getLatLng())
-          }, 250)
+            const newCenter = app.markers.current.getLatLng()
+            // console.log(`recentering to ${newCenter}`)
+            app.map.element.panTo(newCenter)
+            // void the current marker
+            setTimeout(() => {
+              app.markers.deactivate()
+              // inform the map that it has been dynamically resized
+              app.map.element.invalidateSize(true)
+            }, 50)
+          }, 50)
         }
       }
     )
