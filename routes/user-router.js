@@ -97,6 +97,36 @@ const userRouter = ({ config }) => {
 
       // respond with new signed token
       const token = signJwtToken(user, config.jwt)
+
+      // send a welcome email
+      // send an email
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.dreamhost.com',
+        secure: true,
+        port: 465,
+        auth: {
+          user: 'accounts@wikistreets.io',
+          pass: 'Jdbx5bcr',
+        },
+      })
+
+      const mailOptions = {
+        from: 'Wikistreets <accounts@wikistreets.io>',
+        to: user.email,
+        subject: 'Welcome!',
+        text: `${user.handle} - welcome to https://wikistreets.io!`,
+      }
+
+      // console.log(mailOptions)
+
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          // console.log(error)
+        } else {
+          // console.log('Email sent: ' + info.response)
+        }
+      })
+
       // console.log(`sending back token: ${token}`)
       res.json({
         token,
