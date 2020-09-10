@@ -965,8 +965,9 @@ const hideAllTooltips = () => {
 const showSpinner = (containerEl) => {
   // show the spinner
   const spinner = $('.spinner-container .spinner-overlay').clone()
+  spinner.appendTo($(containerEl)) // add to element
+  spinner.css('height', containerEl.height()) // match height
   spinner.show() // in case it was previously hidden
-  spinner.appendTo($(containerEl))
   const topMargin =
     parseInt($(containerEl).height() / 2) -
     parseInt($('.spinner-overlay img', containerEl).height() / 2)
