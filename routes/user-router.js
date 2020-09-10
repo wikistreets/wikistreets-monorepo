@@ -167,6 +167,9 @@ const userRouter = ({ config }) => {
         'updatedAt',
         'forkedFrom.publicId',
         'forkedFrom.title',
+        'issues',
+        'contributors',
+        'forks',
       ])
       .catch((err) => {
         return res.status(500).json({

@@ -1028,13 +1028,14 @@ const collapseInfoWindow = async (e) => {
             // console.log(`recentering to ${newCenter}`)
             app.map.element.panTo(newCenter)
             // void the current marker
-            setTimeout(() => {
-              app.markers.deactivate()
-              // inform the map that it has been dynamically resized
-              app.map.element.invalidateSize(true)
-            }, 50)
           }, 50)
         }
+        // revert map position
+        setTimeout(() => {
+          app.markers.deactivate()
+          // inform the map that it has been dynamically resized
+          app.map.element.invalidateSize(true)
+        }, 100)
       }
     )
 

@@ -297,6 +297,7 @@ ul {
   width: 100%;
   /* height: 30em; */
   /* height: 400px; */
+  max-height: 50vh;
   object-fit: contain;
   overflow: hidden;
 }
