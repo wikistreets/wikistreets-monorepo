@@ -902,16 +902,18 @@ const showInfoWindow = (marker, data) => {
   // console.log(imgString)
 
   // generate the context menu
-  let contextMenuString = !app.auth.getToken()
-    ? ''
-    : `
+  // only show delete link to logged-in users
+  const deleteLinkString = app.auth.getToken()
+    ? `<a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>`
+    : ''
+  let contextMenuString = `
     <div class="context-menu dropdown">
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ...
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
         <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Copy link</a>
-        <a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>
+        ${deleteLinkString}
       </div>
     </div>
   `
