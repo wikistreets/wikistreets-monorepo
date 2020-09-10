@@ -966,6 +966,7 @@ const showSpinner = (containerEl) => {
   // show the spinner
   const spinner = $('.spinner-container .spinner-overlay').clone()
   spinner.appendTo($(containerEl)) // add to element
+  console.log(`containeer height ${containerEl.height()}`)
   spinner.css('height', containerEl.height()) // match height
   spinner.show() // in case it was previously hidden
   const topMargin =
@@ -984,6 +985,9 @@ const expandInfoWindow = async (
   mapHeight = 50,
   title = 'Welcome!'
 ) => {
+  // hide any existing spinners
+  hideSpinner($('.info-window-content'))
+
   // show instructions
   $('.info-window .instructions').html(title)
 
