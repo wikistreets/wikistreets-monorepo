@@ -80,6 +80,15 @@ const app = {
         return mapId
       },
     },
+    hash: {
+      get: () => {
+        // get this map's ID from the URL
+        const hash = window.location.hash
+        if (hash.indexOf('#') == 0) {
+          return hash.substr(1)
+        } else return ''
+      },
+    },
     title: '',
     element: null,
     htmlElementId: 'map',
@@ -380,6 +389,18 @@ app.markers.createCluster = () => {
   // return cluster
   return app.markers.cluster
 }
+app.markers.simulateClick = (marker) => {
+  // fire a click event in the browser-appropriate way
+  if (marker.fireEvent) {
+    // most browsers
+    marker.fireEvent('click')
+  } else {
+    // older browsers, i.e. 8?
+    var evObj = document.createEvent('Events')
+    evObj.initEvent('click', true, false)
+    marker.dispatchEvent(evObj)
+  }
+}
 app.markers.findById = (issueId) => {
   // find an existing marker by its id
   issueId = `marker-${issueId}` // markers on the map have been given this prefix
@@ -395,7 +416,7 @@ app.markers.findById = (issueId) => {
 }
 app.markers.place = (data, cluster) => {
   // make a marker from each data point
-  const latency = 25 // latency between marker animation drops
+  const latency = 15 // latency between marker animation drops
   data.map((point, i, arr) => {
     // check whether this marker already exists on map
     if (!app.markers.findById(point._id)) {
@@ -555,6 +576,18 @@ async function initMap() {
   // load and add map data and markers to the map
   populateMap()
 
+  // load any marker in the url hash
+  // need to wait till all the markers have been placed
+  setTimeout(() => {
+    const hash = app.map.hash.get()
+    if (hash) {
+      //if there is a marker id in the url
+      const marker = app.markers.findById(hash)
+      // simulate click
+      if (marker) app.markers.simulateClick(marker)
+    }
+  }, 1000) // note to self: we need to calculate this latency, not hard-code it
+
   // do this again every 15 seconds
   setInterval(() => {
     // console.log('loading new markers')
@@ -673,6 +706,20 @@ async function initMap() {
   app.map.element.on('dragend', (e) => {
     // console.log('map drag end');
   })
+
+  // handle browser back/forward button clicks
+  window.onpopstate = (e) => {
+    const hash = app.map.hash.get()
+    if (hash) {
+      //if there is a marker id in the url
+      const marker = app.markers.findById(hash)
+      // simulate click
+      if (marker) app.markers.simulateClick(marker)
+    } else {
+      // no hash means no issue, so close info window
+      collapseInfoWindow()
+    }
+  }
 }
 
 // on page load....
@@ -875,6 +922,7 @@ const showInfoWindow = (marker, data) => {
         ...
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+        <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Copy link</a>
         <a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>
       </div>
     </div>
@@ -889,6 +937,7 @@ const showInfoWindow = (marker, data) => {
         <h2>${data.address}</h2>
         <p class="instructions">${attribution}</p>
     </header>
+    <div class="feedback alert alert-success hide"></div>
     <article>
     ${imgString}
     `
@@ -910,6 +959,9 @@ const showInfoWindow = (marker, data) => {
   // activate the carousel
   $('.info-window-content .carousel').carousel()
 
+  // update the url hash tag
+  window.location.hash = marker._id.substr(marker._id.indexOf('-') + 1)
+
   // console.log('opening infowindow');
   expandInfoWindow(70, 30).then(() => {
     // center the map on the selected marker after panel has opened
@@ -925,6 +977,29 @@ const showInfoWindow = (marker, data) => {
 
       openUserProfile(data.user.handle, userId)
     })
+  })
+
+  // activate copy link button
+  $('.copy-issue-link').click((e) => {
+    e.preventDefault()
+    const text = window.location.href
+    navigator.clipboard.writeText(text).then(
+      function () {
+        // show success message
+        // console.log(`Copied ${text} to the clipboard!`)
+        const feedbackEl = $('.info-window-content .feedback')
+        feedbackEl.html('Link copied to clipboard.  Please share!')
+        feedbackEl.show()
+        setTimeout(() => {
+          feedbackEl.fadeOut()
+        }, 3000)
+      },
+      function (err) {
+        console.error(
+          'Could not copy to clipboard.  Please use a different browser.'
+        )
+      }
+    )
   })
 
   // activate delete button
@@ -1017,6 +1092,9 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
 
 const collapseInfoWindow = async (e) => {
   // console.log(`mode=${app.mode}`);
+
+  // remove the hash from the url
+  window.history.pushState('', document.title, window.location.pathname)
 
   // hide the info window
   $('.info-window').css({
@@ -1243,16 +1321,8 @@ const openIssueForm = async (point = false) => {
           // console.log(`finding marker with id marker-${issueId}`)
           const targetMarker = app.markers.findById(issueId)
           if (targetMarker) {
-            // fire a click event in the browser-appropriate way
-            if (targetMarker.fireEvent) {
-              // most browsers
-              targetMarker.fireEvent('click')
-            } else {
-              // older browsers
-              var evObj = document.createEvent('Events')
-              evObj.initEvent('click', true, false)
-              el.dispatchEvent(evObj)
-            }
+            // fire click event
+            app.markers.simulateClick(targetMarker)
           } else {
             // if all fails, just hide the infowindow
             collapseInfoWindow()
