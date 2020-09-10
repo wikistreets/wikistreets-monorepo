@@ -1188,7 +1188,7 @@ const openIssueForm = async (point = false) => {
     e.preventDefault()
 
     // show the spinner till done
-    showSpinner($('.info-window'))
+    showSpinner($('.info-window-content'))
 
     // force user login before an issue can be submitted
     if (!app.auth.getToken()) {
