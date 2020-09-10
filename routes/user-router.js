@@ -114,7 +114,8 @@ const userRouter = ({ config }) => {
         from: 'Wikistreets <accounts@wikistreets.io>',
         to: user.email,
         subject: 'Welcome!',
-        text: `${user.handle} - welcome to https://wikistreets.io!`,
+        text: `${user.handle} - welcome to Wikistreets!  https://wikistreets.io`,
+        html: `<p>${user.handle} - welcome to <a href="https://wikistreets.io">Wikistreets</a>!</p>`,
       }
 
       // console.log(mailOptions)
