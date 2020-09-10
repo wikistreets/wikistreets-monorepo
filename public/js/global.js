@@ -962,6 +962,22 @@ const hideAllTooltips = () => {
   $('.tooltip').tooltip('hide') // trying another method
 }
 
+const showSpinner = (containerEl) => {
+  // show the spinner
+  const spinner = $('.spinner-container .spinner-overlay').clone()
+  spinner.show() // in case it was previously hidden
+  spinner.appendTo($(containerEl))
+  const topMargin =
+    parseInt($(containerEl).height() / 2) -
+    parseInt($('.spinner-overlay img', containerEl).height() / 2)
+  $('.spinner-overlay img', containerEl).css('margin-top', topMargin)
+}
+const hideSpinner = (containerEl) => {
+  // hide the spinner
+  const spinner = $('.spinner-overlay', containerEl)
+  spinner.hide()
+}
+
 const expandInfoWindow = async (
   infoWindowHeight = 50,
   mapHeight = 50,
@@ -1170,6 +1186,9 @@ const openIssueForm = async (point = false) => {
     // prevent page reload
     e.preventDefault()
 
+    // show the spinner till done
+    showSpinner($('.info-window-content'))
+
     // force user login before an issue can be submitted
     if (!app.auth.getToken()) {
       // save the filled-in form in the stash
@@ -1215,11 +1234,32 @@ const openIssueForm = async (point = false) => {
         // bring back the map controls
         $('.map-control').show()
 
-        // close any open infowindow except the issue form
-        collapseInfoWindow()
-
         // remove me marker, if present
         app.markers.wipeMe()
+
+        // close any open infowindow except the issue form
+
+        // open the new issue
+        setTimeout(() => {
+          const issueId = res.data._id
+          console.log(`finding marker with id marker-${issueId}`)
+          const targetMarker = app.markers.findById(issueId)
+          if (targetMarker) {
+            // fire a click event in the browser-appropriate way
+            if (targetMarker.fireEvent) {
+              // most browsers
+              targetMarker.fireEvent('click')
+            } else {
+              // older browsers
+              var evObj = document.createEvent('Events')
+              evObj.initEvent('click', true, false)
+              el.dispatchEvent(evObj)
+            }
+          } else {
+            // if all fails, just hide the infowindow
+            collapseInfoWindow()
+          }
+        }, 100)
       })
       .catch((err) => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
