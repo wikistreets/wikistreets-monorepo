@@ -142,9 +142,9 @@
       <!-- info window icons -->
       <!-- <img class="close-icon" src="/static/images/material_design_icons/close-24px.svg" /> -->
 
-      <p class="hide instructions street-address alert alert-info" role="alert">
+      <!-- <p class="hide instructions street-address alert alert-info" role="alert">
         Welcome!
-      </p>
+      </p> -->
 
       <section class="info-window-content"></section>
     </section>
@@ -214,6 +214,11 @@
             <a href="#" class="signup-link">Sign up</a> to be able to post
             markers to this map.
           </p>
+          <h2>Forgot your password?</h2>
+          <p>
+            We'll <a href="#" class="reset-password-link">send you a new one</a>.
+          </p>
+
         </article>
       </div>
     </div>
@@ -266,21 +271,57 @@
           <p>
             <a href="#" class="signin-link">Log in</a> to an existing account.
           </p>
+        </article>
+        <article class="col-12">
           <p>
             <small>
               By using this app, you agree to the following terms and
-              conditions: that you assume all liability for your usage of this
-              app; that you are at least 18 years old; that we make no promises or guarantees to you of any kind;
-              that we will do whatever we want with your data; and that we may
-              change these terms at any moment when it suits us.
+              conditions: 
+              that you are at least 18 years old;
+              that you assume all liability for your usage of this app; 
+              that we cannot be held liable for any issues or offenses related to your usage of this app; 
+              that we make no promises or guarantees to you of any kind;
+              that we will do whatever we want with your data; and that we may change these terms at any moment when it suits us.
             </small>
           </p>
-
-
         </article>
       </div>
     </div>
     <!-- // signup form-->
+
+    <!-- reset password form -->
+    <div class="reset-password-form-container hide">
+      <h2>Reset password</h2>
+      <div class="feedback-message alert alert-danger hide"></div>
+      <div class="row">
+        <form
+          class="reset-password-form col-xs-12 col-md-6"
+          action="/users/reset-password"
+          method="POST"
+        >
+          <div class="form-group">
+            <!-- <label for="signin-email">Email address</label> -->
+            <input
+              type="email"
+              class="form-control"
+              name="email"
+              id="signin-email"
+              placeholder="Email address"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Reset password</button>
+          <br />
+        </form>
+
+        <article class="col-xs-12 col-md-6">
+          <h2>We'll send you a new password</h2>
+          <p>
+            Check your email after you submit the form.
+          </p>
+        </article>
+      </div>
+    </div>
+    <!-- // reset password form-->
 
     <!-- issue form -->
     <div class="issue-form-container hide">
@@ -354,7 +395,7 @@
           <small>
             &copy; 2020. All rights reserved.
             <p>
-              Created by <a href="http://plasticpast.com">Plastic Plastic
+              Created by <a href="http://plasticpast.com">Plastic Past
               <br />
               &copy;
               <a target="_new" href="https://www.openstreetmap.org/"
@@ -371,10 +412,12 @@
             </p>
             <p>
               By using this app, you agree to the following terms and
-              conditions: that you assume all liability for your usage of this
-              app; that you are at least 18 years old; that we make no promises or guarantees to you of any kind;
-              that we will do whatever we want with your data; and that we may
-              change these terms at any moment when it suits us.
+              conditions: 
+              that you are at least 18 years old;
+              that you assume all liability for your usage of this app; 
+              that we cannot be held liable for any issues or offenses related to your usage of this app; 
+              that we make no promises or guarantees to you of any kind;
+              that we will do whatever we want with your data; and that we may change these terms at any moment when it suits us.
             </p>
           </small>
         </article>
@@ -475,13 +518,14 @@
             enctype="multipart/form-data"
           >
             <div class="form-group">
-              <label for="mapTitle">New name:</label>
+              <!-- <label for="mapTitle">New name:</label> -->
               <input
                 class="form-control"
                 type="text"
                 name="mapTitle"
                 id="mapTitle"
                 maxlength="50"
+                placeholder="Map name"
               />
             </div>
             <button type="submit" class="btn btn-primary">Save</button>

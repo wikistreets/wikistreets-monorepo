@@ -7,6 +7,8 @@ const passportConfig = require('../passportConfig')
 // multer is needed since we're using FormData to submit form on client side
 // bodyParser does not accept multipart form data, but multer does
 const multer = require('multer')
+var generator = require('generate-password')
+var nodemailer = require('nodemailer')
 
 // middleware
 // const _ = require('lodash'); // utility functions for arrays, numbers, objects, strings, etc.
@@ -14,7 +16,7 @@ const multer = require('multer')
 // const path = require('path');
 
 // mongoose schemas and models
-const { User } = require('../models/user')
+const { User, userSchema } = require('../models/user')
 // const { Issue } = require('../models/issue')
 const { Map } = require('../models/map')
 
@@ -112,6 +114,84 @@ const userRouter = ({ config }) => {
       token,
       handle: req.user.handle,
     })
+  })
+
+  // user reset password
+  router.post('/reset-password', upload.none(), async (req, res) => {
+    const newPassword = generator.generate({
+      length: 10,
+      numbers: true,
+    })
+    const newPasswordEncrypted = await userSchema.methods.encryptPassword(
+      newPassword
+    ) // encrypt the password
+    const user = await User.findOneAndUpdate(
+      { email: req.body.email },
+      {
+        password: newPasswordEncrypted,
+      }
+    )
+      .then((user) => {
+        if (user) {
+          // console.log(JSON.stringify(user, null, 2))
+          // save changes
+          user.save()
+
+          // send an email
+          const transporter = nodemailer.createTransport({
+            host: 'smtp.dreamhost.com',
+            secure: true,
+            port: 465,
+            auth: {
+              user: 'accounts@wikistreets.io',
+              pass: 'Jdbx5bcr',
+            },
+          })
+
+          const mailOptions = {
+            from: 'Wikistreets <accounts@wikistreets.io>',
+            to: user.email,
+            subject: 'Password reset',
+            text: `${newPassword}`,
+          }
+
+          // console.log(mailOptions)
+
+          transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+              // console.log(error)
+              err = `An error occurred while sending you the new password. Please try again.`
+              return res.status(400).json({
+                status: false,
+                message: err,
+                error: err,
+              })
+            } else {
+              // console.log('Email sent: ' + info.response)
+              // return the response to client
+              res.json({
+                status: true,
+                message: 'success',
+              })
+            }
+          })
+        } else {
+          err = 'No account found with that email'
+          return res.status(400).json({
+            status: false,
+            message: err,
+            error: err,
+          })
+        }
+      })
+      .catch((err) => {
+        console.log(err)
+        return res.status(400).json({
+          status: false,
+          message: err,
+          err: err,
+        })
+      })
   })
 
   // try to gain access to some content that is hidden behind the JWT authentication wall
