@@ -8,24 +8,11 @@ const app = {
     getToken: () => localStorage.getItem('token'),
   },
   copy: {
-    aboutus: 'Wikistreets',
-    issuelocatestart: 'Drag the person to mark the spot',
-    issuecreate: 'Create a post',
-    searchaddress: 'Enter an address',
-    signin: 'Log in to make maps',
     signinerror:
       'The email or password you entered is not correct.  Please correct and try again',
-    signup: 'Create an account to make maps',
     signuperror:
       'An account exists with that email address.  Please sign in or create a new account',
-    createissueerror: 'Something unusual happened!',
-    userprofile: 'About this user',
-    forkmapinstructions: 'Click the button to fork this map',
-    forkmaperror: 'Sign in the fork this map',
-    selectmapinstructions: 'Manage maps',
     anonymousmaptitle: 'anonymous map',
-    searchaddressinstructions: 'Find address',
-    geopositionfailure: 'Geoposition currently unavailable',
   },
   mode: 'default', // default, issuedetails, issuelocate
   browserGeolocation: {
@@ -283,17 +270,18 @@ app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
   return res
 }
 
-// get the title of the map, or a generic title if none exists
-app.map.getTitle = () => {
-  title = app.map.title ? app.map.title : app.copy.anonymousmaptitle
-  return title
-}
-
 // convert a string to title case
 const toTitleCase = (str) => {
   return str.replace(/\w\S*/g, function (txt) {
     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
   })
+}
+
+// get the title of the map, or a generic title if none exists
+app.map.getTitle = (titlecase = false) => {
+  title = app.map.title ? app.map.title : app.copy.anonymousmaptitle
+  if (titlecase) title = toTitleCase(title)
+  return title
 }
 
 // set the title of the map
@@ -959,6 +947,11 @@ const showInfoWindow = (marker, data) => {
   // activate the carousel
   $('.info-window-content .carousel').carousel()
 
+  // update the page title
+  $('head title').html(
+    `${data.address} - ${app.map.getTitle(true)} - Wikistreets`
+  ) // window title
+
   // update the url hash tag
   window.location.hash = marker._id.substr(marker._id.indexOf('-') + 1)
 
@@ -1246,9 +1239,6 @@ const openIssueForm = async (point = false) => {
     app.markers.me.openPopup()
   })
 
-  // show instructions
-  // $('.info-window .instructions').html(street) //app.copy.issuelocatestart
-
   // copy the issue form into the infowindow
   const infoWindowHTML = $('.issue-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -1354,9 +1344,6 @@ const openSearchAddressForm = () => {
   if (app.markers.me) {
     app.markers.wipeMe()
   }
-
-  // show instructions
-  // $('.info-window .instructions').html(app.copy.searchaddress)
 
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.search-address-form-container').html()
