@@ -20,6 +20,14 @@ const mapSchema = new Schema(
       type: String,
       lowercase: true,
     },
+    limitContributors: {
+      type: Boolean,
+      default: false,
+    },
+    // limitViewers: {
+    //   type: Boolean,
+    //   default: false,
+    // },
     centerPoint: coordinateSchema,
     description: String,
     issues: [issueSchema],

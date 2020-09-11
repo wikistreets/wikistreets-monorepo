@@ -7,8 +7,8 @@ const passportConfig = require('../passportConfig')
 // multer is needed since we're using FormData to submit form on client side
 // bodyParser does not accept multipart form data, but multer does
 const multer = require('multer')
-var generator = require('generate-password')
-var nodemailer = require('nodemailer')
+const generator = require('generate-password')
+const { EmailService } = require('../services/EmailService')
 
 // middleware
 // const _ = require('lodash'); // utility functions for arrays, numbers, objects, strings, etc.
@@ -99,33 +99,12 @@ const userRouter = ({ config }) => {
       const token = signJwtToken(user, config.jwt)
 
       // send a welcome email
-      // send an email
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.dreamhost.com',
-        secure: true,
-        port: 465,
-        auth: {
-          user: 'accounts@wikistreets.io',
-          pass: 'Jdbx5bcr',
-        },
-      })
-
-      const mailOptions = {
-        from: 'Wikistreets <accounts@wikistreets.io>',
-        to: user.email,
-        subject: 'Welcome!',
-        text: `${user.handle} - welcome to Wikistreets!  Visit https://wikistreets.io`,
-      }
-
-      // console.log(mailOptions)
-
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          // console.log(error)
-        } else {
-          // console.log('Email sent: ' + info.response)
-        }
-      })
+      const emailService = new EmailService({})
+      emailService.send(
+        user.email,
+        'Welcome!',
+        `Dear ${user.handle} - Welcome to Wikistreets!\n\nTo get started, just visit wikistreets.io`
+      )
 
       // console.log(`sending back token: ${token}`)
       res.json({
@@ -167,44 +146,13 @@ const userRouter = ({ config }) => {
           // save changes
           user.save()
 
-          // send an email
-          const transporter = nodemailer.createTransport({
-            host: 'smtp.dreamhost.com',
-            secure: true,
-            port: 465,
-            auth: {
-              user: 'accounts@wikistreets.io',
-              pass: 'Jdbx5bcr',
-            },
-          })
-
-          const mailOptions = {
-            from: 'Wikistreets <accounts@wikistreets.io>',
-            to: user.email,
-            subject: 'Password reset',
-            text: `${newPassword}`,
-          }
-
-          // console.log(mailOptions)
-
-          transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-              // console.log(error)
-              err = `An error occurred while sending you the new password. Please try again.`
-              return res.status(400).json({
-                status: false,
-                message: err,
-                error: err,
-              })
-            } else {
-              // console.log('Email sent: ' + info.response)
-              // return the response to client
-              res.json({
-                status: true,
-                message: 'success',
-              })
-            }
-          })
+          // send a welcome email
+          const emailService = new EmailService({})
+          emailService.send(
+            user.email,
+            'Password reset',
+            `${newPassword}\n\nTo get started, just visit wikistreets.io`
+          )
         } else {
           err = 'No account found with that email'
           return res.status(400).json({

@@ -179,7 +179,7 @@
       <div class="feedback-message alert alert-danger hide"></div>
       <div class="row">
         <form
-          class="signin-form col-xs-12 col-md-6"
+          class="signin-form col-12 col-md-6"
           action="/users/signin"
           method="POST"
         >
@@ -208,7 +208,7 @@
           <br />
         </form>
 
-        <article class="col-xs-12 col-md-6">
+        <article class="col-12 col-md-6">
           <h2>Don't have an account?</h2>
           <p>
             <a href="#" class="signup-link">Sign up</a> to be able to post
@@ -230,7 +230,7 @@
       <div class="feedback-message alert alert-danger hide"></div>
       <div class="row">
         <form
-          class="signup-form col-xs-12 col-md-6"
+          class="signup-form col-12 col-md-6"
           action="/users/signup"
           method="POST"
         >
@@ -266,7 +266,7 @@
           </div>
           <button type="submit" class="btn btn-primary">Sign up</button>
         </form>
-        <article class="col-xs-12 col-md-6">
+        <article class="col-12 col-md-6">
           <h2>Already have an account?</h2>
           <p>
             <a href="#" class="signin-link">Log in</a> to an existing account.
@@ -295,7 +295,7 @@
       <div class="feedback-message alert alert-danger hide"></div>
       <div class="row">
         <form
-          class="reset-password-form col-xs-12 col-md-6"
+          class="reset-password-form col-12 col-md-6"
           action="/users/reset-password"
           method="POST"
         >
@@ -313,7 +313,7 @@
           <br />
         </form>
 
-        <article class="col-xs-12 col-md-6">
+        <article class="col-12 col-md-6">
           <h2>We'll send you a new password</h2>
           <p>
             Check your email after you submit the form.
@@ -355,7 +355,7 @@
             <br />
             <h2>Add photos</h2>
             <p>Up to 3 photos</p>
-            <input id="files" name="files" type="file" multiple />
+            <input class="form-control-file" id="files" name="files" type="file" multiple />
             <br />
             <br />
             <h2>Ready to submit?</h2>
@@ -380,7 +380,7 @@
     <!-- about us -->
     <div class="about-us-container hide">
       <div class="row">
-        <header class="col-xs-12 col-md-6">
+        <header class="col-12 col-md-6">
           <h2>Wikistreets</h2>
           <ul>
             <li>Maps for everyone</li>
@@ -429,7 +429,7 @@
     <!-- user profile -->
     <div class="user-profile-container hide">
       <div class="row">
-        <header class="col-xs-12 col-md-4">
+        <header class="col-12 col-md-4">
           <h2 class="handle"></h2>
           <ul class="list-group">
             <li class="list-group-item">
@@ -451,7 +451,7 @@
     <!-- fork map -->
     <div class="fork-map-container hide">
       <div class="row">
-        <header class="map-list-container col-xs-12 col-md-4">
+        <header class="map-list-container col-12 col-md-4">
           <h2 class="map-title selected-map">Map Name</h2>
           <p class="forked-from-container hide">
             Forked from <span class="forked-from-link"></span>
@@ -484,7 +484,7 @@
     <!-- select map -->
     <div class="select-map-container hide">
       <div class="row">
-        <header class="map-details-container col-xs-12 col-md-4">
+        <header class="map-details-container col-12 col-md-4">
           <article class="map-list-item-template">
             <h2>
               <a
@@ -509,7 +509,7 @@
             </p>
           </article>
         </header>
-        <header class="rename-map-container hide col-xs-12 col-md-4">
+        <header class="rename-map-container hide col-12 col-md-4">
           <h2>Rename this map</h2>
           <form
             class="rename-map-form"
@@ -532,7 +532,52 @@
             <a class="cancel-link" href="#">Cancel</a>
           </form>
         </header>
-        <article class="col-12 col-md-8">
+        <article class="settings-map-container hide col-12 col-md-4">
+          <form
+            class="settings-map-form"
+            method="POST"
+            action="/map/collaboration"
+            enctype="multipart/form-data"
+          >
+            <h2>Who can edit this map?</h2>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" value="public" name="limit_contributors" id="limit_contributors_public">
+              <label class="form-check-label" for="limit_contributors_public">Anyone</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" value="private" name="limit_contributors" id="limit_contributors_private" checked="checked">
+              <label class="form-check-label" for="limit_contributors_private">Only invited collaborators</label>
+            </div>
+            <!-- <br />
+            <h2>Who can view this map?</h2>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="limit_viewers" id="limit_viewers_public" value="public" checked="checked">
+              <label class="form-check-label" for="limit_viewers_public">Anyone</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="limit_viewers" id="limit_viewers_private" value="private">
+              <label class="form-check-label" for="limit_viewers_private">Only invited collaborators</label>
+            </div> -->
+            <br />
+            <div class="form-group">
+              <h2>Invite collaborators:</h2>
+              <div class="form-row">
+                <div class="form-group col-8">
+                  <input class="collaborator-email form-control" type="email" placeholder="Email" />
+                </div>
+                <div class="form-group col-4">
+                  <button class="add-collaborator-button btn btn-secondary form-control">Add</button>
+                </div>
+              </div>
+              <input type="hidden" name="add_collaborators" id="add_collaborators" />
+              <ul class="collaborators-list list-group">
+              </ul>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a class="cancel-link" href="#">Cancel</a>
+          </form>
+        </article>
+        <article class="more-maps-container col-12 col-md-8">
           <h2><span class="user-handle">My</span> maps</h2>
           <a class="btn btn-primary" href="/">Create a new map</a>
           <div class="more-maps"></div>
@@ -588,7 +633,15 @@
 
     <!-- error message -->
     <div class="error-container hide">
-      <p class="alert alert-danger error-message"></p>
+      <div class="row">
+        <header class="col-12 col-md-4">
+          <h2>Sorry...</h2>
+          <p class="error-message"></p>
+          <button class="ok-button btn btn-primary">Ok</button>
+        </header>
+        <article class="col-12 col-md-4">
+        </article>
+      </div>
     </div>
     <!-- // error-container -->
     <!-- spinner icon -->

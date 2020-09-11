@@ -16,6 +16,9 @@ const { Map } = require('../models/map')
 const { Issue } = require('../models/issue')
 const { User } = require('../models/user')
 
+// emailer
+const { EmailService } = require('../services/EmailService')
+
 const mapRouter = ({ config }) => {
   // create an express router
   const router = express.Router()
@@ -85,6 +88,111 @@ const mapRouter = ({ config }) => {
         status: true,
         message: 'success',
         data: map,
+      })
+    }
+  )
+
+  // route to change collaboration settings
+  router.post(
+    '/map/collaboration',
+    passportJWT,
+    upload.none(),
+    [body('add_collaborators').trim().escape()],
+    async (req, res) => {
+      const mapId = req.query.mapId
+
+      // check for validation errors
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Invalid input',
+        })
+      }
+
+      // console.log(JSON.stringify(req.body, null, 2))
+
+      // extract any new collaborators
+      const newContributorEmails = req.body.add_collaborators.split(',')
+      const nonUserContributorEmails = [...newContributorEmails] // assume none are users right now
+      const newContributors = []
+      // match emails to ids for any new collaborators
+      await User.find(
+        {
+          email: {
+            $in: newContributorEmails,
+          },
+        },
+        (err, docs) => {
+          docs.map((doc, i, arr) => {
+            // all matching docs represent current users
+            newContributors.push(doc) // add id of this user to list of contributors
+            // remove this user from list of non-user email addresses
+            nonUserContributorEmails.splice(
+              nonUserContributorEmails.indexOf(doc.email)
+            )
+          })
+        }
+      )
+
+      // console.log(JSON.stringify(newContributors, null, 2))
+
+      // console.log(`non-users are: ${nonUserContributorEmails}`)
+
+      // prepare the map updates
+      // console.log(`adding: ${newContributorIds}`)
+      const updates = {
+        limitContributors:
+          req.body.limit_contributors == 'private' ? true : false,
+        // limitViewers:
+        //   req.body.limit_viewers == 'private' ? true : false,
+        // $addToSet: {
+        //   $each: {
+        //     contributors: newContributors,
+        //   },
+        // },
+      }
+
+      // make the damn map updates
+      const map = await Map.findOneAndUpdate(
+        { publicId: req.body.mapId },
+        updates,
+        { new: true } // return updated document
+      ).catch((err) => {
+        console.log(err)
+        return res.status(500).json({
+          status: false,
+          message:
+            'Sorry... something bad happened on our end!  Please try again.',
+          error: 'Sorry... something bad happened on our end!  ',
+        })
+      })
+
+      // add each new contributor
+      newContributors.map((contributor, i, arr) => {
+        map.contributors.addToSet(contributor)
+      })
+
+      // save changes
+      map.save()
+
+      // console.log(JSON.stringify(map, null, 2))
+
+      // send out notification emails to all collaboratorss
+      const emailService = new EmailService({})
+      newContributorEmails.map((email, i, arr) => {
+        // send a welcome email
+        const mapTitle = map.title ? map.title : 'anonymous map'
+        const mapLink = `https://wikistreets.io/map/${map.publicId}`
+        emailService.send(
+          email,
+          `Invitation to collaborate on '${mapTitle}'!`,
+          `You have been cordially invited by ${req.user.handle} to collaborate on '${mapTitle}'!\n\nTo get started, visit the map on wikistreets.io by clicking the following link: ${mapLink}`
+        )
+      })
+
+      res.json({
+        status: true,
+        message: 'success',
       })
     }
   )

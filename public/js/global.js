@@ -43,6 +43,7 @@ const app = {
       deleteIssueUrl: '/markers/delete',
       getUserUrl: '/users',
       mapTitleUrl: '/map/title',
+      collaborationSettingsUrl: '/map/collaboration',
       forkMapUrl: '/map/fork',
       staticMapUrl: '/map',
     },
@@ -55,6 +56,7 @@ const app = {
     },
   },
   user: {
+    id: '',
     maps: [],
   },
   map: {
@@ -88,7 +90,11 @@ const app = {
       default: 14,
       issuelocate: 16,
     },
+    contributors: [],
     numContributors: 0,
+    limitContributors: false,
+    limitViewers: false,
+    forks: [],
     numForks: 0,
     dateModified: '',
   },
@@ -487,6 +493,9 @@ app.user.fetch = async () => {
   // console.log('fetching user data')
   // fetch data from wikistreets api
   return app.myFetch(`${app.apis.wikistreets.getUserMe}`).then((data) => {
+    // save this user's id
+    app.user.id = data._id
+    // save list of this user's maps
     app.user.maps = data.maps
     app.user.maps.reverse() // put most recent map first
 
@@ -508,7 +517,13 @@ const populateMap = async (recenter = true) => {
   // console.log(JSON.stringify(data, null, 2))
   // scrape map metadata
   try {
+    app.map.contributors = data.contributors ? data.contributors : []
     app.map.numContributors = data.contributors ? data.contributors.length : 0
+    app.map.limitContributors = data.limitContributors
+      ? data.limitContributors
+      : false
+    app.map.limitViewers = data.limitViewers ? data.limitViewers : false
+    app.map.forks = data.forks ? data.forks : []
     app.map.numForks = data.forks ? data.forks.length : 0
     app.map.forkedFrom = data.forkedFrom ? data.forkedFrom : null
     // store original timestamps
@@ -561,6 +576,8 @@ async function initMap() {
     accessToken: app.apis.mapbox.apiKey,
   }).addTo(app.map.element)
 
+  app.user.fetch()
+
   // load and add map data and markers to the map
   populateMap()
 
@@ -593,7 +610,7 @@ async function initMap() {
   /**** SET UP EVENT HANDLERS ****/
 
   // allow infoWindow to close when icon clicked
-  $('.info-window .close-icon').click(collapseInfoWindow)
+  // $('.info-window .close-icon').click(collapseInfoWindow)
 
   // check that user is logged in when they try to expand the map selector
   $('.control-map-selector').click(() => {
@@ -608,7 +625,24 @@ async function initMap() {
 
   // pop open issue form when control icon clicked
   $('.control-add-issue').click(() => {
-    app.auth.getToken() ? openIssueForm() : openSigninPanel()
+    // check whether this user is authenticated and is allowed to contribute to this map
+    if (!app.auth.getToken()) openSigninPanel()
+    // user not logged in
+    else if (
+      app.map.limitContributors &&
+      !app.map.contributors.includes(app.user.id)
+    ) {
+      // user is logged-in, but now a contributor on this private map
+      const errorString = $('.error-container').html()
+      $('.info-window-content').html(errorString)
+      $('.info-window-content .error-message').html(
+        'You do not have permission to modify this map.'
+      )
+      $('.info-window-content .ok-button').click((e) => {
+        collapseInfoWindow()
+      })
+      expandInfoWindow(30, 70)
+    } else openIssueForm() // user is logged-in and allowed to contribute
   })
 
   // geolocate when icon clicked
@@ -1450,10 +1484,16 @@ const openSigninPanel = async () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // activate link to switch to signup panel
-  $('.info-window .signup-link').click(openSignupPanel)
+  $('.info-window .signup-link').click((e) => {
+    e.preventDefault()
+    openSignupPanel()
+  })
 
   // activate link to reset password
-  $('.info-window .reset-password-link').click(openResetPasswordPanel)
+  $('.info-window .reset-password-link').click((e) => {
+    e.preventDefault()
+    openResetPasswordPanel()
+  })
 
   $('.info-window-content form.signin-form').submit((e) => {
     // prevent page reload
@@ -1496,7 +1536,10 @@ const openSignupPanel = async () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // activate link to switch to signup panel
-  $('.info-window .signin-link').click(openSigninPanel)
+  $('.info-window .signin-link').click((e) => {
+    e.preventDefault()
+    openSigninPanel()
+  })
 
   $('.info-window-content form.signup-form').submit((e) => {
     // prevent page reload
@@ -1767,25 +1810,104 @@ const openMapSelectorPanel = async () => {
   // create a list item for the selected map
   const selectedMapListItem = createMapListItem(mapData, true, true, true)
 
-  // enable rename map link
-  $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
-  $('.rename-map-link', selectedMapListItem).click((e) => {
-    e.preventDefault()
-    // show the rename map form
-    $('.info-window-content .map-details-container').hide()
-    $('.info-window-content .rename-map-container').show()
-    $('.info-window-content .rename-map-container #mapTitle').val(app.map.title)
-    $('.info-window-content .rename-map-container #mapTitle').focus()
-  })
-  $('.rename-map-form .cancel-link', $('.info-window-content')).click((e) => {
-    e.preventDefault()
-    // revert to the map list view
-    $('.info-window-content .map-details-container').show()
-    $('.info-window-content .rename-map-container').hide()
-  })
+  // add a link to map settings, if authenticated
+  if (
+    (app.auth.getToken() &&
+      !app.map.limitContributors &&
+      app.markers.markers.length != 0) ||
+    app.map.contributors.includes(app.user.id)
+  ) {
+    // user is editor of this map
+    // console.log('welcome, editor!')
+    const settingsButtonEl = $(
+      `<button class="settings-map-link btn btn-primary">Invite</button>`
+    )
+    settingsButtonEl.appendTo($('.info-window header.map-details-container'))
+    // add settings link behavior
+    $('.settings-map-link').click((e) => {
+      e.preventDefault()
+      // show the settings map form
+      $('.info-window-content .map-details-container').hide()
+      $('.info-window-content .settings-map-container').show()
+
+      // pre-select the correct contributor settings
+      if (app.map.limitContributors) {
+        $('.settings-map-container input#limit_contributors_public').removeAttr(
+          'checked'
+        )
+        $('.settings-map-container input#limit_contributors_private').attr(
+          'checked',
+          'checked'
+        )
+      } else {
+        $('.settings-map-container input#limit_contributors_public').attr(
+          'checked',
+          'checked'
+        )
+        $(
+          '.settings-map-container input#limit_contributors_private'
+        ).removeAttr('checked')
+      }
+
+      // add collaborators behavior
+      $('.info-window-content .add-collaborator-button').click((e) => {
+        e.preventDefault()
+        const email = $('.info-window-content .collaborator-email').val()
+        const listItem = $(`<li class="list-group-item">${email}</li>`)
+        // add to visible collaborators list
+        listItem.appendTo('.info-window-content .collaborators-list')
+        // add to hidden collaborators list field
+        let addedCollaborators = $(
+          '.info-window-content form #add_collaborators'
+        ).val()
+        addedCollaborators =
+          addedCollaborators == '' ? email : addedCollaborators + `,${email}`
+        $('.info-window-content form #add_collaborators').val(
+          addedCollaborators
+        )
+
+        $('.info-window-content .collaborator-email').val('')
+      })
+    })
+    // add cancel link behavior
+    $('.settings-map-form .cancel-link', $('.info-window-content')).click(
+      (e) => {
+        e.preventDefault()
+        // revert to the map list view
+        $('.info-window-content .map-details-container').show()
+        $('.info-window-content .settings-map-container').hide()
+      }
+    )
+
+    // enable rename map link
+    $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
+    $('.rename-map-link', selectedMapListItem).click((e) => {
+      e.preventDefault()
+      // show the rename map form
+      $('.info-window-content .map-details-container').hide()
+      $('.info-window-content .rename-map-container').show()
+      $('.info-window-content .rename-map-container #mapTitle').val(
+        app.map.title
+      )
+      $('.info-window-content .rename-map-container #mapTitle').focus()
+    })
+    $('.rename-map-form .cancel-link', $('.info-window-content')).click((e) => {
+      e.preventDefault()
+      // revert to the map list view
+      $('.info-window-content .map-details-container').show()
+      $('.info-window-content .rename-map-container').hide()
+    })
+  } else {
+    // remove link to edit map name for non-contributors
+    $('.rename-map-link', selectedMapListItem).css('cursor', 'default')
+    $('.rename-map-link', selectedMapListItem).click((e) => {
+      e.preventDefault()
+    })
+  }
 
   // enable fork map link
-  $('.fork-map-link', selectedMapListItem).click(() => {
+  $('.fork-map-link', selectedMapListItem).click((e) => {
+    e.preventDefault()
     app.auth.getToken() ? openForkPanel() : openSigninPanel()
   })
 
@@ -1858,7 +1980,27 @@ const openMapSelectorPanel = async () => {
     // close the infowindow
     collapseInfoWindow()
   })
-}
+
+  $('.settings-map-form').submit((e) => {
+    e.preventDefault()
+
+    // send settings changes to server
+    if (app.auth.getToken()) {
+      // console.log(`sending data to: ${apiUrl}`)
+      let formData = new FormData(e.target)
+      app.myFetch(
+        app.apis.wikistreets.collaborationSettingsUrl,
+        'POST',
+        formData
+      )
+    } else {
+      console.log('not sending to server')
+    }
+
+    // close the infowindow
+    collapseInfoWindow()
+  })
+} // openMapSelectorPanel
 
 // enable bootstrap tooltips
 $(function () {
