@@ -74,10 +74,10 @@ label {
   padding-left: 10px;
 }
 
-input[type='text'],
+/* input[type='text'],
 select {
   width: 300px;
-}
+} */
 
 ul {
   margin-left: 0;
