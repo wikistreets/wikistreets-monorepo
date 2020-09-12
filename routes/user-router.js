@@ -19,6 +19,7 @@ const { EmailService } = require('../services/EmailService')
 const { User, userSchema } = require('../models/user')
 // const { Issue } = require('../models/issue')
 const { Map } = require('../models/map')
+const { Invitation } = require('../models/invitation')
 
 /**
  * Sign a JWT token with the user's id and our issuer details
@@ -106,10 +107,45 @@ const userRouter = ({ config }) => {
         `Dear ${user.handle} - Welcome to Wikistreets!\n\nTo get started, just visit wikistreets.io`
       )
 
+      // if this signup is from an email invitation, let this user edit the map they were invited to
+      console.log(`map id: ${req.body.mapId}`)
+      if (req.body.mapId) {
+        console.log(`map id received`)
+        Map.findOne({
+          publicId: req.body.mapId,
+        }).then((map) => {
+          if (map) {
+            console.log(`map found`)
+            // find the invitation to edit this map
+            Invitation.findOneAndUpdate(
+              {
+                invitee: req.body.email,
+                map: map,
+              },
+              {
+                accepted: true,
+              },
+              { new: true }
+            ).then((invitation) => {
+              if (invitation) {
+                console.log(`invitation found`)
+                // add the invited user to the map's contributors
+                map.contributors.push(user)
+                map.save((err, doc) => {
+                  if (err) console.log(`${err}`)
+                  else if (doc) console.log(`${doc}`)
+                })
+              }
+            })
+          }
+        })
+      }
+
       // console.log(`sending back token: ${token}`)
       res.json({
         token,
         handle: user.handle,
+        _id: user._id,
       })
     }
   )
@@ -122,6 +158,7 @@ const userRouter = ({ config }) => {
     res.json({
       token,
       handle: req.user.handle,
+      _id: req.user._id,
     })
   })
 

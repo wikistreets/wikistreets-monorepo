@@ -495,6 +495,7 @@ app.user.fetch = async () => {
   return app.myFetch(`${app.apis.wikistreets.getUserMe}`).then((data) => {
     // save this user's id
     app.user.id = data._id
+    app.user.handle = data.handle
     // save list of this user's maps
     app.user.maps = data.maps
     app.user.maps.reverse() // put most recent map first
@@ -1513,6 +1514,8 @@ const openSigninPanel = async () => {
       .then((res) => {
         // console.log(`SUCCESS: ${res}`)
         app.auth.setToken(res.token)
+        app.user.handle = res.handle
+        app.user.id = res._id
         $('.handle').text(res.handle)
         collapseInfoWindow()
       })
@@ -1562,10 +1565,15 @@ const openSignupPanel = async () => {
           return
         }
 
-        console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
+        // console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
         app.auth.setToken(res.token)
+        app.user.handle = res.handle
+        app.user.id = res._id
         $('.handle').text(res.handle)
         collapseInfoWindow()
+
+        // load the map again, in case this user has been added as an invited contributor
+        populateMap()
       })
       .catch((err) => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)

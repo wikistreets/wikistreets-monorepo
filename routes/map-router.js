@@ -18,6 +18,7 @@ const { User } = require('../models/user')
 
 // emailer
 const { EmailService } = require('../services/EmailService')
+const { Invitation } = require('../models/invitation')
 
 const mapRouter = ({ config }) => {
   // create an express router
@@ -97,9 +98,13 @@ const mapRouter = ({ config }) => {
     '/map/collaboration',
     passportJWT,
     upload.none(),
-    [body('add_collaborators').trim().escape()],
+    [
+      body('add_collaborators').trim().escape(),
+      body('mapId').not().isEmpty().trim(),
+    ],
     async (req, res) => {
-      const mapId = req.query.mapId
+      // the map to adjust
+      const mapId = req.body.mapId
 
       // check for validation errors
       const errors = validationResult(req)
@@ -158,7 +163,6 @@ const mapRouter = ({ config }) => {
         updates,
         { new: true } // return updated document
       ).catch((err) => {
-        console.log(err)
         return res.status(500).json({
           status: false,
           message:
@@ -173,7 +177,19 @@ const mapRouter = ({ config }) => {
       })
 
       // save changes
-      map.save()
+      await map.save((err, doc) => {
+        if (err) {
+          console.log(`Error: ${err}`)
+          return res.status(500).json({
+            status: false,
+            message:
+              'Sorry... something bad happened on our end!  Please try again.',
+            error: 'Sorry... something bad happened on our end!  ',
+          })
+        } else {
+          console.log('updated map')
+        }
+      })
 
       // console.log(JSON.stringify(map, null, 2))
 
@@ -188,6 +204,19 @@ const mapRouter = ({ config }) => {
           `Invitation to collaborate on '${mapTitle}'!`,
           `You have been cordially invited by ${req.user.handle} to collaborate on '${mapTitle}'!\n\nTo get started, visit the map on wikistreets.io by clicking the following link: ${mapLink}`
         )
+      })
+
+      // remember invitations sent out to non-users so we can give them permission once they sign up
+      nonUserContributorEmails.map((email, i, arr) => {
+        // console.log(
+        //   `inviter: ${req.user._id}; invitee: ${email}; map: ${map.publicId}`
+        // )
+        const invitation = new Invitation({
+          inviter: req.user,
+          invitee: email,
+          map: map,
+        })
+        invitation.save()
       })
 
       res.json({
