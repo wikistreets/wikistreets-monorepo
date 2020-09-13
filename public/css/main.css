@@ -342,3 +342,9 @@ ul {
   margin: 0 auto;
   width: 75px;
 }
+
+/* previous and next issue links */
+.info-window .prev-issue-link,
+.info-window .next-issue-link {
+  border-radius: 0;
+}

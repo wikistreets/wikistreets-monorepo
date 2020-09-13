@@ -434,6 +434,9 @@ app.markers.place = (data, cluster) => {
           marker._id = `marker-${point._id}`
           // console.log(marker._id)
 
+          // keep the index number of this marker to maintain order
+          marker.index = i
+
           // cluster.addLayer(marker) // add to the marker cluster
           app.map.element.addLayer(marker) // add directly to map
 
@@ -973,6 +976,10 @@ const showInfoWindow = (marker, data) => {
     `
   contentString += `
     </article>
+    <div class="row">
+      <a class="prev-issue-link btn btn-secondary col-6" href="#">Prev</a>
+      <a class="next-issue-link btn btn-secondary col-6" href="#">Next</a>
+    </div>
   `
   contentString += `
 </div>
@@ -980,6 +987,21 @@ const showInfoWindow = (marker, data) => {
 
   // update the infoWindow content
   $('.info-window-content').html(contentString)
+
+  // handle previous and next issue button clicks
+  $('.info-window-content .prev-issue-link').click((e) => {
+    e.preventDefault()
+    let i = marker.index - 1 // next marker's index
+    if (i < 0) i = app.markers.markers.length - 1 // start from last
+    app.markers.simulateClick(app.markers.markers[i])
+  })
+
+  $('.info-window-content .next-issue-link').click((e) => {
+    e.preventDefault()
+    let i = marker.index + 1 // next marker's index
+    if (i == app.markers.markers.length) i = 0 // start from first
+    app.markers.simulateClick(app.markers.markers[i])
+  })
 
   // activate the carousel
   $('.info-window-content .carousel').carousel()
