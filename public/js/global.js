@@ -24,6 +24,8 @@ const app = {
     signuperror:
       'An account exists with that email address.  Please sign in or create a new account',
     anonymousmaptitle: 'anonymous map',
+    shareissuemessage: 'Link copied to clipboard.  Share anywhere!',
+    sharemapmessage: 'Link copied to clipboard.  Share anywhere!',
   },
   mode: 'default', // default, issuedetails, issuelocate
   browserGeolocation: {
@@ -960,7 +962,7 @@ const showInfoWindow = (marker, data) => {
         ...
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Copy link</a>
+        <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Share this post</a>
         ${deleteLinkString}
       </div>
     </div>
@@ -1050,7 +1052,7 @@ const showInfoWindow = (marker, data) => {
         // show success message
         // console.log(`Copied ${text} to the clipboard!`)
         const feedbackEl = $('.info-window-content .feedback')
-        feedbackEl.html('Link copied to clipboard.  Please share!')
+        feedbackEl.html(app.copy.shareissuemessage)
         feedbackEl.show()
         setTimeout(() => {
           feedbackEl.fadeOut()
@@ -1843,16 +1845,23 @@ const openMapSelectorPanel = async () => {
 
   // generate the context menu
   // only show delete link to logged-in users who have permissions to edit this map
-  const deleteLinkString = app.auth.userCanEdit()
-    ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Delete</a>`
-    : ''
+  // if this is an unsaved app, the only way to currently infer that is through no markers
+  const deleteLinkString =
+    app.auth.userCanEdit() && app.markers.markers.length != 0
+      ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Delete this map</a>`
+      : ''
+  const forkLinkString =
+    app.auth.getToken() && app.markers.markers.length != 0
+      ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Fork this map</a>`
+      : ''
   let contextMenuString = `
     <div class="context-menu dropdown">
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ...
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Copy link</a>
+        <a class="copy-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Share this map</a>
+        ${forkLinkString}
         ${deleteLinkString}
       </div>
     </div>
@@ -1871,7 +1880,7 @@ const openMapSelectorPanel = async () => {
         const feedbackEl = $(
           `<div class="feedback alert alert-success hide"></div>`
         )
-        feedbackEl.html('Link copied to clipboard.  Please share!')
+        feedbackEl.html(app.copy.sharemapmessage)
         feedbackEl.prependTo(selectedMapListItem)
         feedbackEl.show()
         setTimeout(() => {
