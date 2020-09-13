@@ -96,36 +96,63 @@ const mapRouter = ({ config }) => {
     }
   )
 
-  router.get('map/remove/:mapId', passportJWT, async (req, res) => {
-    console.log('removing...')
-    const mapId = req.param.mapId
+  router.get('/map/remove/:mapId', passportJWT, async (req, res) => {
+    const mapId = req.params.mapId
+    console.log(`removing map ${mapId}...`)
     // find the map in question
+    let errorMessage = ''
     const map = await Map.findOne({
       publicId: mapId,
+    }).catch((err) => {
+      errorMessage = err
     })
-    console.log(`found map ${map._id}`)
     if (map) {
-      // remove this user from this map's contributors
       const user = req.user
+      // remove this map from this user's list of maps
+      // remove this user from the map's list of contributors
+      map.contributors.pull(user)
+      if (map.contributors.length == 0) {
+        // if there are no more contributors to the map, delete it completely
+        await Map.deleteOne({
+          _id: map._id,
+        }).catch((err) => {
+          errorMessage = err
+        })
+      } else {
+        // remove this user from the map, but keep the map for other users
+        map = await map.save((err, doc) => {
+          if (err) {
+            errorMessage = err
+          }
+        })
+      }
+
       user.maps.pull(map) // remove this map from this user's list
       // save changes
       console.log(`saving changes to user ${user._id}`)
       req.user.save((err, doc) => {
         if (err) {
-          console.log(`Error: ${err}`)
-          return res.status(500).json({
-            status: false,
-            message:
-              'Sorry... something bad happened on our end!  Please try again.',
-            error: 'Sorry... something bad happened on our end!  ',
-          })
+          errorMessage = err
         } else {
-          console.log('updated map')
+          res.json({
+            status: true,
+            message: 'success',
+          })
         }
       })
     } // if map
     else {
-      console.log(`couldn't find map`)
+      errorMessage = 'Unable to remove map.'
+    }
+
+    // for all errors...
+    if (errorMessage) {
+      console.log(`Error: ${errorMessage}`)
+      return res.status(500).json({
+        status: false,
+        message: errorMessage,
+        error: errorMessage,
+      })
     }
   })
 
@@ -288,6 +315,7 @@ const mapRouter = ({ config }) => {
         delete newMap._id // remove old id
         newMap.isNew = true // flag it as new
         newMap.publicId = uuidv4() // generate a new random-ish public id for this map
+        newMap.contributors = [req.user] // wipe out list of contributors, save for this user
         newMap.forks = [] // wipe out list of forks
         newMap.forkedFrom = map._id // track from whence this fork came
         const fork = new Map(newMap)
