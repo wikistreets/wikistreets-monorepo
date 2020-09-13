@@ -962,7 +962,7 @@ const showInfoWindow = (marker, data) => {
         ...
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Share this post</a>
+        <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Share</a>
         ${deleteLinkString}
       </div>
     </div>
@@ -1848,11 +1848,11 @@ const openMapSelectorPanel = async () => {
   // if this is an unsaved app, the only way to currently infer that is through no markers
   const deleteLinkString =
     app.auth.userCanEdit() && app.markers.markers.length != 0
-      ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Delete this map</a>`
+      ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Delete</a>`
       : ''
   const forkLinkString =
     app.auth.getToken() && app.markers.markers.length != 0
-      ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Fork this map</a>`
+      ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Fork</a>`
       : ''
   let contextMenuString = `
     <div class="context-menu dropdown">
@@ -1860,7 +1860,7 @@ const openMapSelectorPanel = async () => {
         ...
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Share this map</a>
+        <a class="copy-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Share</a>
         ${forkLinkString}
         ${deleteLinkString}
       </div>
