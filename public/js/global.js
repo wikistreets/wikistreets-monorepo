@@ -960,6 +960,10 @@ const showInfoWindow = (marker, data) => {
   data.comments = data.comments.replace('\n', '<br />')
   contentString += `
 <div class="issue-detail">
+    <div class="prevnext-issue-container row">
+      <a class="prev-issue-link btn btn-secondary col-6" href="#">Prev</a>
+      <a class="next-issue-link btn btn-secondary col-6" href="#">Next</a>
+    </div>
     <header>
         ${contextMenuString}
         <h2>${data.address}</h2>
@@ -976,10 +980,6 @@ const showInfoWindow = (marker, data) => {
     `
   contentString += `
     </article>
-    <div class="row">
-      <a class="prev-issue-link btn btn-secondary col-6" href="#">Prev</a>
-      <a class="next-issue-link btn btn-secondary col-6" href="#">Next</a>
-    </div>
   `
   contentString += `
 </div>

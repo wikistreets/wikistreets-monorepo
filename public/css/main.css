@@ -348,3 +348,7 @@ ul {
 .info-window .next-issue-link {
   border-radius: 0;
 }
+.prevnext-issue-container {
+  margin-top: -18px;
+  margin-bottom: 10px;
+}
