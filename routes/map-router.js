@@ -1,6 +1,6 @@
 // express
 const express = require('express')
-const { body, validationResult } = require('express-validator')
+const { body, param, query, validationResult } = require('express-validator')
 const uuidv4 = require('uuid/v4')
 const path = require('path')
 const multer = require('multer') // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
@@ -59,7 +59,10 @@ const mapRouter = ({ config }) => {
     '/map/title/:mapId',
     passportJWT,
     upload.none(),
-    [body('mapTitle').not().isEmpty().trim().escape()],
+    [
+      body('mapId').not().isEmpty().trim(),
+      body('mapTitle').not().isEmpty().trim().escape(),
+    ],
     async (req, res) => {
       const mapId = req.body.mapId
       const mapTitle = req.body.mapTitle
@@ -92,6 +95,39 @@ const mapRouter = ({ config }) => {
       })
     }
   )
+
+  router.get('map/remove/:mapId', passportJWT, async (req, res) => {
+    console.log('removing...')
+    const mapId = req.param.mapId
+    // find the map in question
+    const map = await Map.findOne({
+      publicId: mapId,
+    })
+    console.log(`found map ${map._id}`)
+    if (map) {
+      // remove this user from this map's contributors
+      const user = req.user
+      user.maps.pull(map) // remove this map from this user's list
+      // save changes
+      console.log(`saving changes to user ${user._id}`)
+      req.user.save((err, doc) => {
+        if (err) {
+          console.log(`Error: ${err}`)
+          return res.status(500).json({
+            status: false,
+            message:
+              'Sorry... something bad happened on our end!  Please try again.',
+            error: 'Sorry... something bad happened on our end!  ',
+          })
+        } else {
+          console.log('updated map')
+        }
+      })
+    } // if map
+    else {
+      console.log(`couldn't find map`)
+    }
+  })
 
   // route to change collaboration settings
   router.post(
@@ -227,93 +263,106 @@ const mapRouter = ({ config }) => {
   )
 
   // route to fork a map
-  router.get('/map/fork/:mapId', passportJWT, async (req, res) => {
-    // retrieve the map to be forked
-    const mapId = req.params.mapId
-    const map = await Map.findOne({
-      publicId: mapId,
-    }).exec((err, map) => {
-      if (err) {
-        // failure
-        console.log(`FAILED TO FIND MAP: ${map}`)
-        return res.status(400).json({
-          status: false,
-          message: 'Invalid map identifier',
-          error: err,
-        })
-      }
-
-      // create a new map object
-      const newMap = map.toObject()
-      delete newMap._id // remove old id
-      newMap.isNew = true // flag it as new
-      newMap.publicId = uuidv4() // generate a new random-ish public id for this map
-      newMap.forks = [] // wipe out list of forks
-      newMap.forkedFrom = map._id // track from whence this fork came
-      const fork = new Map(newMap)
-
-      // save it
-      fork.save((err, map) => {
+  router.get(
+    '/map/fork/:mapId',
+    passportJWT,
+    [param('mapId').not().isEmpty().trim()],
+    async (req, res) => {
+      // retrieve the map to be forked
+      const mapId = req.params.mapId
+      const map = await Map.findOne({
+        publicId: mapId,
+      }).exec((err, map) => {
         if (err) {
           // failure
-          console.log(`FAILED TO FORK MAP: ${map}`)
+          console.log(`FAILED TO FIND MAP: ${map}`)
+          return res.status(400).json({
+            status: false,
+            message: 'Invalid map identifier',
+            error: err,
+          })
+        }
+
+        // create a new map object
+        const newMap = map.toObject()
+        delete newMap._id // remove old id
+        newMap.isNew = true // flag it as new
+        newMap.publicId = uuidv4() // generate a new random-ish public id for this map
+        newMap.forks = [] // wipe out list of forks
+        newMap.forkedFrom = map._id // track from whence this fork came
+        const fork = new Map(newMap)
+
+        // save it
+        fork.save((err, map) => {
+          if (err) {
+            // failure
+            console.log(`FAILED TO FORK MAP: ${map}`)
+            return res.status(500).json({
+              status: false,
+              message:
+                'Sorry... something bad happened on our end!  Please try again.',
+              error: err,
+            })
+          } else {
+            // success
+            console.log(`FORKED MAP: ${map._id}`)
+            return res.json(map)
+          }
+        })
+
+        // add this fork to the user's list of maps
+        req.user.maps.push(fork) // append to list
+        req.user.save() // save changes
+
+        // update original map's list of forks
+        map.forks.push(fork) // re-append to list
+        map.save() // save changes
+      })
+    }
+  )
+
+  // route for HTTP GET requests to the map JSON data
+  router.get(
+    '/map/data/:mapId',
+    [param('mapId').not().isEmpty()],
+    async (req, res) => {
+      const mapId = req.params.mapId
+      const sinceDate = req.query.since // optional param to retrieve only issues since a given date
+      let map = await Map.findOne({
+        publicId: mapId,
+        sinceDate: sinceDate,
+      })
+        .populate('issues.user')
+        .populate('forkedFrom', ['title', 'publicId'])
+        .catch((err) => {
           return res.status(500).json({
             status: false,
             message:
               'Sorry... something bad happened on our end!  Please try again.',
-            error: err,
+            error: 'Sorry... something bad happened on our end!  ',
           })
-        } else {
-          // success
-          console.log(`FORKED MAP: ${map._id}`)
-          return res.json(map)
-        }
-      })
-
-      // add this fork to the user's list of maps
-      req.user.maps.push(fork) // append to list
-      req.user.save() // save changes
-
-      // update original map's list of forks
-      map.forks.push(fork) // re-append to list
-      map.save() // save changes
-    })
-  })
-
-  // route for HTTP GET requests to the map JSON data
-  router.get('/map/data/:mapId', async (req, res) => {
-    const mapId = req.params.mapId
-    const sinceDate = req.query.since // optional param to retrieve only issues since a given date
-    let map = await Map.findOne({
-      publicId: mapId,
-      sinceDate: sinceDate,
-    })
-      .populate('issues.user')
-      .populate('forkedFrom', ['title', 'publicId'])
-      .catch((err) => {
-        return res.status(500).json({
-          status: false,
-          message:
-            'Sorry... something bad happened on our end!  Please try again.',
-          error: 'Sorry... something bad happened on our end!  ',
         })
-      })
 
-    if (!map) {
-      map = {
-        publicId: mapId,
-        description: 'A blank starter map',
-        issues: [],
+      if (!map) {
+        map = {
+          publicId: mapId,
+          description: 'A blank starter map',
+          issues: [],
+        }
       }
+      // console.log(`MAP: ${map}`)
+      res.json(map)
     }
-    // console.log(`MAP: ${map}`)
-    res.json(map)
-  })
+  )
 
   // route for HTTP GET requests for a specific map
-  router.get('/map/:mapId', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', `/public/index.html`))
-  })
+  router.get(
+    '/map/:mapId',
+    param('mapId').not().isEmpty().trim(),
+    (req, res) => {
+      res.sendFile(path.join(__dirname, '..', `/public/index.html`))
+    }
+  )
 
   // redirect requests for a home page to a map with a random identifier
   router.get(['/', '/map'], (req, res) => {

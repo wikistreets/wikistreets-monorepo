@@ -6,6 +6,17 @@ const app = {
     // get and set a JWT token for authorizing this user
     setToken: (token) => localStorage.setItem('token', token),
     getToken: () => localStorage.getItem('token'),
+    userCanEdit: () => {
+      const userIsLoggedIn = app.auth.getToken()
+      const mapIsPrivate = app.map.limitContributors
+      const userIsContributor = app.map.contributors.includes(app.user.id)
+      // if the map is public, any user has permission to edit
+      // if the map is private, only official contributors can edit
+      return (
+        (userIsLoggedIn && !mapIsPrivate) ||
+        (userIsLoggedIn && userIsContributor)
+      )
+    },
   },
   copy: {
     signinerror:
@@ -44,6 +55,7 @@ const app = {
       getUserUrl: '/users',
       mapTitleUrl: '/map/title',
       collaborationSettingsUrl: '/map/collaboration',
+      deleteMapUrl: '/map/remove',
       forkMapUrl: '/map/fork',
       staticMapUrl: '/map',
     },
@@ -631,12 +643,8 @@ async function initMap() {
   $('.control-add-issue').click(() => {
     // check whether this user is authenticated and is allowed to contribute to this map
     if (!app.auth.getToken()) openSigninPanel()
-    // user not logged in
-    else if (
-      app.map.limitContributors &&
-      !app.map.contributors.includes(app.user.id)
-    ) {
-      // user is logged-in, but now a contributor on this private map
+    else if (!app.auth.userCanEdit()) {
+      // user is logged-in, but not a contributor on this private map
       const errorString = $('.error-container').html()
       $('.info-window-content').html(errorString)
       $('.info-window-content .error-message').html(
@@ -646,7 +654,9 @@ async function initMap() {
         collapseInfoWindow()
       })
       expandInfoWindow(30, 70)
-    } else openIssueForm() // user is logged-in and allowed to contribute
+    } else {
+      openIssueForm() // user is logged-in and allowed to contribute
+    }
   })
 
   // geolocate when icon clicked
@@ -940,8 +950,8 @@ const showInfoWindow = (marker, data) => {
   // console.log(imgString)
 
   // generate the context menu
-  // only show delete link to logged-in users
-  const deleteLinkString = app.auth.getToken()
+  // only show delete link to logged-in users who have permissions to edit this map
+  const deleteLinkString = app.auth.userCanEdit()
     ? `<a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>`
     : ''
   let contextMenuString = `
@@ -1188,15 +1198,6 @@ const collapseInfoWindow = async (e) => {
 }
 
 const meMarkerButtonClick = async () => {
-  // // update street address
-  // const street = await getStreetAddress(app.browserGeolocation.coords)
-  // // console.log(street);
-  // app.browserGeolocation.street = street
-  // $('.street-address').html(street)
-  // $('.address').val(street)
-  // $('.lat').val(app.browserGeolocation.coords.lat)
-  // $('.lng').val(app.browserGeolocation.coords.lng)
-
   // close popup
   // app.markers.me.closePopup()
 
@@ -1840,13 +1841,68 @@ const openMapSelectorPanel = async () => {
   // create a list item for the selected map
   const selectedMapListItem = createMapListItem(mapData, true, true, true)
 
+  // generate the context menu
+  // only show delete link to logged-in users who have permissions to edit this map
+  const deleteLinkString = app.auth.userCanEdit()
+    ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Delete</a>`
+    : ''
+  let contextMenuString = `
+    <div class="context-menu dropdown">
+      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        ...
+      </button>
+      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+        <a class="copy-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Copy link</a>
+        ${deleteLinkString}
+      </div>
+    </div>
+  `
+  // add context menu to map list item
+  $(contextMenuString).prependTo(selectedMapListItem)
+
+  // enable context menu links
+  $('.copy-map-link', selectedMapListItem).click((e) => {
+    e.preventDefault()
+    const text = `https://wikistreets.io/map/${app.map.id.get()}`
+    navigator.clipboard.writeText(text).then(
+      function () {
+        // show success message
+        // console.log(`Copied ${text} to the clipboard!`)
+        const feedbackEl = $(
+          `<div class="feedback alert alert-success hide"></div>`
+        )
+        feedbackEl.html('Link copied to clipboard.  Please share!')
+        feedbackEl.prependTo(selectedMapListItem)
+        feedbackEl.show()
+        setTimeout(() => {
+          feedbackEl.fadeOut()
+        }, 3000)
+      },
+      function (err) {
+        console.error(
+          'Could not copy to clipboard.  Please use a different browser.'
+        )
+      }
+    )
+  })
+
+  $('.delete-map-link', selectedMapListItem).click((e) => {
+    e.preventDefault()
+    // send delete request to server
+    app
+      .myFetch(`${app.apis.wikistreets.deleteMapUrl}/${app.map.id.get()}`)
+      // send delete request to server
+      .then((res) => {
+        // console.log(JSON.stringify(res, null, 2))
+        if (res.status == true) {
+          // take user to home page
+          window.location.href = 'https://wikistreets.io'
+        }
+      })
+  })
+
   // add a link to map settings, if authenticated
-  if (
-    (app.auth.getToken() &&
-      !app.map.limitContributors &&
-      app.markers.markers.length != 0) ||
-    app.map.contributors.includes(app.user.id)
-  ) {
+  if (app.auth.userCanEdit()) {
     // user is editor of this map
     // console.log('welcome, editor!')
     const settingsButtonEl = $(

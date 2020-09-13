@@ -344,11 +344,12 @@ ul {
 }
 
 /* previous and next issue links */
+.prevnext-issue-container {
+  margin-top: -16px;
+  margin-bottom: 10px;
+}
 .info-window .prev-issue-link,
 .info-window .next-issue-link {
   border-radius: 0;
-}
-.prevnext-issue-container {
-  margin-top: -18px;
-  margin-bottom: 10px;
+  color: black;
 }
