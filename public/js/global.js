@@ -1839,16 +1839,17 @@ const openMapSelectorPanel = async () => {
   // only show delete link to logged-in users who have permissions to edit this map
   // if this is an unsaved app, the only way to currently infer that is through no markers
   const deleteLinkString =
-    app.auth.userCanEdit() && app.markers.markers.length != 0
+    app.auth.userCanEdit() && app.markers.markers.length > 0
       ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Delete</a>`
       : ''
   const forkLinkString =
-    app.auth.getToken() && app.markers.markers.length != 0
+    app.auth.getToken() && app.markers.markers.length > 0
       ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Fork</a>`
       : ''
-  const collaborateLinkString = app.auth.userCanEdit()
-    ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Invite collaborators...</a>`
-    : ''
+  const collaborateLinkString =
+    app.auth.userCanEdit() && app.markers.markers.length > 0
+      ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Invite collaborators...</a>`
+      : ''
   let contextMenuString = `
     <div class="context-menu dropdown">
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
