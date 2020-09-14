@@ -413,7 +413,7 @@ app.markers.findById = (issueId) => {
   // find an existing marker by its id
   issueId = `marker-${issueId}` // markers on the map have been given this prefix
   let match = false
-  app.markers.markers.map((data, i, arr) => {
+  app.markers.markers.forEach((data) => {
     // console.log(`${data._id} && ${issueId}`)
     if (data._id == issueId) {
       // console.log('matching marker found')
@@ -962,7 +962,7 @@ const showInfoWindow = (marker, data) => {
         ...
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Share</a>
+        <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Share link</a>
         ${deleteLinkString}
       </div>
     </div>
@@ -1329,14 +1329,6 @@ const openIssueForm = async (point = false) => {
 
     // construct a FormData object from the form DOM element
     let formData = new FormData(e.target)
-
-    // add additional info, if desired
-    // formData.append("CustomField", "This is some extra data, testing");
-
-    // debugging FormData object... it can't easily be printed otherwise
-    // for (const key of formData.entries()) {
-    // 	console.log(key[0] + ', ' + key[1])
-    // }
 
     // post to server
     app
@@ -1854,13 +1846,17 @@ const openMapSelectorPanel = async () => {
     app.auth.getToken() && app.markers.markers.length != 0
       ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Fork</a>`
       : ''
+  const collaborateLinkString = app.auth.userCanEdit()
+    ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Invite collaborators...</a>`
+    : ''
   let contextMenuString = `
     <div class="context-menu dropdown">
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ...
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Share</a>
+        <a class="copy-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Share link</a>
+        ${collaborateLinkString}
         ${forkLinkString}
         ${deleteLinkString}
       </div>
@@ -1910,89 +1906,75 @@ const openMapSelectorPanel = async () => {
       })
   })
 
-  // add a link to map settings, if authenticated
-  if (app.auth.userCanEdit()) {
-    // user is editor of this map
-    // console.log('welcome, editor!')
-    const settingsButtonEl = $(
-      `<button class="settings-map-link btn btn-primary">Invite</button>`
-    )
-    settingsButtonEl.appendTo($('.info-window header.map-details-container'))
-    // add settings link behavior
-    $('.settings-map-link').click((e) => {
-      e.preventDefault()
-      // show the settings map form
-      $('.info-window-content .map-details-container').hide()
-      $('.info-window-content .settings-map-container').show()
+  $('.collaborate-map-link', selectedMapListItem).click((e) => {
+    e.preventDefault()
+    // show the settings map form
+    $('.info-window-content .map-details-container').hide()
+    $('.info-window-content .settings-map-container').show()
 
-      // pre-select the correct contributor settings
-      if (app.map.limitContributors) {
-        $('.settings-map-container input#limit_contributors_public').removeAttr(
-          'checked'
-        )
-        $('.settings-map-container input#limit_contributors_private').attr(
-          'checked',
-          'checked'
-        )
-      } else {
-        $('.settings-map-container input#limit_contributors_public').attr(
-          'checked',
-          'checked'
-        )
-        $(
-          '.settings-map-container input#limit_contributors_private'
-        ).removeAttr('checked')
-      }
-
-      // add collaborators behavior
-      $('.info-window-content .add-collaborator-button').click((e) => {
-        e.preventDefault()
-        const email = $('.info-window-content .collaborator-email').val()
-        const listItem = $(`<li class="list-group-item">${email}</li>`)
-        // add to visible collaborators list
-        listItem.appendTo('.info-window-content .collaborators-list')
-        // add to hidden collaborators list field
-        let addedCollaborators = $(
-          '.info-window-content form #add_collaborators'
-        ).val()
-        addedCollaborators =
-          addedCollaborators == '' ? email : addedCollaborators + `,${email}`
-        $('.info-window-content form #add_collaborators').val(
-          addedCollaborators
-        )
-
-        $('.info-window-content .collaborator-email').val('')
-      })
-    })
-    // add cancel link behavior
-    $('.settings-map-form .cancel-link', $('.info-window-content')).click(
-      (e) => {
-        e.preventDefault()
-        // revert to the map list view
-        $('.info-window-content .map-details-container').show()
-        $('.info-window-content .settings-map-container').hide()
-      }
-    )
-
-    // enable rename map link
-    $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
-    $('.rename-map-link', selectedMapListItem).click((e) => {
-      e.preventDefault()
-      // show the rename map form
-      $('.info-window-content .map-details-container').hide()
-      $('.info-window-content .rename-map-container').show()
-      $('.info-window-content .rename-map-container #mapTitle').val(
-        app.map.title
+    // pre-select the correct contributor settings
+    if (app.map.limitContributors) {
+      $('.settings-map-container input#limit_contributors_public').removeAttr(
+        'checked'
       )
-      $('.info-window-content .rename-map-container #mapTitle').focus()
-    })
-    $('.rename-map-form .cancel-link', $('.info-window-content')).click((e) => {
+      $('.settings-map-container input#limit_contributors_private').attr(
+        'checked',
+        'checked'
+      )
+    } else {
+      $('.settings-map-container input#limit_contributors_public').attr(
+        'checked',
+        'checked'
+      )
+      $('.settings-map-container input#limit_contributors_private').removeAttr(
+        'checked'
+      )
+    }
+
+    // add collaborators behavior
+    $('.info-window-content .add-collaborator-button').click((e) => {
       e.preventDefault()
-      // revert to the map list view
-      $('.info-window-content .map-details-container').show()
-      $('.info-window-content .rename-map-container').hide()
+      const email = $('.info-window-content .collaborator-email').val()
+      const listItem = $(`<li class="list-group-item">${email}</li>`)
+      // add to visible collaborators list
+      listItem.appendTo('.info-window-content .collaborators-list')
+      // add to hidden collaborators list field
+      let addedCollaborators = $(
+        '.info-window-content form #add_collaborators'
+      ).val()
+      addedCollaborators =
+        addedCollaborators == '' ? email : addedCollaborators + `,${email}`
+      $('.info-window-content form #add_collaborators').val(addedCollaborators)
+
+      $('.info-window-content .collaborator-email').val('')
     })
-  } else {
+  })
+  // add cancel link behavior
+  $('.settings-map-form .cancel-link', $('.info-window-content')).click((e) => {
+    e.preventDefault()
+    // revert to the map list view
+    $('.info-window-content .map-details-container').show()
+    $('.info-window-content .settings-map-container').hide()
+  })
+
+  // enable rename map link
+  $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
+  $('.rename-map-link', selectedMapListItem).click((e) => {
+    e.preventDefault()
+    // show the rename map form
+    $('.info-window-content .map-details-container').hide()
+    $('.info-window-content .rename-map-container').show()
+    $('.info-window-content .rename-map-container #mapTitle').val(app.map.title)
+    $('.info-window-content .rename-map-container #mapTitle').focus()
+  })
+  $('.rename-map-form .cancel-link', $('.info-window-content')).click((e) => {
+    e.preventDefault()
+    // revert to the map list view
+    $('.info-window-content .map-details-container').show()
+    $('.info-window-content .rename-map-container').hide()
+  })
+
+  if (!app.auth.userCanEdit()) {
     // remove link to edit map name for non-contributors
     $('.rename-map-link', selectedMapListItem).css('cursor', 'default')
     $('.rename-map-link', selectedMapListItem).click((e) => {
@@ -2093,7 +2075,18 @@ const openMapSelectorPanel = async () => {
     }
 
     // close the infowindow
-    collapseInfoWindow()
+    // collapseInfoWindow()
+    // show the settings map form
+    $('.info-window-content .map-details-container').show()
+    $('.info-window-content .settings-map-container').hide()
+    const feedbackEl = $(
+      '.info-window-content .map-details-container .feedback-message'
+    )
+    feedbackEl.html('Collaboration settings saved.')
+    feedbackEl.show()
+    setTimeout(() => {
+      feedbackEl.fadeOut()
+    }, 3000)
   })
 } // openMapSelectorPanel
 
