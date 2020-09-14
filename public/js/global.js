@@ -1894,6 +1894,8 @@ const openMapSelectorPanel = async () => {
 
   $('.delete-map-link', selectedMapListItem).click((e) => {
     e.preventDefault()
+    // put up one small barrier
+    if (!window.confirm(`Delete this entire map?`)) return
     // send delete request to server
     app
       .myFetch(`${app.apis.wikistreets.deleteMapUrl}/${app.map.id.get()}`)
