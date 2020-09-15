@@ -222,9 +222,15 @@ const userRouter = ({ config }) => {
   // route for HTTP GET requests to a user's JSON data
   router.get('/me', passportJWT, async (req, res) => {
     const userId = req.user._id
-    let user = await User.findOne({
-      _id: userId,
-    })
+    let user = await User.findOne(
+      {
+        _id: userId,
+      },
+      {
+        password: false,
+        email: false,
+      }
+    )
       .populate('maps', [
         'title',
         'publicId',
@@ -252,9 +258,15 @@ const userRouter = ({ config }) => {
   // route for HTTP GET requests to a user's JSON data
   router.get('/:userId', async (req, res) => {
     const userId = req.params.userId
-    let user = await User.findOne({
-      _id: userId,
-    })
+    let user = await User.findOne(
+      {
+        _id: userId,
+      },
+      {
+        password: false,
+        email: false,
+      }
+    )
       .populate('maps', [
         'title',
         'publicId',

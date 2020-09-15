@@ -24,7 +24,7 @@ const handleImages = (imageService) => async (req, res, next) => {
         // repackage only the data we want to keep about the file
         const fileObj = {
           filename: filename,
-          path: imageService.filepath(filename),
+          // path: imageService.filepath(filename),
           mimetype: file.mimetype,
           encoding: file.encoding,
           size: file.size,
