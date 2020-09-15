@@ -1147,7 +1147,9 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
         // scroll the info window to the top, in case it was previously scrolled down
         $('.info-window').scrollTop(0)
         // inform the map that it has been dynamically resized
-        app.map.element.invalidateSize(true)
+        setTimeout(() => {
+          app.map.element.invalidateSize(true)
+        }, 100)
       }
     )
 
@@ -1896,10 +1898,10 @@ const openMapSelectorPanel = async () => {
       // send delete request to server
       .then((res) => {
         // console.log(JSON.stringify(res, null, 2))
-        // if (res.status == true) {
-        // take user to home page
-        window.location.href = `//${window.location.hostname}`
-        // }
+        if (res.status == true) {
+          // take user to home page
+          window.location.href = `/`
+        }
       })
   })
 

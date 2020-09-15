@@ -101,17 +101,39 @@ const mapRouter = ({ config }) => {
     console.log(`removing map ${mapId}...`)
     // find the map in question
     let errorMessage = ''
-    const map = await Map.findOne({
+    let map = await Map.findOne({
       publicId: mapId,
     }).catch((err) => {
       errorMessage = err
     })
     if (map) {
-      const user = req.user
-      // remove this map from this user's list of maps
+      console.log(`found map ${map._id}`)
+      let user = req.user
+      // first, remove this map from this user's list of maps
+      user = await User.findOneAndUpdate(
+        {
+          _id: req.user._id,
+        },
+        {
+          $pull: { maps: map._id },
+        },
+        {
+          new: true, // return updated doc
+        },
+        (err, doc) => {
+          if (err) {
+            console.log('error pulling map from user list')
+            errorMessage = err
+          } else {
+            console.log('pulled map from user list')
+          }
+        }
+      )
+
       // remove this user from the map's list of contributors
       map.contributors.pull(user)
       if (map.contributors.length == 0) {
+        console.log(`no more contributors`)
         // if there are no more contributors to the map, delete it completely
         await Map.deleteOne({
           _id: map._id,
@@ -119,30 +141,19 @@ const mapRouter = ({ config }) => {
           errorMessage = err
         })
       } else {
+        console.log(`other contributors exist`)
         // remove this user from the map, but keep the map for other users
         map = await map.save((err, doc) => {
           if (err) {
             errorMessage = err
+          } else {
+            console.log(`saved map updates`)
           }
         })
       }
-
-      user.maps.pull(map) // remove this map from this user's list
-      // save changes
-      console.log(`saving changes to user ${user._id}`)
-      req.user.save((err, doc) => {
-        if (err) {
-          errorMessage = err
-        } else {
-          res.json({
-            status: true,
-            message: 'success',
-          })
-        }
-      })
     } // if map
     else {
-      errorMessage = 'Unable to remove map.'
+      errorMessage = 'Unable to find map.'
     }
 
     // for all errors...
@@ -152,6 +163,12 @@ const mapRouter = ({ config }) => {
         status: false,
         message: errorMessage,
         error: errorMessage,
+      })
+    } else {
+      // all worked well...
+      res.json({
+        status: true,
+        message: 'success',
       })
     }
   })
