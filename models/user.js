@@ -4,25 +4,27 @@ const bcrypt = require('bcryptjs')
 const { Map, mapSchema } = require('./map')
 
 // a user
-const userSchema = new Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
+const userSchema = new Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+    },
+    handle: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    numPosts: { type: Number, default: 0 },
+    maps: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
   },
-  handle: {
-    type: String,
-    required: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  numPosts: { type: Number, default: 0 },
-  maps: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
-  date: { type: Date, default: Date.now },
-})
+  { timestamps: true }
+)
 
 // passport middleware function is run before saving a new user
 // userSchema.pre('save', async function (next) {

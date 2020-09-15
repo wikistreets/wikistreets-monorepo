@@ -22,7 +22,7 @@ const mapSchema = new Schema(
     },
     limitContributors: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     // limitViewers: {
     //   type: Boolean,
@@ -34,7 +34,6 @@ const mapSchema = new Schema(
     contributors: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     forks: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
     forkedFrom: { type: Schema.Types.ObjectId, ref: 'Map' },
-    // date: { type: Date, default: Date.now },
   },
   { timestamps: true }
 )

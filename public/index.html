@@ -142,10 +142,6 @@
       <!-- info window icons -->
       <!-- <img class="close-icon" src="/static/images/material_design_icons/close-24px.svg" /> -->
 
-      <!-- <p class="hide instructions street-address alert alert-info" role="alert">
-        Welcome!
-      </p> -->
-
       <section class="info-window-content"></section>
     </section>
     <!-- // info window -->
@@ -184,7 +180,6 @@
           method="POST"
         >
           <div class="form-group">
-            <!-- <label for="signin-email">Email address</label> -->
             <input
               type="email"
               class="form-control"
@@ -235,7 +230,6 @@
           method="POST"
         >
           <div class="form-group">
-            <!-- <label for="signup-email">Email address</label> -->
             <input
               type="email"
               class="form-control"
@@ -300,7 +294,6 @@
           method="POST"
         >
           <div class="form-group">
-            <!-- <label for="signin-email">Email address</label> -->
             <input
               type="email"
               class="form-control"
@@ -331,34 +324,32 @@
         method="POST"
         enctype="multipart/form-data"
       >
-        <!-- <input type="hidden" name="address" class="address" /> -->
+        <input type="hidden" name="address" class="address" />
         <input type="hidden" name="lat" class="lat" />
         <input type="hidden" name="lng" class="lng" />
 
         <div class="row">
-          <section class="col-12 col-md-6 col-lg-4 submit-container">
-            <h2>Post title</h2>
+          <section class="col-12 submit-container">
+            <h2>Post</h2>
+            <p class="nearby-address">near <span class="address">Anonymous location</span></p>
             <input
               type="text"
-              class="form-control address"
-              name="address"
-              placeholder="Title of this post"
+              class="form-control"
+              name="title"
+              placeholder="Title*"
               required="required"
             />
             <br />
-            <h2>Post a message here</h2>
             <textarea
               class="form-control col-12"
-              name="comments"
-              placeholder="Any additional important details"
+              name="body"
+              placeholder="Description"
             ></textarea>
             <br />
-            <h2>Add photos</h2>
             <p>Up to 3 photos</p>
             <input class="form-control-file" id="files" name="files" type="file" multiple />
             <br />
-            <h2>Ready to submit?</h2>
-            <input class="btn btn-primary" type="submit" value="Submit!" />
+            <input class="btn btn-primary" type="submit" value="Submit" />
           </section>
         </div>
 
@@ -518,7 +509,6 @@
             enctype="multipart/form-data"
           >
             <div class="form-group">
-              <!-- <label for="mapTitle">New name:</label> -->
               <input
                 class="form-control"
                 type="text"

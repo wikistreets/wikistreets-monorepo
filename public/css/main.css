@@ -353,3 +353,11 @@ ul {
   border-radius: 0;
   color: black;
 }
+
+.issue-form .nearby-address {
+  font-size: 0.75em;
+}
+
+.issue-form span.address {
+  font-weight: bold;
+}

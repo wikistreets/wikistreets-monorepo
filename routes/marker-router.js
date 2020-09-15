@@ -181,8 +181,9 @@ const markerRouter = ({ config }) => {
     [
       body('lat').not().isEmpty().trim(),
       body('lng').not().isEmpty().trim(),
-      body('address').trim().escape(),
-      body('comments').trim().escape(),
+      body('title').not().isEmpty().trim().escape(),
+      body('address').not().isEmpty().trim().escape(),
+      body('body').trim().escape(),
       body('mapTitle').trim().escape(),
     ],
     async (req, res, next) => {
@@ -194,9 +195,10 @@ const markerRouter = ({ config }) => {
           lat: req.body.lat,
           lng: req.body.lng,
         },
+        title: req.body.title,
         address: req.body.address,
         photos: req.files,
-        comments: req.body.comments,
+        body: req.body.body,
       }
 
       // reject posts with no map
@@ -209,7 +211,7 @@ const markerRouter = ({ config }) => {
         })
       }
       // reject posts with no useful data
-      else if (!data.photos.length && !data.comments) {
+      else if (!data.photos.length && !data.body) {
         const err = 'You submitted an empty post.... please be reasonable.'
         return res.status(400).json({
           status: false,

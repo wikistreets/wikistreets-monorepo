@@ -35,7 +35,7 @@ const app = {
       lat: 41.1974622,
       lng: -73.8802434,
     },
-    street: null,
+    address: null,
     options: {
       // default gps options
       enableHighAccuracy: true,
@@ -278,6 +278,9 @@ app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
       queryParams.push(`${key}=${val}`)
       // console.log(`${key}: ${courses[key]}`)
     })
+    // make sure map title is sent along, just in case it has changed in client
+    if (!queryParams.includes('mapTitle'))
+      queryParams.push('mapTitle', app.map.title)
     // assemble the query and tack it on the URL
     let query = queryParams.join('&')
     url = url += `?${query}`
@@ -617,14 +620,6 @@ async function initMap() {
     populateMap(false) // don't re-center the map
   }, 15000)
 
-  // find browser's geolocation
-  //app.browserGeolocation.update();
-
-  // get the current center of the map
-  // app.browserGeolocation.coords = app.map.getCenter();
-  // const street = await getStreetAddress(app.browserGeolocation.coords);
-  // $('.street-address').html(street);
-
   /**** SET UP EVENT HANDLERS ****/
 
   // allow infoWindow to close when icon clicked
@@ -710,18 +705,6 @@ async function initMap() {
     const coords = app.map.getCenter()
     app.browserGeolocation.setCoords(coords.lat, coords.lng)
 
-    // // if locator mode, update street address
-    // if (app.mode == 'issuelocate') {
-    //     const street = await getStreetAddress(coords);
-    //     app.browserGeolocation.street = street;
-    //     $('.street-address').html(street);
-
-    //     // update hidden from elements
-    //     $('.address').val(street);
-    //     $('.lat').val(coords.lat);
-    //     $('.lng').val(coords.lng);
-    // }
-
     // if we had previous been centered on user's personal location, change icon now
     if (app.browserGeolocation.enabled) app.controls.gps.setState('enabled')
   })
@@ -776,10 +759,11 @@ const getStreetAddress = async (coords) => {
   return fetch(apiFullUrl)
     .then((response) => response.json()) // convert JSON response text to an object
     .then((data) => {
-      // console.log(data);
-      let street
+      // console.log(JSON.stringify(data, null, 2))
+      let street = 'Anonymous location'
+      let address = 'Anonymous location'
       if (data.features.length && data.features[0].place_name) {
-        const address = data.features[0].place_name
+        address = data.features[0].place_name
         street = address.substring(0, address.indexOf(',')) // up till the comma
         // console.log(address)
         // check if street is a number...
@@ -791,10 +775,9 @@ const getStreetAddress = async (coords) => {
             address.indexOf(',', posFirstComma + 1)
           )
         }
-      } else {
-        street = 'Anonymous location'
       }
-      return street
+      // return street
+      return address
     })
     .catch((err) => {
       console.error(err)
@@ -819,6 +802,21 @@ const getFormattedAddress = async (address) => {
   })
 }
 
+async function updateAddress(coords) {
+  const address = await getStreetAddress(coords)
+  if (address == '') address = 'Anonymous location'
+  // get just the street address for brevity
+  street = address.indexOf(',')
+    ? address.substr(0, address.indexOf(','))
+    : address
+  app.browserGeolocation.address = address
+  $('.street-address').html(street)
+  $('input.address').val(address) // form fields
+  $('span.address').html(address) // other types
+  $('.lat').val(coords.lat)
+  $('.lng').val(coords.lng)
+  return address
+}
 /**
  * Determine address from lat/long coordinates.
  * @param {*} pos
@@ -827,6 +825,7 @@ function geocodePosition(pos) {
   geocoder = new google.maps.Geocoder()
   geocoder.geocode({ latLng: pos }, (results, status) => {
     if (status == google.maps.GeocoderStatus.OK) {
+      console.log(JSON.stringify(results, null, 2))
       $('#street').val(results[0].formatted_address)
     } else {
       console.log(`Error: ${status}`)
@@ -944,9 +943,16 @@ const showInfoWindow = (marker, data) => {
   let contentString = ''
 
   // format the date the marker was created
-  const date = DateDiff.asAge(data.date)
+  // console.log(JSON.stringify(data, null, 2))
+  const date = DateDiff.asAge(data.createdAt)
   // give attribution to author
-  const attribution = `Posted by <a class="user-link" user-id="${data.user._id}" href="#">${data.user.handle}</a> ${date}.`
+  const attribution = `
+Posted by
+<a class="user-link" ws-user-id="${data.user._id}" href="#">${
+    data.user.handle
+  }</a> ${date}
+near ${data.address.substr(0, data.address.lastIndexOf(','))}.
+`
 
   let imgString = createPhotoCarousel(data.photos)
   // console.log(imgString)
@@ -969,7 +975,7 @@ const showInfoWindow = (marker, data) => {
   `
 
   // do some cleanup of the text comment
-  data.comments = data.comments.replace('\n', '<br />')
+  data.body = data.body.replace('\n', '<br />')
   contentString += `
 <div class="issue-detail">
     <div class="prevnext-issue-container row">
@@ -978,17 +984,17 @@ const showInfoWindow = (marker, data) => {
     </div>
     <header>
         ${contextMenuString}
-        <h2>${data.address}</h2>
+        <h2>${data.title}</h2>
         <p class="instructions">${attribution}</p>
     </header>
     <div class="feedback alert alert-success hide"></div>
     <article>
     ${imgString}
     `
-  contentString += !data.comments
+  contentString += !data.body
     ? ''
     : `
-        <p>${data.comments}</p>
+        <p>${data.body}</p>
     `
   contentString += `
     </article>
@@ -1037,7 +1043,7 @@ const showInfoWindow = (marker, data) => {
       e.preventDefault()
 
       // get target userid
-      const userId = $(e.target).attr('user-id')
+      const userId = $(e.target).attr('ws-user-id')
 
       openUserProfile(data.user.handle, userId)
     })
@@ -1256,22 +1262,24 @@ const openIssueForm = async (point = false) => {
   coords = app.browserGeolocation.getCoords()
 
   // update street address
-  const street = await getStreetAddress(coords)
-  app.browserGeolocation.street = street
-  $('.street-address').html(street)
-  $('.address').val(street)
-  $('.lat').val(coords.lat)
-  $('.lng').val(coords.lng)
+  const address = await updateAddress(coords)
 
   // attach a popup
   marker.bindPopup($('.map-popup-container').html()).openPopup()
 
+  // copy the issue form into the infowindow
+  const infoWindowHTML = $('.issue-form-container').html()
+  $('.info-window-content').html(infoWindowHTML)
+
+  $('.info-window-content .address').html(address)
+
+  // detect dragstart events on me marker
   app.markers.me.on('dragstart', async () => {
     // close the marker popup
     app.markers.me.closePopup()
   })
 
-  // detect drag events on me marker
+  // detect dragend events on me marker
   app.markers.me.on('dragend', async () => {
     // get the center address of the map
     app.browserGeolocation.coords = {
@@ -1285,29 +1293,12 @@ const openIssueForm = async (point = false) => {
     app.map.element.panTo(coords)
 
     // update street address
-    const street = await getStreetAddress(coords)
-    // console.log(street);
-    app.browserGeolocation.street = street
-    $('.street-address').html(street)
-    // update address in form
-    $('.address').val(street)
-
-    // update hidden from elements
-    $('.lat').val(coords.lat)
-    $('.lng').val(coords.lng)
+    const address = await updateAddress(coords)
 
     //re-open popup ... make sure it has the updated street first
     app.markers.me.setPopupContent($('.map-popup-container').html())
     app.markers.me.openPopup()
   })
-
-  // copy the issue form into the infowindow
-  const infoWindowHTML = $('.issue-form-container').html()
-  $('.info-window-content').html(infoWindowHTML)
-
-  // update address
-  $('.street-address').html(street)
-  $('.address').val(street)
 
   // deal with form submissions
   $('.info-window-content form.issue-form').on('submit', async (e) => {
@@ -1869,7 +1860,10 @@ const openMapSelectorPanel = async () => {
   // enable context menu links
   $('.copy-map-link', selectedMapListItem).click((e) => {
     e.preventDefault()
-    const text = `https://wikistreets.io/map/${app.map.id.get()}`
+    const port = window.location.port ? `:${window.location.port}` : ''
+    const text = `${window.location.protocol}://${
+      window.location.hostname
+    }${port}/map/${app.map.id.get()}`
     navigator.clipboard.writeText(text).then(
       function () {
         // show success message
@@ -1902,10 +1896,10 @@ const openMapSelectorPanel = async () => {
       // send delete request to server
       .then((res) => {
         // console.log(JSON.stringify(res, null, 2))
-        if (res.status == true) {
-          // take user to home page
-          window.location.href = 'https://wikistreets.io'
-        }
+        // if (res.status == true) {
+        // take user to home page
+        window.location.href = `//${window.location.hostname}`
+        // }
       })
   })
 

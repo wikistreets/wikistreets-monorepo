@@ -360,7 +360,7 @@ const mapRouter = ({ config }) => {
         publicId: mapId,
         sinceDate: sinceDate,
       })
-        .populate('issues.user')
+        .populate('issues.user', ['_id', 'handle'])
         .populate('forkedFrom', ['title', 'publicId'])
         .catch((err) => {
           return res.status(500).json({
