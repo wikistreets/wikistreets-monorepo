@@ -497,6 +497,19 @@ app.markers.deactivate = (marker = app.markers.current) => {
   app.markers.current = null
 }
 
+// go to the previous marker
+app.markers.previous = (marker) => {
+  let i = marker.index - 1 // next marker's index
+  if (i < 0) i = app.markers.markers.length - 1 // start from last
+  app.markers.simulateClick(app.markers.markers[i])
+}
+// go to the next marker
+app.markers.next = (marker) => {
+  let i = marker.index + 1 // next marker's index
+  if (i == app.markers.markers.length) i = 0 // start from first
+  app.markers.simulateClick(app.markers.markers[i])
+}
+
 app.map.fetch = async (sinceDate = null) => {
   // fetch data from wikistreets api
   let apiUrl = `${app.apis.wikistreets.getMapUrl}/${app.map.id.get()}`
@@ -1009,17 +1022,24 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   // handle previous and next issue button clicks
   $('.info-window-content .prev-issue-link').click((e) => {
     e.preventDefault()
-    let i = marker.index - 1 // next marker's index
-    if (i < 0) i = app.markers.markers.length - 1 // start from last
-    app.markers.simulateClick(app.markers.markers[i])
+    app.markers.previous(marker)
   })
-
   $('.info-window-content .next-issue-link').click((e) => {
     e.preventDefault()
-    let i = marker.index + 1 // next marker's index
-    if (i == app.markers.markers.length) i = 0 // start from first
-    app.markers.simulateClick(app.markers.markers[i])
+    app.markers.next(marker)
   })
+  // allow left and right arrow keys to perform prev/next iterator
+  // $('html').keyup((e) => {
+  //   const key = e.which
+  //   console.log(key)
+  //   if (key == 37) {
+  //     // left arrow
+  //     app.markers.previous(marker)
+  //   } else if (key == 39) {
+  //     // right arrow
+  //     app.markers.next(marker)
+  //   }
+  // })
 
   // activate the carousel
   $('.info-window-content .carousel').carousel()
