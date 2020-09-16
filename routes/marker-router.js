@@ -20,6 +20,9 @@ const { ImageService } = require('../services/ImageService')
 const handleImages = require('../middlewares/handle-images.js') // our own image handler
 const user = require('../models/user')
 
+// markdown support
+const marked = require('marked')
+
 const markerRouter = ({ config }) => {
   // create an express router
   const router = express.Router()
@@ -69,7 +72,7 @@ const markerRouter = ({ config }) => {
     },
   })
 
-  // route for HTTP GET requests to the map JSON data
+  // route for HTTP GET requests to an issue's JSON data
   router.get('/json', (req, res) => {
     const mapId = req.query.mapId // get mapId from query string
     const data = Issue.find({ mapId }, (err, docs) => {
@@ -183,7 +186,7 @@ const markerRouter = ({ config }) => {
       body('lng').not().isEmpty().trim(),
       body('title').not().isEmpty().trim().escape(),
       body('address').not().isEmpty().trim().escape(),
-      body('body').trim().escape(),
+      body('body').trim(),
       body('mapTitle').trim().escape(),
     ],
     async (req, res, next) => {
@@ -279,6 +282,9 @@ const markerRouter = ({ config }) => {
         )
 
         req.user.save() // save changes to user
+
+        // support markdown
+        issue.body = marked(issue.body)
 
         // return the response to client
         res.json({

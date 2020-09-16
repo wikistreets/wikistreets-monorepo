@@ -20,6 +20,27 @@ const { User } = require('../models/user')
 const { EmailService } = require('../services/EmailService')
 const { Invitation } = require('../models/invitation')
 
+// markdown support
+const marked = require('marked')
+
+// Set options
+// `highlight` example uses `highlight.js`
+marked.setOptions({
+  renderer: new marked.Renderer(),
+  // highlight: function(code, language) {
+  //   const hljs = require('highlight.js');
+  //   const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
+  //   return hljs.highlight(validLanguage, code).value;
+  // },
+  pedantic: false,
+  gfm: true,
+  breaks: false,
+  sanitize: false,
+  smartLists: true,
+  smartypants: false,
+  xhtml: false,
+})
+
 const mapRouter = ({ config }) => {
   // create an express router
   const router = express.Router()
@@ -393,8 +414,18 @@ const mapRouter = ({ config }) => {
           publicId: mapId,
           description: 'A blank starter map',
           issues: [],
+          saved: false, // not a real map
         }
       }
+
+      // support markdown
+      map.issues.forEach((issue) => {
+        // support markdown
+        // issue.body = markdown.toHTML(issue.body)
+        issue.body = marked(issue.body)
+      })
+      // console.log(JSON.stringify(map.issues, null, 2))
+
       // console.log(`MAP: ${map}`)
       res.json(map)
     }

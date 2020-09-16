@@ -316,8 +316,59 @@
     </div>
     <!-- // reset password form-->
 
-    <!-- issue form -->
-    <div class="issue-form-container hide">
+    <!-- new issue form -->
+    <div id="new-issue-form" class="issue-form-container hide">
+      <form
+        class="issue-form"
+        action="/markers/create"
+        method="POST"
+        enctype="multipart/form-data"
+      >
+        <input type="hidden" name="address" class="address" />
+        <input type="hidden" name="lat" class="lat" />
+        <input type="hidden" name="lng" class="lng" />
+
+        <div class="row">
+          <section class="col-12 submit-container">
+            <h2>Post</h2>
+            <p class="nearby-address">near <span class="address">Anonymous location</span></p>
+            <input
+              type="text"
+              class="form-control"
+              name="title"
+              placeholder="Title*"
+              required="required"
+            />
+            <br />
+            <textarea
+              class="form-control col-12"
+              name="body"
+              placeholder="Description (markdown supported)"
+            ></textarea>
+            <br />
+            <p>Up to 3 photos</p>
+            <input class="form-control-file" id="files" name="files" type="file" multiple />
+            <br />
+            <input class="btn btn-primary" type="submit" value="Submit" />
+          </section>
+        </div>
+
+        <div class="map-popup-container hide">
+          <p>near <strong class="street-address"></strong></p>
+          <button
+            onclick="meMarkerButtonClick()"
+            class="btn btn-primary me-marker-go-button"
+          >
+            Create post at this location
+          </button>
+          <p>... or drag marker somewhere else!</p>
+        </div>
+      </form>
+    </div>
+    <!-- // new issue form -->
+
+    <!-- edit issue form -->
+    <div id="edit-issue-form" class="issue-form-container hide">
       <form
         class="issue-form"
         action="/markers/create"
@@ -365,7 +416,7 @@
         </div>
       </form>
     </div>
-    <!-- // issue form -->
+    <!-- // edit issue form -->
 
     <!-- about us -->
     <div class="about-us-container hide">

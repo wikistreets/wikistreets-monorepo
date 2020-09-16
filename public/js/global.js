@@ -988,7 +988,8 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   `
 
   // do some cleanup of the text comment
-  data.body = data.body.replace('\n', '<br />')
+  // data.body = data.body.replace(/\n/g, '<br />')
+
   contentString += `
 <div class="issue-detail">
     <div class="prevnext-issue-container row">
@@ -1113,9 +1114,9 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 
           // close any open info window
           collapseInfoWindow()
-        }
-      })
-  })
+        } // if res.status == true
+      }) // myFetch.then
+  }) // if delete link clicked
 } // showInfoWindow
 
 // hack to close tooltips on mobile... bootstrap's tooltips are buggy on mobile
