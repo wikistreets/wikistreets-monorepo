@@ -64,6 +64,7 @@
     <!-- CUSTOM -->
     <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
     <script type="text/javascript" src="/static/js/date_diff.js"></script>
+    <script type="text/javascript" src="/static/js/fuploader.js"></script>
     <script type="text/javascript" src="/static/js/global.js"></script>
   </head>
   <body>
@@ -346,9 +347,11 @@
               placeholder="Description (markdown supported)"
             ></textarea>
             <br />
-            <p>Up to 3 photos</p>
+            <p>Photos</p>
             <input class="form-control-file" id="files" name="files" type="file" multiple />
-            <br />
+            <div class="upload-thumbnails-container row">
+              <!-- photo thumbnails will go here -->
+            </div>
             <input class="btn btn-primary" type="submit" value="Submit" />
           </section>
         </div>
@@ -394,10 +397,10 @@
             <textarea
               class="form-control col-12"
               name="body"
-              placeholder="Description"
+              placeholder="Description (markdown supported)"
             ></textarea>
             <br />
-            <p>Up to 3 photos</p>
+            <p>Photos</p>
             <input class="form-control-file" id="files" name="files" type="file" multiple />
             <br />
             <input class="btn btn-primary" type="submit" value="Submit" />

@@ -361,3 +361,13 @@ ul {
 .issue-form span.address {
   font-weight: bold;
 }
+
+.issue-form .upload-thumbnails-container {
+  margin-top: 10px;
+}
+.issue-form .upload-thumbnails-container img {
+  margin-left: 10px;
+  margin-bottom: 10px;
+  border: 1px solid white;
+  height: 100px;
+}

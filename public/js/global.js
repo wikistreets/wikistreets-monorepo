@@ -1323,6 +1323,12 @@ const openIssueForm = async (point = false) => {
     app.markers.me.openPopup()
   })
 
+  // create a decent file uploader for photos
+  fuploader(
+    document.querySelector('.info-window-content #files'),
+    document.querySelector('.info-window-content .upload-thumbnails-container')
+  )
+
   // deal with form submissions
   $('.info-window-content form.issue-form').on('submit', async (e) => {
     // prevent page reload
