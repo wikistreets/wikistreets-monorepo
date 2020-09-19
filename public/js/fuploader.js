@@ -130,7 +130,7 @@ function FUploader(config) {
               config.thumbsContainer.closeIconImgSrc
             )
             closeIcon.onclick = (e) => {
-              console.log('clicked')
+              // console.log('clicked')
               fileuploader.removeImage(image.title) // remove this image
             }
             // create a div around them both
@@ -149,12 +149,12 @@ function FUploader(config) {
   } // showPreview
 
   this.removeImage = (imgSrc) => {
-    console.log(imgSrc)
+    // console.log(imgSrc)
     // loop through all dropped files and remove this one
     let i = 0
     ;[].forEach.call(config.form.droppedFiles, (file) => {
       if (file.name == imgSrc) {
-        console.log('found it!')
+        // console.log('found it!')
         config.form.droppedFiles.splice(i, 1) // remove from array
         this.showPreview(this.getDroppedFiles()) // update display
       }
