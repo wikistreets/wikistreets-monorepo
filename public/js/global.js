@@ -451,7 +451,7 @@ app.markers.place = (data, cluster) => {
           // console.log(marker._id)
 
           // keep the index number of this marker to maintain order
-          marker.index = i
+          marker.index = app.markers.markers.length //i
 
           // cluster.addLayer(marker) // add to the marker cluster
           app.map.element.addLayer(marker) // add directly to map
