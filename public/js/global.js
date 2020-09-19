@@ -419,7 +419,6 @@ app.markers.findById = (issueId) => {
   app.markers.markers.forEach((data) => {
     // console.log(`${data._id} && ${issueId}`)
     if (data._id == issueId) {
-      // console.log('matching marker found')
       match = data
     }
   })
@@ -1105,9 +1104,11 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
         if (res.status == true) {
           // remove the marker from the map
           const targetMarker = app.markers.findById(issueId)
+          // console.log(`issue ${issueId}'s marker id: ${targetMarker._id}`)
           if (targetMarker) {
             // remove if present
-            app.markers.markers.splice(targetMarker, 1)
+            const index = app.markers.markers.indexOf(targetMarker)
+            app.markers.markers.splice(index, 1)
             app.markers.cluster.removeLayer(targetMarker) // remove from any map cluster
             app.map.element.removeLayer(targetMarker) // remove from map
           }
@@ -1294,6 +1295,7 @@ const openIssueForm = async (point = false) => {
   const infoWindowHTML = $('.issue-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
+  // insert address
   $('.info-window-content .address').html(address)
 
   // detect dragstart events on me marker
@@ -1324,10 +1326,36 @@ const openIssueForm = async (point = false) => {
   })
 
   // create a decent file uploader for photos
-  fuploader(
-    document.querySelector('.info-window-content #files'),
-    document.querySelector('.info-window-content .upload-thumbnails-container')
-  )
+  const fuploader = new FUploader({
+    container: {
+      el: document.querySelector('.info-window-content .file-upload-container'),
+      activeClassName: 'active',
+    },
+    fileSelector: {
+      el: document.querySelector('.info-window-content input[type="file"]'),
+    },
+    buttonContainer: {
+      el: document.querySelector('.info-window-content .button-container'),
+    },
+    thumbsContainer: {
+      el: document.querySelector('.info-window-content .thumbs-container'),
+    },
+    dropContainer: {
+      el: document.querySelector('.info-window-content .drop-container'),
+      activeClassName: 'active',
+    },
+    form: {
+      el: document.querySelector('.info-window-content .issue-form'),
+      droppedFiles: [], // nothing yet
+    },
+  })
+  fuploader.init() // initalize settings
+
+  // activate add image link
+  $('.info-window-content .add-photos-link').click((e) => {
+    e.preventDefault()
+    $('.info-window-content input[type="file"]').trigger('click')
+  })
 
   // deal with form submissions
   $('.info-window-content form.issue-form').on('submit', async (e) => {
@@ -1349,6 +1377,18 @@ const openIssueForm = async (point = false) => {
 
     // construct a FormData object from the form DOM element
     let formData = new FormData(e.target)
+
+    // remove the input type='file' data, since we don't need it
+    formData.delete('files-excuse')
+
+    // add any drag-and-dropped files to this
+    const files = fuploader.getDroppedFiles()
+    // console.log(files)
+
+    // add files from array to formdata
+    $.each(files, function (i, file) {
+      formData.append('files', file)
+    })
 
     // post to server
     app
@@ -1403,7 +1443,7 @@ const openIssueForm = async (point = false) => {
           'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
         )
       })
-  })
+  }) // issue-form submit
 }
 
 const openSearchAddressForm = () => {

@@ -346,11 +346,18 @@
               name="body"
               placeholder="Description (markdown supported)"
             ></textarea>
-            <br />
-            <p>Photos</p>
-            <input class="form-control-file" id="files" name="files" type="file" multiple />
-            <div class="upload-thumbnails-container row">
-              <!-- photo thumbnails will go here -->
+            <div class="file-upload-container">
+              <div class="button-container">
+                <p>Photos</p>
+                <input class="form-control-file hide" id="files" name="files-excuse" type="file" multiple />
+                <a class="add-photos-link" href="#">Add photos</a>
+              </div>
+              <div class="drop-container hide">
+                <p>Drop your photos here</p>
+              </div>
+              <div class="thumbs-container row">
+                <!-- photo thumbnails will go here -->
+              </div>
             </div>
             <input class="btn btn-primary" type="submit" value="Submit" />
           </section>

@@ -362,10 +362,30 @@ ul {
   font-weight: bold;
 }
 
-.issue-form .upload-thumbnails-container {
+.issue-form .file-upload-container {
+  margin-top: 10px;
+  border: 2px dotted white;
+  padding: 10px;
+  background-color: black;
+}
+.issue-form .file-upload-container * {
+  pointer-events: none; /* prevent inner elements from triggering dragleave events */
+}
+.issue-form .file-upload-container a.add-photos-link {
+  pointer-events: all; /* prevent inner elements from triggering dragleave events */
+}
+.issue-form .file-upload-container.active {
+  background-color: blue;
+  color: white;
+}
+.issue-form .drop-container {
+  text-align: center;
+  padding-bottom: 15px;
+}
+.issue-form .thumbs-container {
   margin-top: 10px;
 }
-.issue-form .upload-thumbnails-container img {
+.issue-form .thumbs-container img {
   margin-left: 10px;
   margin-bottom: 10px;
   border: 1px solid white;
