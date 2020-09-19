@@ -1325,6 +1325,11 @@ const openIssueForm = async (point = false) => {
     app.markers.me.openPopup()
   })
 
+  // remove an image from an issue
+  const removeIssueImage = (e) => {
+    console.log(`removing ${e.target}`)
+  }
+
   // create a decent file uploader for photos
   const fuploader = new FUploader({
     container: {
@@ -1339,6 +1344,11 @@ const openIssueForm = async (point = false) => {
     },
     thumbsContainer: {
       el: document.querySelector('.info-window-content .thumbs-container'),
+      thumbClassName: 'thumb',
+      thumbImgClassName: 'thumb-img',
+      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
+      closeIconClassName: 'close-icon',
+      closeIconCallback: removeIssueImage,
     },
     dropContainer: {
       el: document.querySelector('.info-window-content .drop-container'),

@@ -15,6 +15,11 @@ function FUploader(config) {
     },
     thumbsContainer: {
       el: an element within which image thumbnails will show up,
+      thumbClassName: 'thumb',
+      thumbImgClassName: 'thumb-img',
+      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
+      closeIconClassName: 'close-icon',
+      closeIconCallback: removeIssueImage,
     },
     dropContainer: {
       el: an element that will appear once users drag files over the container,
@@ -102,6 +107,7 @@ function FUploader(config) {
 
   // show the image thumbnails within the thumbsContainer element
   this.showPreview = (files) => {
+    const fileuploader = this // get a pointer to this before joisting
     // wipe out any existing thumbs
     config.thumbsContainer.el.innerHTML = ''
     ;[].forEach.call(files, (file) => {
@@ -111,10 +117,28 @@ function FUploader(config) {
         reader.addEventListener(
           'load',
           function () {
-            var image = new Image()
+            // create an image element
+            const image = new Image()
             image.title = file.name
             image.src = this.result
-            config.thumbsContainer.el.appendChild(image)
+            image.classList.add(config.thumbsContainer.thumbImgClassName)
+            // create a close icon for removing this imagee
+            const closeIcon = document.createElement('IMG')
+            closeIcon.classList.add(config.thumbsContainer.closeIconClassName)
+            closeIcon.setAttribute(
+              'src',
+              config.thumbsContainer.closeIconImgSrc
+            )
+            closeIcon.onclick = (e) => {
+              console.log('clicked')
+              fileuploader.removeImage(image.title) // remove this image
+            }
+            // create a div around them both
+            const div = document.createElement('DIV')
+            div.classList.add(config.thumbsContainer.thumbClassName)
+            div.appendChild(image)
+            div.appendChild(closeIcon)
+            config.thumbsContainer.el.appendChild(div)
           },
           false
         )
@@ -122,5 +146,19 @@ function FUploader(config) {
         reader.readAsDataURL(file)
       } // if image filename
     }) // foreach file
+  } // showPreview
+
+  this.removeImage = (imgSrc) => {
+    console.log(imgSrc)
+    // loop through all dropped files and remove this one
+    let i = 0
+    ;[].forEach.call(config.form.droppedFiles, (file) => {
+      if (file.name == imgSrc) {
+        console.log('found it!')
+        config.form.droppedFiles.splice(i, 1) // remove from array
+        this.showPreview(this.getDroppedFiles()) // update display
+      }
+      i++
+    })
   }
 }

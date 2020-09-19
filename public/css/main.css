@@ -372,7 +372,7 @@ ul {
   pointer-events: none; /* prevent inner elements from triggering dragleave events */
 }
 .issue-form .file-upload-container a.add-photos-link {
-  pointer-events: all; /* prevent inner elements from triggering dragleave events */
+  pointer-events: all; /* allow clicks! */
 }
 .issue-form .file-upload-container.active {
   background-color: blue;
@@ -385,9 +385,19 @@ ul {
 .issue-form .thumbs-container {
   margin-top: 10px;
 }
-.issue-form .thumbs-container img {
+.issue-form .thumbs-container .thumb {
+  position: relative;
   margin-left: 10px;
   margin-bottom: 10px;
   border: 1px solid white;
+}
+.issue-form .thumbs-container .thumb img.thumb-img {
   height: 100px;
+}
+.issue-form .thumbs-container .thumb .close-icon {
+  top: 0;
+  right: 0;
+  background-color: white;
+  cursor: pointer;
+  pointer-events: all; /* allow clicks! */
 }
