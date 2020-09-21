@@ -102,7 +102,7 @@
           />
         </div>
 
-        <div class="map-control control-search-address hide">
+        <div class="map-control control-search-address">
           <img
             data-toggle="tooltip"
             data-placement="top"
@@ -112,31 +112,10 @@
           />
         </div>
 
-        <div class="map-control control-fork-map hide">
-          <img
-            data-toggle="tooltip"
-            data-placement="top"
-            alt="Fork this map"
-            title="Fork this map"
-            src="/static/images/material_design_icons/call_split-24px.svg"
-          />
-        </div>
+      </div> <!-- //.map-controls -->
+      <!-- <div class="clear"></div> -->
 
-        <!-- <div class="map-control control-download-data">
-        <a href="/markers/kml">
-          <img
-            data-toggle="tooltip"
-            data-placement="top"
-            alt="Download KML data file"
-            title="Download KML data file"
-            src="/static/images/material_design_icons/cloud_download-24px.svg"
-          />
-        </a>
-      </div> -->
-      </div>
-      <div class="clear"></div>
-      <!-- // .map-controls -->
-    </section>
+    </section><!-- //.issue-map -->
 
     <!-- info window -->
     <section class="info-window">
@@ -149,16 +128,21 @@
 
     <!-- search address -->
     <div class="search-address-form-container hide">
-      <form action="/search" method="POST" class="row">
-        <input
-          class="col-12 col-md-8"
-          type="text"
-          name="searchterm"
-          id="searchterm"
-          placeholder="Enter address"
-        />
-        <input class="col-12 col-md-4 btn btn-primary" type="submit" />
-      </form>
+      <div class="form-group">
+        <form class="search-address-form" action="/search" method="POST" class="row">
+          <h2>Search for a place</h2>
+          <input
+            class="form-control"
+            type="text"
+            name="searchterm"
+            id="searchterm"
+            placeholder="Search term"
+          />
+        </form>
+        <!-- results -->
+        <ul class="matching-addresses list-group list-group-flush">          
+        </ul>
+      </div>
     </div>
     <!-- // search address -->
 

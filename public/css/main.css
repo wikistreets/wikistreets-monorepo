@@ -158,16 +158,15 @@ ul {
   right: 30px;
 }
 .control-find-location img {
-  /* margin-left: -20px; */
   width: 100%;
 }
-.control-fork-map {
-  float: left;
-  transform: rotate(90deg);
-}
 .control-search-address {
-  float: left;
-  display: none; /* not yet functional */
+  width: 40px;
+  top: 90px;
+  right: 22px;
+}
+.control-find-location img {
+  width: 100%;
 }
 .control-download-data {
   float: left;
@@ -400,4 +399,12 @@ ul {
   background-color: white;
   cursor: pointer;
   pointer-events: all; /* allow clicks! */
+}
+
+/* search results */
+.matching-addresses .list-group-item {
+  color: #ccc;
+  border-color: #555;
+  text-decoration: none;
+  padding: 5px 0;
 }

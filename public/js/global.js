@@ -111,6 +111,13 @@ const app = {
     forks: [],
     numForks: 0,
     dateModified: '',
+    panTo: (coords) => {
+      // call the leaflet map's panTo method
+      app.map.element.panTo(coords)
+      // store this position
+      app.browserGeolocation.coords = coords
+      localStorage.setItem('coords', JSON.stringify(coords))
+    },
   },
   controls: {
     newIssue: {
@@ -544,7 +551,7 @@ const populateMap = async (recenter = true) => {
   // recenter on map centerpoint
   if (recenter && data.centerPoint) {
     //console.log('init map panning')
-    app.map.element.panTo(data.centerPoint)
+    app.map.panTo(data.centerPoint)
   }
 
   // console.log(JSON.stringify(data, null, 2))
@@ -587,8 +594,10 @@ const populateMap = async (recenter = true) => {
 }
 
 async function initMap() {
-  // instantiate map centered on last known coords
-  const coords = app.browserGeolocation.getCoords()
+  let coords = app.browserGeolocation.getCoords() // default coords
+  // use last known coords, if any
+  if (localStorage.getItem('coords'))
+    coords = JSON.parse(localStorage.getItem('coords'))
 
   // set up the leaflet.js map view
   app.map.element = new L.map(app.map.htmlElementId, {
@@ -674,9 +683,12 @@ async function initMap() {
     panToPersonalLocation()
       .then((coords) => {
         // move the me marker, if available
-        if ((app.mode = 'issuelocate' && app.markers.me)) {
+        if (
+          (app.mode =
+            'issuelocate' && app.markers.me && app.markers.me.setLatLng)
+        ) {
           // console.log('moving me');
-          app.markers.me.setPosition(coords)
+          app.markers.me.setLatLng(coords)
         }
       })
       .catch((err) => {
@@ -708,7 +720,7 @@ async function initMap() {
     app.markers.wipeMe()
 
     // show the map controls
-    $('.map-control').fadeIn()
+    $('.map-control').show()
   })
 
   app.map.element.on('moveend', async function (e) {
@@ -765,7 +777,7 @@ $(function () {
  * @param {*} lat The latitude
  * @param {*} long The longitude
  */
-const getStreetAddress = async (coords) => {
+const reverseGeocode = async (coords) => {
   const apiFullUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${coords.lng},${coords.lat}.json?access_token=${app.apis.mapbox.apiKey}`
   // console.log(apiFullUrl)
   return fetch(apiFullUrl)
@@ -797,25 +809,45 @@ const getStreetAddress = async (coords) => {
     })
 }
 
-const getMatchingAddresses = async (address) => {
-  const bounds = app.map.element.getBounds()
-  const apiFullUrl = `${app.apis.googleMaps.baseUrl}address=${address}&bounds=${bounds}&key=${app.apis.googleMaps.apiKey}`
-  //console.log(apiFullUrl)
-  return app.myFetch(apiFullUrl) // convert JSON response text to an object
-}
-
 /**
- * Use Google Maps API to determine full street address based on search term.
- * @param {*} address The address search term
+ * Use Mapbox API to determine street address based on lat long coordinates.
+ * @param {*} searchterm The address or other keyword to search for
+ * @returns An array containing names and coordinates of the matching results
  */
-const getFormattedAddress = async (address) => {
-  return getMatchingAddresses(address).then((data) => {
-    $('#street').val(data.results[0].formatted_address)
-  })
+const forwardGeocode = async (searchterm, coords = false) => {
+  if (coords) proximityQuery = `&proximity=${coords.lng},${coords.lat}&`
+  const apiFullUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${searchterm}.json?${proximityQuery}access_token=${app.apis.mapbox.apiKey}`
+  // console.log(apiFullUrl)
+  return fetch(apiFullUrl)
+    .then((response) => response.json()) // convert JSON response text to an object
+    .then((data) => {
+      // console.log(`Forward geocode: ${JSON.stringify(data, null, 2)}`)
+      const features = data.features // get the results
+      let results = []
+      if (data.features && data.features.length) {
+        // loop through each result
+        features.forEach((feature) => {
+          // extract the salient details
+          const { place_name, center } = feature
+          // repackage it our own way
+          result = {
+            name: place_name,
+            coords: { lat: center[1], lng: center[0] },
+          }
+          results.push(result)
+        })
+      }
+      // return results
+      return results
+    })
+    .catch((err) => {
+      console.error(err)
+      throw err
+    })
 }
 
 async function updateAddress(coords) {
-  const address = await getStreetAddress(coords)
+  const address = await reverseGeocode(coords)
   if (address == '') address = 'Anonymous location'
   // get just the street address for brevity
   street = address.indexOf(',')
@@ -828,21 +860,6 @@ async function updateAddress(coords) {
   $('.lat').val(coords.lat)
   $('.lng').val(coords.lng)
   return address
-}
-/**
- * Determine address from lat/long coordinates.
- * @param {*} pos
- */
-function geocodePosition(pos) {
-  geocoder = new google.maps.Geocoder()
-  geocoder.geocode({ latLng: pos }, (results, status) => {
-    if (status == google.maps.GeocoderStatus.OK) {
-      console.log(JSON.stringify(results, null, 2))
-      $('#street').val(results[0].formatted_address)
-    } else {
-      console.log(`Error: ${status}`)
-    }
-  })
 }
 
 // show details of the map from which this map was forked
@@ -1056,7 +1073,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   expandInfoWindow(70, 30).then(() => {
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
-    app.map.element.panTo(marker.getLatLng())
+    app.map.panTo(marker.getLatLng())
 
     // handle click on username event
     $('.info-window .user-link').click((e) => {
@@ -1212,7 +1229,7 @@ const collapseInfoWindow = async (e) => {
           setTimeout(() => {
             const newCenter = app.markers.current.getLatLng()
             // console.log(`recentering to ${newCenter}`)
-            app.map.element.panTo(newCenter)
+            app.map.panTo(newCenter)
             // void the current marker
           }, 50)
         }
@@ -1263,10 +1280,10 @@ const openIssueForm = async (point = false) => {
   }
 
   // hide the map controls
-  $('.map-control').fadeOut()
+  // $('.map-control').fadeOut()
 
   //console.log('issue form panning')
-  app.map.element.panTo(point)
+  app.map.panTo(point)
   let coords = [point.lat, point.lng]
   const marker = L.marker(coords, {
     zIndexOffset: app.markers.zIndex.me,
@@ -1315,7 +1332,7 @@ const openIssueForm = async (point = false) => {
     // center map on the me marker
     //console.log('dragend panning...')
     let coords = app.browserGeolocation.getCoords()
-    app.map.element.panTo(coords)
+    app.map.panTo(coords)
 
     // update street address
     const address = await updateAddress(coords)
@@ -1473,6 +1490,11 @@ const openSearchAddressForm = () => {
   const infoWindowHTML = $('.search-address-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
+  // disable form
+  $('.search-address-form').submit((e) => {
+    e.preventDefault()
+  })
+
   // perform search after a pause in input
   $('#searchterm').keyup((e) => {
     // cancel any existing timeout
@@ -1483,13 +1505,47 @@ const openSearchAddressForm = () => {
 
     // create a new timeout
     app.controls.searchAddress.timer = setTimeout(async () => {
-      const addresses = await getMatchingAddresses($('#searchterm').val())
+      const searchTerm = $('#searchterm').val()
+      const coords = app.browserGeolocation.coords
+      const results = await forwardGeocode(searchTerm, coords)
+
+      // create a list item for each result
+      $('.info-window .matching-addresses').html('') // start from scratch
+      results.map((data, i, arr) => {
+        const item = $(
+          `<a class="address-link list-group-item list-group-item-action" href="#" ws-coords="${JSON.stringify(
+            data.coords,
+            null,
+            2
+          )}">${data.name}</a>`
+        )
+        item.click((e) => {
+          // what to do after clicking this address
+          app.map.panTo(data.coords)
+        })
+        item.appendTo('.info-window .matching-addresses')
+      })
+
+      // pan to the first search result
+      // if (results.length && results[0].coords) {
+      //   const resultCoords = results[0].coords
+      //   app.map.panTo(resultCoords)
+      //   setTimeout(() => {
+      //     if (app.markers.me && app.markers.me.setLatLng) {
+      //       // console.log('moving me');
+      //       app.markers.me.setLatLng(coords)
+      //     }
+      //   }, 250)
+      // }
       // console.log(addresses)
-    }, 500)
+    }, 1000)
   })
 
   // open the info window
-  expandInfoWindow(50, 50).then(async () => {})
+  expandInfoWindow(50, 50).then(async () => {
+    // focus in text field
+    $('.info-window-content #searchterm').focus()
+  })
 }
 
 const openGeopositionUnavailableForm = () => {
@@ -1519,7 +1575,7 @@ const panToPersonalLocation = () => {
     .then((coords) => {
       // console.log(`panning to ${coords}`)
       //console.log('personal location panning...')
-      app.map.element.panTo(coords) // pan map to personal location
+      app.map.panTo(coords) // pan map to personal location
       app.controls.gps.setState('active')
       return coords
     })
@@ -2033,26 +2089,27 @@ const openMapSelectorPanel = async () => {
     $('.info-window-content .settings-map-container').hide()
   })
 
-  // enable rename map link
-  $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
-  $('.rename-map-link', selectedMapListItem).click((e) => {
-    e.preventDefault()
-    // show the rename map form
-    $('.info-window-content .map-details-container').hide()
-    $('.info-window-content .rename-map-container').show()
-    $('.info-window-content .rename-map-container #mapTitle').val(app.map.title)
-    $('.info-window-content .rename-map-container #mapTitle').focus()
-  })
-  $('.rename-map-form .cancel-link', $('.info-window-content')).click((e) => {
-    e.preventDefault()
-    // revert to the map list view
-    $('.info-window-content .map-details-container').show()
-    $('.info-window-content .rename-map-container').hide()
-  })
-
-  if (!app.auth.userCanEdit()) {
-    // remove link to edit map name for non-contributors
-    $('.rename-map-link', selectedMapListItem).css('cursor', 'default')
+  // enable rename map link, if authorized
+  if (app.auth.userCanEdit()) {
+    $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
+    $('.rename-map-link', selectedMapListItem).click((e) => {
+      e.preventDefault()
+      // show the rename map form
+      $('.info-window-content .map-details-container').hide()
+      $('.info-window-content .rename-map-container').show()
+      $('.info-window-content .rename-map-container #mapTitle').val(
+        app.map.title
+      )
+      $('.info-window-content .rename-map-container #mapTitle').focus()
+    })
+    $('.rename-map-form .cancel-link', $('.info-window-content')).click((e) => {
+      e.preventDefault()
+      // revert to the map list view
+      $('.info-window-content .map-details-container').show()
+      $('.info-window-content .rename-map-container').hide()
+    })
+  } else {
+    // disable rename map link
     $('.rename-map-link', selectedMapListItem).click((e) => {
       e.preventDefault()
     })
