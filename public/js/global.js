@@ -1520,8 +1520,19 @@ const openSearchAddressForm = () => {
           )}">${data.name}</a>`
         )
         item.click((e) => {
+          e.preventDefault()
           // what to do after clicking this address
-          app.map.panTo(data.coords)
+          // app.map.panTo(data.coords)
+          if (!app.auth.getToken()) {
+            // console.log('not logged in')
+            app.map.panTo(data.coords)
+            openSigninPanel('Log in to place a marker here')
+          } else {
+            // console.log('logged in')
+            app.auth.userCanEdit()
+              ? openIssueForm(data.coords)
+              : openErrorPanel()
+          }
         })
         item.appendTo('.info-window .matching-addresses')
       })
@@ -1622,11 +1633,13 @@ const formatDate = (date) => {
 }
 
 // authorize the current user
-const openSigninPanel = async () => {
+const openSigninPanel = async (title = false) => {
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.signin-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
+  // add title, if any
+  if (title) $('.info-window-content h2').html(title)
   // activate link to switch to signup panel
   $('.info-window .signup-link').click((e) => {
     e.preventDefault()
@@ -1759,8 +1772,8 @@ const openResetPasswordPanel = async () => {
           return
         }
 
-        console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
-        openSigninPanel()
+        // console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
+        openSigninPanel('Log in with the new password we just sent you')
       })
       .catch((err) => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
