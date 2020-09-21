@@ -199,6 +199,13 @@ const userRouter = ({ config }) => {
           })
         }
       })
+      .then(() => {
+        res.json({
+          success: true,
+          status: 'ok',
+          message: 'all good!',
+        })
+      })
       .catch((err) => {
         console.log(err)
         return res.status(400).json({

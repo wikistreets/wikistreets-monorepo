@@ -660,7 +660,7 @@ async function initMap() {
   // pop open issue form when control icon clicked
   $('.control-add-issue').click(() => {
     // check whether this user is authenticated and is allowed to contribute to this map
-    if (!app.auth.getToken()) openSigninPanel()
+    if (!app.auth.getToken()) openSigninPanel('Log in to create a post')
     else if (!app.auth.userCanEdit()) {
       // user is logged-in, but not a contributor on this private map
       const errorString = $('.error-container').html()
@@ -689,6 +689,19 @@ async function initMap() {
         ) {
           // console.log('moving me');
           app.markers.me.setLatLng(coords)
+        }
+        return coords
+      })
+      .then((coords) => {
+        if (!app.auth.getToken()) {
+          // console.log('not logged in')
+          app.map.panTo(coords)
+          openSigninPanel('Log in to create a post here')
+        } else {
+          collapseInfoWindow().then(() => {
+            // console.log('logged in')
+            app.auth.userCanEdit() ? openIssueForm(coords) : openErrorPanel()
+          })
         }
       })
       .catch((err) => {
@@ -1398,7 +1411,7 @@ const openIssueForm = async (point = false) => {
       //$('.info-window .issue-form-container').appendTo('.stash')
 
       // open signin form
-      openSigninPanel()
+      openSigninPanel('Log in to create a post')
       return
     }
 
@@ -1526,12 +1539,12 @@ const openSearchAddressForm = () => {
           if (!app.auth.getToken()) {
             // console.log('not logged in')
             app.map.panTo(data.coords)
-            openSigninPanel('Log in to place a marker here')
+            openSigninPanel('Log in to create a post here')
           } else {
-            // console.log('logged in')
-            app.auth.userCanEdit()
-              ? openIssueForm(data.coords)
-              : openErrorPanel()
+            collapseInfoWindow().then(() => {
+              // console.log('logged in')
+              if (app.auth.userCanEdit()) openIssueForm(data.coords)
+            })
           }
         })
         item.appendTo('.info-window .matching-addresses')
@@ -1639,7 +1652,7 @@ const openSigninPanel = async (title = false) => {
   $('.info-window-content').html(infoWindowHTML)
 
   // add title, if any
-  if (title) $('.info-window-content h2').html(title)
+  if (title) $('.info-window-content h2.panel-title').html(title)
   // activate link to switch to signup panel
   $('.info-window .signup-link').click((e) => {
     e.preventDefault()
