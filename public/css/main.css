@@ -163,9 +163,9 @@ ul {
 .control-search-address {
   width: 40px;
   top: 90px;
-  right: 22px;
+  right: 25px;
 }
-.control-find-location img {
+.control-search-address img {
   width: 100%;
 }
 .control-download-data {
