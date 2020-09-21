@@ -408,3 +408,7 @@ ul {
   text-decoration: none;
   padding: 5px 0;
 }
+.matching-addresses .list-group-item-action:hover {
+  background-color: transparent;
+  color: white;
+}
