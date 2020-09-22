@@ -53,6 +53,7 @@ const app = {
       getUserMe: '/users/me',
       getMapUrl: '/map/data',
       postIssueUrl: '/markers/create',
+      editIssueUrl: '/markers/edit',
       deleteIssueUrl: '/markers/delete',
       getUserUrl: '/users',
       mapTitleUrl: '/map/title',
@@ -460,6 +461,9 @@ app.markers.place = (data, cluster) => {
           // keep the index number of this marker to maintain order
           marker.index = app.markers.markers.length //i
 
+          // attach the data to the marker
+          marker.issueData = point
+
           // cluster.addLayer(marker) // add to the marker cluster
           app.map.element.addLayer(marker) // add directly to map
 
@@ -472,7 +476,7 @@ app.markers.place = (data, cluster) => {
 
           // // detect click events
           marker.on('click', (e) => {
-            showInfoWindow(marker, point)
+            showInfoWindow(marker)
           })
         } // if
       }, i * latency) // setTimeout
@@ -934,7 +938,7 @@ const createMapListItem = (
 
 const createPhotoCarousel = (photos) => {
   // abort if no photos
-  if (photos.length == 0) return ''
+  if (!photos || photos.length == 0) return ''
 
   // loop through photos
   let slides = ''
@@ -968,8 +972,7 @@ const createPhotoCarousel = (photos) => {
   return $('#carouselTemplate').html()
 }
 
-const showInfoWindow = (marker, data) => {
-  // close form if open
+const showInfoWindow = (marker) => {
   app.mode = 'issuedetails' // in case it was set previously
   // console.log(`mode=${app.mode}`);
 
@@ -981,6 +984,9 @@ const showInfoWindow = (marker, data) => {
 
   // the current marker is now the active one
   app.markers.activate(marker)
+
+  // extract the data from the marker
+  const data = marker.issueData
 
   let contentString = ''
 
@@ -1004,6 +1010,9 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   const deleteLinkString = app.auth.userCanEdit()
     ? `<a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>`
     : ''
+  const editLinkString = app.auth.userCanEdit()
+    ? `<a class="edit-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Edit</a>`
+    : ''
   let contextMenuString = `
     <div class="context-menu dropdown">
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -1011,6 +1020,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
         <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Share link</a>
+        ${editLinkString}
         ${deleteLinkString}
       </div>
     </div>
@@ -1037,7 +1047,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   contentString += !data.body
     ? ''
     : `
-        <p>${data.body}</p>
+        <p>${marked(data.body)}</p>
     `
   contentString += `
     </article>
@@ -1148,6 +1158,14 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
         } // if res.status == true
       }) // myFetch.then
   }) // if delete link clicked
+
+  // activate delete button
+  $('.edit-issue-link').click((e) => {
+    e.preventDefault()
+    // grab the id of the issue to delete
+    const issueId = $(e.target).attr('ws-issue-id')
+    openEditIssueForm(issueId)
+  }) // if edit link clicked
 } // showInfoWindow
 
 // hack to close tooltips on mobile... bootstrap's tooltips are buggy on mobile
@@ -1322,7 +1340,7 @@ const openIssueForm = async (point = false) => {
   marker.bindPopup($('.map-popup-container').html()).openPopup()
 
   // copy the issue form into the infowindow
-  const infoWindowHTML = $('.issue-form-container').html()
+  const infoWindowHTML = $('.new-issue-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
   // insert address
@@ -1407,12 +1425,9 @@ const openIssueForm = async (point = false) => {
 
     // force user login before an issue can be submitted
     if (!app.auth.getToken()) {
-      // save the filled-in form in the stash
-      //$('.info-window .issue-form-container').appendTo('.stash')
-
       // open signin form
       openSigninPanel('Log in to create a post')
-      return
+      return // exit function
     }
 
     // construct a FormData object from the form DOM element
@@ -1484,7 +1499,178 @@ const openIssueForm = async (point = false) => {
         )
       })
   }) // issue-form submit
-}
+} // openIssueForm()
+
+const openEditIssueForm = async (issueId) => {
+  // keep track
+  app.mode = 'issueedit'
+
+  // get marker from id
+  const marker = app.markers.findById(issueId)
+  if (!marker) return
+
+  const data = marker.issueData // extract the data
+  marker.dragging.enable() // make it draggable
+
+  app.map.panTo(marker.getLatLng())
+
+  // copy the edit issue form into the infowindow
+  const infoWindowHTML = $('.edit-issue-form-container').html()
+  $('.info-window-content').html(infoWindowHTML)
+
+  // inject the data to the form
+  $('.info-window-content .issueid').val(data._id)
+  $('.info-window-content .issue-title').val(data.title)
+  $('.info-window-content .issue-body').val(data.body)
+  $('.info-window-content .address').html(data.address)
+  $('.info-window-content input[name="address"]').val(data.address)
+  $('.info-window-content .lat').val(data.position.lat)
+  $('.info-window-content .lng').val(data.position.lng)
+
+  // inject images that already exist for this post
+  let filesToRemove = [] // we'll fill it up later
+  const existingImagesEl = $('.info-window-content .existing-thumbs-container')
+  data.photos.forEach((photo) => {
+    // create a thumbnail
+    const thumb = $(
+      `<div class="thumb" ws-image-filename="${photo.filename}" >
+        <img class="thumb-img" src="/static/uploads/${photo.filename}" title="${photo.filename}" />
+        <img class="close-icon" ws-image-filename="${photo.filename}" src="/static/images/material_design_icons/close-24px.svg">
+      </div>`
+    )
+    // handle removing it
+    $('.close-icon', thumb).click((e) => {
+      const filename = $(e.target).attr('ws-image-filename') // get the image title, which contains the filename
+      $(`.info-window-content .thumb[ws-image-filename="${filename}"]`).remove() // remove it from screen
+      filesToRemove.push(filename) // add it to list of those to remove
+      console.log(`removing ${filename}`)
+      // add the filename to the list
+    })
+    thumb.appendTo(existingImagesEl)
+  })
+
+  // handle marker dragging
+  // detect dragend events on me marker
+  marker.on('dragend', async () => {
+    // get the coordinates of the new location
+    const coords = {
+      lat: marker.getLatLng().lat,
+      lng: marker.getLatLng().lng,
+    }
+
+    // center map on the me marker
+    app.map.panTo(coords)
+
+    // update street address
+    const address = await updateAddress(coords)
+  })
+
+  // open the info panel
+  expandInfoWindow(60, 40).then(() => {})
+
+  // create a decent file uploader for photos
+  const fuploader = new FUploader({
+    container: {
+      el: document.querySelector('.info-window-content .file-upload-container'),
+      activeClassName: 'active',
+    },
+    fileSelector: {
+      el: document.querySelector('.info-window-content input[type="file"]'),
+    },
+    buttonContainer: {
+      el: document.querySelector('.info-window-content .button-container'),
+    },
+    thumbsContainer: {
+      el: document.querySelector('.info-window-content .thumbs-container'),
+      thumbClassName: 'thumb',
+      thumbImgClassName: 'thumb-img',
+      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
+      closeIconClassName: 'close-icon',
+    },
+    dropContainer: {
+      el: document.querySelector('.info-window-content .drop-container'),
+      activeClassName: 'active',
+    },
+    form: {
+      el: document.querySelector('.info-window-content .issue-form'),
+      droppedFiles: [], // nothing yet
+    },
+  })
+  fuploader.init() // initalize settings
+
+  // activate add image link
+  $('.info-window-content .add-photos-link').click((e) => {
+    e.preventDefault()
+    $('.info-window-content input[type="file"]').trigger('click')
+  })
+
+  // deal with form submissions
+  $('.info-window-content form.issue-form').on('submit', async (e) => {
+    // prevent page reload
+    e.preventDefault()
+
+    // show the spinner till done
+    showSpinner($('.info-window-content'))
+
+    // force user login before an issue can be submitted
+    if (!app.auth.getToken()) {
+      // open signin form
+      openSigninPanel('Log in to edit a post')
+      return // exit function
+    }
+
+    // construct a FormData object from the form DOM element
+    let formData = new FormData(e.target)
+
+    // add any existing files to delete
+    if (filesToRemove.length) {
+      formData.append('files_to_delete', filesToRemove.join(','))
+    }
+
+    // remove the input type='file' data, since we don't need it
+    formData.delete('files-excuse')
+
+    // add any drag-and-dropped files to this
+    const files = fuploader.getDroppedFiles()
+    // console.log(files)
+
+    // add files from array to formdata
+    $.each(files, function (i, file) {
+      formData.append('files', file)
+    })
+
+    // post to server
+    app
+      .myFetch(app.apis.wikistreets.editIssueUrl, 'POST', formData)
+      .then((res) => {
+        if (!res.status) {
+          //          console.log(`ERROR: ${res}`)
+          openErrorPanel(res.message)
+          return
+        }
+        // close any open infowindow except the issue form
+        // console.log(JSON.stringify(res, null, 2))
+
+        marker.issueData = res.data // update the marker's data
+
+        // open the updated issue
+        setTimeout(() => {
+          // fire click event
+          app.markers.simulateClick(marker)
+        }, 100)
+      })
+      .catch((err) => {
+        console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        // boot user out of login
+        // app.auth.setToken(''); // wipe out JWT token
+        // openSigninPanel()
+        // open error panel
+        openErrorPanel(
+          'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
+        )
+      })
+  }) // edit-issue-form submit
+} // openEditIssueForm()
 
 const openSearchAddressForm = () => {
   // keep track

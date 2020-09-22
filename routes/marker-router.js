@@ -21,7 +21,7 @@ const handleImages = require('../middlewares/handle-images.js') // our own image
 const user = require('../models/user')
 
 // markdown support
-const marked = require('marked')
+// const marked = require('marked')
 
 const markerRouter = ({ config }) => {
   // create an express router
@@ -224,7 +224,7 @@ const markerRouter = ({ config }) => {
       }
       // reject posts with no address or lat/lng
       else if (!data.address || !data.position.lat || !data.position.lng) {
-        const err = 'Please include a title with your post'
+        const err = 'Please include an address with your post'
         return res.status(400).json({
           status: false,
           message: err,
@@ -284,7 +284,7 @@ const markerRouter = ({ config }) => {
         req.user.save() // save changes to user
 
         // support markdown
-        issue.body = marked(issue.body)
+        // issue.body = marked(issue.body)
 
         // return the response to client
         res.json({
@@ -314,6 +314,145 @@ const markerRouter = ({ config }) => {
       }
     }
   ) // '/create' route
+
+  // route for HTTP POST requests to create a new marker
+  router.post(
+    '/edit',
+    passportJWT, // jwt authentication
+    upload.array('files', config.markers.maxFiles), // multer file upload
+    handleImages(markerImageService), // sharp file editing
+    [
+      body('issueid').not().isEmpty().trim(),
+      body('lat').not().isEmpty().trim(),
+      body('lng').not().isEmpty().trim(),
+      body('title').not().isEmpty().trim().escape(),
+      body('address').not().isEmpty().trim().escape(),
+      body('body').trim(),
+      body('files_to_delete').trim().escape(),
+    ],
+    async (req, res, next) => {
+      const mapId = req.body.mapId
+      const issueId = req.body.issueid // the issue at issue
+
+      // files to delete
+      const filesToDelete = req.body.files_to_delete
+        ? req.body.files_to_delete.split(',')
+        : []
+
+      const data = {
+        _id: issueId,
+        user: req.user,
+        position: {
+          lat: req.body.lat,
+          lng: req.body.lng,
+        },
+        title: req.body.title,
+        address: req.body.address,
+        // photos: req.files,
+        body: req.body.body,
+      }
+
+      // reject posts with no map
+      if (!mapId || !issueId) {
+        const err = 'Map or marker not specified.'
+        return res.status(400).json({
+          status: false,
+          message: err,
+          err: err,
+        })
+      }
+      // // reject posts with no useful data
+      // else if (!data.photos.length && !data.body) {
+      //   const err = 'You submitted an empty post.... please be reasonable.'
+      //   return res.status(400).json({
+      //     status: false,
+      //     message: err,
+      //     err: err,
+      //   })
+      // }
+      // reject posts with no address or lat/lng
+      else if (!data.address || !data.position.lat || !data.position.lng) {
+        const err = 'Please include an address with your post'
+        return res.status(400).json({
+          status: false,
+          message: err,
+          err: err,
+        })
+      }
+
+      // if we've reached here, the marker is valid...
+      try {
+        // find and update the Issue object
+        // issueObjectId = ObjectId.fromString(issueId)
+        const map = await Map.findOneAndUpdate(
+          { publicId: mapId, 'issues._id': issueId },
+          {
+            $set: {
+              // centerPoint: data.position, // map's center point
+              'issues.$.user': data.user,
+              'issues.$.position': data.position,
+              'issues.$.address': data.address,
+              'issues.$.title': data.title,
+              'issues.$.body': data.body,
+            },
+            $addToSet: {
+              contributors: req.user,
+            },
+            $pull: {
+              $each: {
+                'issues.$.photos.filename': filesToDelete,
+              },
+            },
+          }
+        ).catch((err) => {
+          console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        })
+
+        // // add this map to the user's list of maps
+        // req.user.maps.pull(map._id) // first remove from list
+        // req.user.maps.push(map) // re-append to list
+        // req.user.save()
+
+        // // increment the number of posts this user has created
+        // req.user = await User.findOneAndUpdate(
+        //   { _id: req.user._id },
+        //   { $inc: { numPosts: 1 } },
+        //   { new: true }
+        // )
+
+        // req.user.save() // save changes to user
+
+        // support markdown
+        // issue.body = marked(issue.body)
+
+        // return the response to client
+        res.json({
+          status: true,
+          message: 'success',
+          data: data,
+        })
+      } catch (err) {
+        // failed to save the new issue...
+        console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        // delete any uploaded files if the entire route fails for some reason
+        if (req.files && req.files.length > 0) {
+          req.files.map((file, i) => {
+            if (file.path) {
+              // if it was stored on disk, delete it
+              markerImageService.delete(file.path)
+            }
+          })
+        }
+
+        //return failure response
+        return res.status(500).json({
+          status: false,
+          message: 'An error occurred trying to save this issue',
+          err: err,
+        })
+      }
+    }
+  ) // '/edit' route
 
   return router
 }

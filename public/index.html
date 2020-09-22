@@ -10,22 +10,13 @@
 
     <!-- JQUERY -->
     <script
-      type="text/javascript"
-      src="/static/frameworks/jquery/jquery.min.js"
-    ></script>
+      src="/static/frameworks/jquery/jquery-3.4.1.min.js"></script>
 
-    <!-- BOOTSTRAP -->
-    <script
-      type="text/javascript"
-      src="/static/frameworks/bootstrap/js/bootstrap.bundle.js"
-    ></script>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="/static/frameworks/bootstrap/css/bootstrap.min.css"
-    />
-
-    <!-- LEAFLET.JS -->
+    <!-- BOOTSTRAP CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js" integrity="sha384-LtrjvnR4Twt/qOuYxE721u19sVFLVSA4hf/rRt6PrZTmiPltdZcI7q7PXQBYTKyf" crossorigin="anonymous"></script>
+    
+    <!-- LEAFLET.JS CDN -->
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
@@ -60,6 +51,9 @@
       href="/static/frameworks/leaflet.markercluster/MarkerCluster.Default.css"
     />
     <script src="/static/frameworks/leaflet.markercluster/leaflet.markercluster-src.js"></script>
+
+    <!-- MARKED MARKDOWN SUPPORT -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <!-- CUSTOM -->
     <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
@@ -301,7 +295,7 @@
     <!-- // reset password form-->
 
     <!-- new issue form -->
-    <div id="new-issue-form" class="issue-form-container hide">
+    <div class="new-issue-form-container hide">
       <form
         class="issue-form"
         action="/markers/create"
@@ -331,9 +325,9 @@
             ></textarea>
             <div class="file-upload-container">
               <div class="button-container">
-                <p>Photos</p>
+                <!-- <p>Photos</p> -->
                 <input class="form-control-file hide" id="files" name="files-excuse" type="file" multiple />
-                <a class="add-photos-link" href="#">Add photos</a>
+                <a class="add-photos-link" href="#">Add photos</a> <span class="display-none d-md-inline">(drag-and-drop or <a href="#" class="add-photos-link">click here</a>)</span>
               </div>
               <div class="drop-container hide">
                 <p>Drop your photos here</p>
@@ -361,39 +355,58 @@
     <!-- // new issue form -->
 
     <!-- edit issue form -->
-    <div id="edit-issue-form" class="issue-form-container hide">
+    <div class="edit-issue-form-container hide">
       <form
         class="issue-form"
-        action="/markers/create"
+        action="/markers/edit"
         method="POST"
         enctype="multipart/form-data"
       >
+        <input type="hidden" name="issueid" class="issueid" />
         <input type="hidden" name="address" class="address" />
         <input type="hidden" name="lat" class="lat" />
         <input type="hidden" name="lng" class="lng" />
 
         <div class="row">
           <section class="col-12 submit-container">
-            <h2 class="panel-title">Post</h2>
-            <p class="nearby-address">near <span class="address">Anonymous location</span></p>
+            <h2 class="panel-title">Edit post</h2>
+            <p class="nearby-address">
+              near <span class="address">Anonymous location</span>
+              <br />
+              (Drag marker to reposition)
+            </p>
             <input
               type="text"
-              class="form-control"
+              class="form-control issue-title"
               name="title"
+              id='issue-title'
               placeholder="Title*"
               required="required"
             />
             <br />
             <textarea
-              class="form-control col-12"
+              class="form-control col-12 issue-body"
               name="body"
               placeholder="Description (markdown supported)"
             ></textarea>
-            <br />
-            <p>Photos</p>
-            <input class="form-control-file" id="files" name="files" type="file" multiple />
-            <br />
-            <input class="btn btn-primary" type="submit" value="Submit" />
+            <input type="hidden" name="remove-images-list" class="remove-images-list"/>
+            <div class="existing-thumbs-container row"></div>
+            <div class="file-upload-container">
+              <div class="button-container">
+                <!-- <p>Photos</p> -->
+                <input class="form-control-file hide" id="files" name="files-excuse" type="file" multiple />
+                <a class="add-photos-link" href="#">Add photos</a> 
+                <br />
+                <small class="d-none d-md-inline">(drag-and-drop or <a href="#" class="add-photos-link">click</a>)</small>
+              </div>
+              <div class="drop-container hide">
+                <p>Drop your photos here</p>
+              </div>
+              <div class="thumbs-container row">
+                <!-- photo thumbnails will go here -->
+              </div>
+            </div>
+            <input class="btn btn-primary" type="submit" value="Save changes" />
           </section>
         </div>
 

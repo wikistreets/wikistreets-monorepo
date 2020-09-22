@@ -381,19 +381,26 @@ ul {
   text-align: center;
   padding-bottom: 15px;
 }
-.issue-form .thumbs-container {
+.issue-form .thumbs-container,
+.issue-form .existing-thumbs-container {
   margin-top: 10px;
 }
-.issue-form .thumbs-container .thumb {
+.issue-form .existing-thumbs-container {
+  margin-left: -5px;
+}
+.issue-form .thumbs-container .thumb,
+.issue-form .existing-thumbs-container .thumb {
   position: relative;
   margin-left: 10px;
   margin-bottom: 10px;
   border: 1px solid white;
 }
-.issue-form .thumbs-container .thumb img.thumb-img {
+.issue-form .thumbs-container .thumb img.thumb-img,
+.issue-form .existing-thumbs-container .thumb img.thumb-img {
   height: 100px;
 }
-.issue-form .thumbs-container .thumb .close-icon {
+.issue-form .thumbs-container .thumb .close-icon,
+.issue-form .existing-thumbs-container .thumb .close-icon {
   top: 0;
   right: 0;
   background-color: white;

@@ -101,6 +101,11 @@ function FUploader(config) {
     } // on change
   } // init
 
+  this.addUploadedFile = (image, alreadyUploaded = true) => {
+    image.isAlreadyUploaded = true // mark it
+    this.config.form.droppedFiles.push(image) // add it to list
+  }
+
   this.getDroppedFiles = () => {
     return this.config.form.droppedFiles
   }
