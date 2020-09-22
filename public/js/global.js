@@ -922,6 +922,13 @@ const createMapListItem = (
   if (showForkedFrom && mapData.forkedFrom)
     showForkedFromInfo(mapData, mapListing) // show forked info if any
   $('.num-markers', mapListing).html(mapData.numMarkers)
+  // show link to view markers, if relevant
+  if (isSelectedMap && app.markers.markers.length) {
+    $('.marker-map-link', mapListing).html(
+      `<a href="#" onclick="app.markers.simulateClick(app.markers.markers[0]); return false">posts</a>`
+    )
+  }
+
   $('.num-contributors', mapListing).html(mapData.numContributors)
   $('.num-forks', mapListing).html(mapData.numForks)
   if (!showForkLink) {
@@ -932,6 +939,16 @@ const createMapListItem = (
   }
   $('.createdat', mapListing).html(DateDiff.asAge(mapData.createdAt))
   $('.updatedat', mapListing).html(DateDiff.asAge(mapData.updatedAt))
+
+  if (isSelectedMap) {
+    // add links to first and last posts
+    $(`
+      <div class= "row">
+        <button class="navigate-issues-link btn btn-secondary col-6" onclick="app.markers.simulateClick(app.markers.markers[0]); return false">First post</button>
+        <button class="navigate-issues-link btn btn-secondary col-6" onclick="app.markers.simulateClick(app.markers.markers[app.markers.markers.length - 1]); return false">Last post</button>
+      </div>
+    `).appendTo(mapListing)
+  }
 
   return mapListing
 }

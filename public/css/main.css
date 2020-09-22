@@ -348,7 +348,8 @@ ul {
   margin-bottom: 10px;
 }
 .info-window .prev-issue-link,
-.info-window .next-issue-link {
+.info-window .next-issue-link,
+.info-window .navigate-issues-link {
   border-radius: 0;
   color: black;
 }
