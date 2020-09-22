@@ -13,6 +13,7 @@ const path = require('path')
 // database schemas and models
 const { Map } = require('../models/map')
 const { Issue } = require('../models/issue')
+const { File } = require('../models/file')
 const { User } = require('../models/user')
 
 // image editing service
@@ -384,11 +385,11 @@ const markerRouter = ({ config }) => {
       try {
         // find and update the Issue object
         // issueObjectId = ObjectId.fromString(issueId)
-        const map = await Map.findOneAndUpdate(
+        await Map.update(
           { publicId: mapId, 'issues._id': issueId },
           {
             $set: {
-              // centerPoint: data.position, // map's center point
+              centerPoint: data.position, // map's center point
               'issues.$.user': data.user,
               'issues.$.position': data.position,
               'issues.$.address': data.address,
@@ -398,20 +399,46 @@ const markerRouter = ({ config }) => {
             $addToSet: {
               contributors: req.user,
             },
-            $pull: {
-              $each: {
-                'issues.$.photos.filename': filesToDelete,
-              },
-            },
-          }
+          },
+          { new: true }
         ).catch((err) => {
           console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
         })
 
+        // pull deleted images
+        let map = await Map.findOneAndUpdate(
+          { publicId: mapId, 'issues._id': issueId },
+          {
+            $pull: {
+              'issues.$.photos': {
+                filename: {
+                  $in: filesToDelete,
+                },
+              },
+            },
+          },
+          { new: true }
+        )
+        // add new images, if any
+        if (req.files.length) {
+          const filesToAdd = req.files
+          map = await Map.findOneAndUpdate(
+            { publicId: mapId, 'issues._id': issueId },
+            {
+              $push: {
+                'issues.$.photos': {
+                  $each: filesToAdd,
+                },
+              },
+            },
+            { new: true }
+          )
+        }
+
         // // add this map to the user's list of maps
-        // req.user.maps.pull(map._id) // first remove from list
-        // req.user.maps.push(map) // re-append to list
-        // req.user.save()
+        req.user.maps.pull(map._id) // first remove from list
+        req.user.maps.push(map) // re-append to list
+        req.user.save()
 
         // // increment the number of posts this user has created
         // req.user = await User.findOneAndUpdate(
@@ -429,7 +456,7 @@ const markerRouter = ({ config }) => {
         res.json({
           status: true,
           message: 'success',
-          data: data,
+          data: map, // return full map for now, rather than just the updated issue because it's easier
         })
       } catch (err) {
         // failed to save the new issue...

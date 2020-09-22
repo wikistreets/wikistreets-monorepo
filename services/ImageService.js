@@ -23,7 +23,7 @@ const reorientJpeg = async (buffer, quality = 100) => {
       return buffer
     })
     .catch((error) => {
-      console.log('An error occurred when rotating the file: ' + error.message)
+      // console.log('An error occurred when rotating the file: ' + error.message)
       return buffer
     })
   return modified

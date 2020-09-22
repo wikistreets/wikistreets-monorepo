@@ -437,7 +437,16 @@ app.markers.place = (data, cluster) => {
   const latency = 15 // latency between marker animation drops
   data.map((point, i, arr) => {
     // check whether this marker already exists on map
-    if (!app.markers.findById(point._id)) {
+    const existingMarker = app.markers.findById(point._id)
+    if (existingMarker) {
+      // marker exists already... just update it, if necessary
+      existingMarker.issueData = point // save the data
+      existingMarker.setLatLng({
+        lat: point.position.lat,
+        lng: point.position.lng,
+      }) // reposition it
+    } else {
+      // new marker
       // add delay before dropping marker onto map
       setTimeout(() => {
         if (point.position != undefined && point.position != null) {
@@ -480,10 +489,7 @@ app.markers.place = (data, cluster) => {
           })
         } // if
       }, i * latency) // setTimeout
-    } // if marker doesn't yet exist
-    else {
-      // console.log(`skipping marker ${point._id}`)
-    }
+    } // else if marker doesn't yet exist
   }) // data.map
 }
 
@@ -1668,7 +1674,18 @@ const openEditIssueForm = async (issueId) => {
         // close any open infowindow except the issue form
         // console.log(JSON.stringify(res, null, 2))
 
-        marker.issueData = res.data // update the marker's data
+        // this api point returns the full map...
+        // console.log(JSON.stringify(res, null, 2))
+        const issues = res.data.issues
+
+        // get a marker cluster
+        const cluster = app.markers.cluster
+          ? app.markers.cluster
+          : app.markers.createCluster()
+
+        // make a new marker for the new issue
+        // put the new issue data into an array and pass to the place method
+        app.markers.place(issues, cluster)
 
         // open the updated issue
         setTimeout(() => {
