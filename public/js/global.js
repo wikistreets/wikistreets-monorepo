@@ -409,6 +409,8 @@ app.markers.createCluster = () => {
   return app.markers.cluster
 }
 app.markers.simulateClick = (marker) => {
+  if (!marker) return // ignore invalid markers
+
   // fire a click event in the browser-appropriate way
   if (marker.fireEvent) {
     // most browsers
@@ -946,12 +948,12 @@ const createMapListItem = (
   $('.createdat', mapListing).html(DateDiff.asAge(mapData.createdAt))
   $('.updatedat', mapListing).html(DateDiff.asAge(mapData.updatedAt))
 
-  if (isSelectedMap) {
+  if (isSelectedMap && app.markers.markers.length) {
     // add links to first and last posts
     $(`
       <div class= "row">
         <button class="navigate-issues-link btn btn-secondary col-6" onclick="app.markers.simulateClick(app.markers.markers[0]); return false">First post</button>
-        <button class="navigate-issues-link btn btn-secondary col-6" onclick="app.markers.simulateClick(app.markers.markers[app.markers.markers.length - 1]); return false">Last post</button>
+        <button class="navigate-issues-link btn btn-secondary col-6" onclick="app.markers.simulateClick(app.markers.markers[app.markers.markers.length - 1]); return false">Latest post</button>
       </div>
     `).appendTo(mapListing)
   }

@@ -6,16 +6,74 @@
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no"
     />
-    <title>Wikistreets</title>
+    <!-- discovery metadata -->
+    <meta
+      property="og:title"
+      content="The collaborative browser-based map maker"
+    />
+    <meta
+      property="og:description"
+      content="Wikistreets is a simple yet powerful online map maker. Snap and map photos and notes while at home or on the road. Share your map and invite others to collaborate. Fork (i.e. copy) any map."
+    />
+    <meta property="og:type" content="article" />
+    <meta
+      property="og:image"
+      content="https://wikistreets.io/static/images/share_image.png"
+    />
+    <meta property="og:site_name" content="Wikistreets.io" />
+    <meta itemprop="name" content="Wikistreets.io" />
+    <meta
+      itemprop="description"
+      content="Wikistreets is a simple yet powerful online map maker. Snap and map photos and notes while at home or on the road. Share your map and invite others to collaborate. Fork (i.e. copy) any map."
+    />
+    <meta
+      itemprop="image"
+      content="https://wikistreets.io/static/images/share_image.png"
+    />
+    <meta
+      name="description"
+      content="Wikistreets is a simple yet powerful online map maker. Snap and map photos and notes while at home or on the road. Share your map and invite others to collaborate. Fork (i.e. copy) any map."
+    />
+    <meta
+      name="keywords"
+      content="maps,geography,GIS,editor,places,locations,markers,paths,routes,trails,roads,streets,wiki"
+    />
+    <meta name="author" property="og:author" content="Wikistreets.io" />
+    <meta name="twitter:card" content="summary" />
+    <!-- <meta name="twitter:site" content="@wikistreets.io"/> -->
+    <meta
+      name="twitter:title"
+      content="The collaborative browser-based map maker"
+    />
+    <meta
+      name="twitter:description"
+      content="Wikistreets is a simple yet powerful online map maker. Snap and map photos and notes while at home or on the road. Share your map and invite others to collaborate. Fork (i.e. copy) any map."
+    />
+    <meta
+      name="twitter:image"
+      content="https://wikistreets.io/static/images/share_image.png"
+    />
+    <meta name="google" value="notranslate" />
+    <!-- //discovery metadata -->
+
+    <title>Wikistreets - The collaborative browser-based map maker</title>
 
     <!-- JQUERY -->
-    <script
-      src="/static/frameworks/jquery/jquery-3.4.1.min.js"></script>
+    <script src="/static/frameworks/jquery/jquery-3.4.1.min.js"></script>
 
     <!-- BOOTSTRAP CDN -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js" integrity="sha384-LtrjvnR4Twt/qOuYxE721u19sVFLVSA4hf/rRt6PrZTmiPltdZcI7q7PXQBYTKyf" crossorigin="anonymous"></script>
-    
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"
+      integrity="sha384-LtrjvnR4Twt/qOuYxE721u19sVFLVSA4hf/rRt6PrZTmiPltdZcI7q7PXQBYTKyf"
+      crossorigin="anonymous"
+    ></script>
+
     <!-- LEAFLET.JS CDN -->
     <link
       rel="stylesheet"
@@ -105,11 +163,11 @@
             src="/static/images/material_design_icons/search-24px.svg"
           />
         </div>
-
-      </div> <!-- //.map-controls -->
+      </div>
+      <!-- //.map-controls -->
       <!-- <div class="clear"></div> -->
-
-    </section><!-- //.issue-map -->
+    </section>
+    <!-- //.issue-map -->
 
     <!-- info window -->
     <section class="info-window">
@@ -123,7 +181,12 @@
     <!-- search address -->
     <div class="search-address-form-container hide">
       <div class="form-group">
-        <form class="search-address-form" action="/search" method="POST" class="row">
+        <form
+          class="search-address-form"
+          action="/search"
+          method="POST"
+          class="row"
+        >
           <h2>Search for a place</h2>
           <input
             class="form-control"
@@ -134,8 +197,7 @@
           />
         </form>
         <!-- results -->
-        <ul class="matching-addresses list-group list-group-flush">          
-        </ul>
+        <ul class="matching-addresses list-group list-group-flush"></ul>
       </div>
     </div>
     <!-- // search address -->
@@ -185,13 +247,14 @@
         <article class="col-12 col-md-6">
           <h2>Don't have an account?</h2>
           <p>
-            <a href="#" class="signup-link">Create an account</a> to be able to post to this map.
+            <a href="#" class="signup-link">Create an account</a> to be able to
+            post to this map.
           </p>
           <h2>Forgot your password?</h2>
           <p>
-            We'll <a href="#" class="reset-password-link">send you a new one</a>.
+            We'll
+            <a href="#" class="reset-password-link">send you a new one</a>.
           </p>
-
         </article>
       </div>
     </div>
@@ -247,13 +310,12 @@
         <article class="col-12">
           <p>
             <small>
-              By using this app, you agree to the following terms and
-              conditions: 
-              that you are at least 18 years old;
-              that you assume all liability for your usage of this app; 
-              that we cannot be held liable for any issues or offenses related to your usage of this app; 
-              that we make no promises or guarantees to you of any kind;
-              that we will do whatever we want with your data; and that we may change these terms at any moment when it suits us.
+              By using this app, you agree to our
+              <a href="/static/privacy-policy.html">Privacy Policy</a>,
+              <a href="/static/terms-of-use.html">Terms of Use</a>, and
+              <a href="/static/community-guidelines.html"
+                >Community Guidelines</a
+              >.
             </small>
           </p>
         </article>
@@ -286,9 +348,7 @@
 
         <article class="col-12 col-md-6">
           <h2>We'll send you a new password</h2>
-          <p>
-            Check your email after you submit the form.
-          </p>
+          <p>Check your email after you submit the form.</p>
         </article>
       </div>
     </div>
@@ -309,7 +369,9 @@
         <div class="row">
           <section class="col-12 submit-container">
             <h2 class="panel-title">Post</h2>
-            <p class="nearby-address">near <span class="address">Anonymous location</span></p>
+            <p class="nearby-address">
+              near <span class="address">Anonymous location</span>
+            </p>
             <input
               type="text"
               class="form-control"
@@ -326,8 +388,18 @@
             <div class="file-upload-container">
               <div class="button-container">
                 <!-- <p>Photos</p> -->
-                <input class="form-control-file hide" id="files" name="files-excuse" type="file" multiple />
-                <a class="add-photos-link" href="#">Add photos</a> <span class="display-none d-md-inline">(drag-and-drop or <a href="#" class="add-photos-link">click here</a>)</span>
+                <input
+                  class="form-control-file hide"
+                  id="files"
+                  name="files-excuse"
+                  type="file"
+                  multiple
+                />
+                <a class="add-photos-link" href="#">Add photos</a>
+                <span class="display-none d-md-inline"
+                  >(drag-and-drop or
+                  <a href="#" class="add-photos-link">click here</a>)</span
+                >
               </div>
               <div class="drop-container hide">
                 <p>Drop your photos here</p>
@@ -379,7 +451,7 @@
               type="text"
               class="form-control issue-title"
               name="title"
-              id='issue-title'
+              id="issue-title"
               placeholder="Title*"
               required="required"
             />
@@ -389,15 +461,28 @@
               name="body"
               placeholder="Description (markdown supported)"
             ></textarea>
-            <input type="hidden" name="remove-images-list" class="remove-images-list"/>
+            <input
+              type="hidden"
+              name="remove-images-list"
+              class="remove-images-list"
+            />
             <div class="existing-thumbs-container row"></div>
             <div class="file-upload-container">
               <div class="button-container">
                 <!-- <p>Photos</p> -->
-                <input class="form-control-file hide" id="files" name="files-excuse" type="file" multiple />
-                <a class="add-photos-link" href="#">Add photos</a> 
+                <input
+                  class="form-control-file hide"
+                  id="files"
+                  name="files-excuse"
+                  type="file"
+                  multiple
+                />
+                <a class="add-photos-link" href="#">Add photos</a>
                 <br />
-                <small class="d-none d-md-inline">(drag-and-drop or <a href="#" class="add-photos-link">click</a>)</small>
+                <small class="d-none d-md-inline"
+                  >(drag-and-drop or
+                  <a href="#" class="add-photos-link">click</a>)</small
+                >
               </div>
               <div class="drop-container hide">
                 <p>Drop your photos here</p>
@@ -442,29 +527,40 @@
           <small>
             &copy; 2020. All rights reserved.
             <p>
-              Created by <a href="http://plasticpast.com">Plastic Past
+              Created by <a href="http://plasticpast.com">Plastic Past</a>
               <br />
               &copy;
               <a target="_new" href="https://www.openstreetmap.org/"
                 >OpenStreetMap</a
               >
               contributors
-              <a target="_new" href="https://www.openstreetmap.org/copyright">ODbL</a>
+              <a target="_new" href="https://www.openstreetmap.org/copyright"
+                >ODbL</a
+              >
               | Imagery &copy;
               <a target="_new" href="https://www.mapbox.com/">Mapbox</a>
               | Map interactions &copy;
               <a target="_new" href="https://leafletjs.com">Leaflet</a>
               | Icons &copy;
-              <a target="_new" href="https://material.io/resources/icons/">Material Design</a> under <a target="_new" href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache-2.0</a>
+              <a target="_new" href="https://material.io/resources/icons/"
+                >Material Design</a
+              >
+              under
+              <a
+                target="_new"
+                href="https://www.apache.org/licenses/LICENSE-2.0.html"
+                >Apache-2.0</a
+              >
             </p>
             <p>
-              By using this app, you agree to the following terms and
-              conditions: 
-              that you are at least 18 years old;
-              that you assume all liability for your usage of this app; 
-              that we cannot be held liable for any issues or offenses related to your usage of this app; 
-              that we make no promises or guarantees to you of any kind;
-              that we will do whatever we want with your data; and that we may change these terms at any moment when it suits us.
+              <small>
+                By using this app, you agree to our
+                <a href="/static/privacy-policy.html">Privacy Policy</a>,
+                <a href="/static/terms-of-use.html">Terms of Use</a>, and
+                <a href="/static/community-guidelines.html"
+                  >Community Guidelines</a
+                >.
+              </small>
             </p>
           </small>
         </article>
@@ -550,7 +646,8 @@
               updated <span class="updatedat"></span> | created
               <span class="createdat"></span>
               <br />
-              <span class="num-markers">0</span> <span class="marker-map-link">posts</span> |
+              <span class="num-markers">0</span>
+              <span class="marker-map-link">posts</span> |
               <span class="num-contributors">0</span> contributors |
               <span class="num-forks">0</span>
               <a href="#" class="fork-map-link">forks</a>
@@ -590,12 +687,29 @@
             <div class="feedback-message alert alert-info hide"></div>
 
             <div class="form-check">
-              <input class="form-check-input" type="radio" value="public" name="limit_contributors" id="limit_contributors_public">
-              <label class="form-check-label" for="limit_contributors_public">Anyone</label>
+              <input
+                class="form-check-input"
+                type="radio"
+                value="public"
+                name="limit_contributors"
+                id="limit_contributors_public"
+              />
+              <label class="form-check-label" for="limit_contributors_public"
+                >Anyone</label
+              >
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="radio" value="private" name="limit_contributors" id="limit_contributors_private" checked="checked">
-              <label class="form-check-label" for="limit_contributors_private">Only invited collaborators</label>
+              <input
+                class="form-check-input"
+                type="radio"
+                value="private"
+                name="limit_contributors"
+                id="limit_contributors_private"
+                checked="checked"
+              />
+              <label class="form-check-label" for="limit_contributors_private"
+                >Only invited collaborators</label
+              >
             </div>
             <!-- <br />
             <h2>Who can view this map?</h2>
@@ -612,15 +726,26 @@
               <h2>Invite collaborators:</h2>
               <div class="form-row">
                 <div class="form-group col-8">
-                  <input class="collaborator-email form-control" type="email" placeholder="Email" />
+                  <input
+                    class="collaborator-email form-control"
+                    type="email"
+                    placeholder="Email"
+                  />
                 </div>
                 <div class="form-group col-4">
-                  <button class="add-collaborator-button btn btn-secondary form-control">Add</button>
+                  <button
+                    class="add-collaborator-button btn btn-secondary form-control"
+                  >
+                    Add
+                  </button>
                 </div>
               </div>
-              <input type="hidden" name="add_collaborators" id="add_collaborators" />
-              <ul class="collaborators-list list-group">
-              </ul>
+              <input
+                type="hidden"
+                name="add_collaborators"
+                id="add_collaborators"
+              />
+              <ul class="collaborators-list list-group"></ul>
             </div>
             <button type="submit" class="btn btn-primary">Save</button>
             <a class="cancel-link" href="#">Cancel</a>
@@ -688,8 +813,7 @@
           <p class="error-message"></p>
           <button class="ok-button btn btn-primary">Ok</button>
         </header>
-        <article class="col-12 col-md-4">
-        </article>
+        <article class="col-12 col-md-4"></article>
       </div>
     </div>
     <!-- // error-container -->
@@ -700,5 +824,10 @@
       </div>
     </div>
     <!-- // spinner icon -->
+    <!-- privacy policy -->
+    <div class="privacy-policy-container hide">
+      <h2>Privacy Policy</h2>
+    </div>
+    <!-- // privacy policy -->
   </body>
 </html>
