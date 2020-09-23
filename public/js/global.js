@@ -320,8 +320,13 @@ app.map.setTitle = (title) => {
   // store it if it's valid
   if (title) app.map.title = title
   else title = app.copy.anonymousmaptitle // use generic title, if none
-  $('head title').html(`${toTitleCase(title)} - Wikistreets`) // window title
+  const newTitle = `${toTitleCase(title)} - Wikistreets`
+  $('head title').html(newTitle) // window title
   $('.map-title.selected-map').text(title) // update the visible name
+  // update social media metadata
+  $(
+    `meta[property="og\\:title"], meta[itemprop="name"], meta[name="twitter\\:title"]`
+  ).attr('content', newTitle)
 }
 
 // get the center point of the map
