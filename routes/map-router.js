@@ -398,6 +398,7 @@ const mapRouter = ({ config }) => {
         publicId: mapId,
         sinceDate: sinceDate,
       })
+        .populate('contributors', ['_id', 'handle'])
         .populate('issues.user', ['_id', 'handle'])
         .populate('forkedFrom', ['title', 'publicId'])
         .catch((err) => {

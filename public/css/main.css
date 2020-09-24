@@ -215,6 +215,8 @@ ul {
   position: absolute;
   top: 0;
   right: 0;
+  padding: 0;
+  margin-top: -10px;
   box-shadow: none;
   font-size: 1.5em;
   letter-spacing: 0.1em;
@@ -259,6 +261,11 @@ ul {
   right: 10px;
   cursor: pointer;
   z-index: 201;
+}
+
+/* issue details */
+.info-window-content .issue-detail header {
+  padding-top: 30px;
 }
 
 /* info panel styles */
@@ -344,8 +351,11 @@ ul {
 
 /* previous and next issue links */
 .prevnext-issue-container {
-  margin-top: -16px;
+  margin-top: -20px;
   margin-bottom: 10px;
+  width: 100%;
+  left: 15px;
+  position: fixed;
 }
 .info-window .prev-issue-link,
 .info-window .next-issue-link,

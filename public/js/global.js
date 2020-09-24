@@ -6,10 +6,19 @@ const app = {
     // get and set a JWT token for authorizing this user
     setToken: (token) => localStorage.setItem('token', token),
     getToken: () => localStorage.getItem('token'),
-    userCanEdit: () => {
+    isContributor: (userId) => {
+      const contributors = app.map.contributors
+      let found = false
+      contributors.forEach((contributor) => {
+        if (contributor._id == userId) found = true
+        return
+      })
+      return found
+    },
+    isEditor: () => {
       const userIsLoggedIn = app.auth.getToken()
       const mapIsPrivate = app.map.limitContributors
-      const userIsContributor = app.map.contributors.includes(app.user.id)
+      const userIsContributor = app.auth.isContributor(app.user.id)
       // if the map is public, any user has permission to edit
       // if the map is private, only official contributors can edit
       return (
@@ -440,6 +449,7 @@ app.markers.findById = (issueId) => {
   return match
 }
 app.markers.place = (data, cluster) => {
+  if (!data) return // ignore no data!
   // make a marker from each data point
   const latency = 15 // latency between marker animation drops
   data.map((point, i, arr) => {
@@ -678,7 +688,7 @@ async function initMap() {
   $('.control-add-issue').click(() => {
     // check whether this user is authenticated and is allowed to contribute to this map
     if (!app.auth.getToken()) openSigninPanel('Log in to create a post')
-    else if (!app.auth.userCanEdit()) {
+    else if (!app.auth.isEditor()) {
       // user is logged-in, but not a contributor on this private map
       const errorString = $('.error-container').html()
       $('.info-window-content').html(errorString)
@@ -717,7 +727,7 @@ async function initMap() {
         } else {
           collapseInfoWindow().then(() => {
             // console.log('logged in')
-            app.auth.userCanEdit() ? openIssueForm(coords) : openErrorPanel()
+            app.auth.isEditor() ? openIssueForm(coords) : openErrorPanel()
           })
         }
       })
@@ -1037,10 +1047,10 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 
   // generate the context menu
   // only show delete link to logged-in users who have permissions to edit this map
-  const deleteLinkString = app.auth.userCanEdit()
+  const deleteLinkString = app.auth.isEditor()
     ? `<a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>`
     : ''
-  const editLinkString = app.auth.userCanEdit()
+  const editLinkString = app.auth.isEditor()
     ? `<a class="edit-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Edit</a>`
     : ''
   let contextMenuString = `
@@ -1770,7 +1780,7 @@ const openSearchAddressForm = () => {
           } else {
             collapseInfoWindow().then(() => {
               // console.log('logged in')
-              if (app.auth.userCanEdit()) openIssueForm(data.coords)
+              if (app.auth.isEditor()) openIssueForm(data.coords)
             })
           }
         })
@@ -1815,6 +1825,9 @@ const openGeopositionUnavailableForm = () => {
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.geoposition-error-container').html()
   $('.info-window-content').html(infoWindowHTML)
+  $('.info-window-content .ok-button').click((e) => {
+    collapseInfoWindow()
+  })
 
   // open the info window
   expandInfoWindow(50, 50).then(async () => {})
@@ -2112,6 +2125,9 @@ const openErrorPanel = (message) => {
   const infoWindowHTML = $('.error-container').html()
   $('.info-window-content').html(infoWindowHTML)
   $('.error-message').html(message)
+  $('.info-window-content .ok-button').click((e) => {
+    collapseInfoWindow()
+  })
 
   // open the info window
   expandInfoWindow(50, 50)
@@ -2218,7 +2234,7 @@ const openMapSelectorPanel = async () => {
   // only show delete link to logged-in users who have permissions to edit this map
   // if this is an unsaved app, the only way to currently infer that is through no markers
   const deleteLinkString =
-    app.auth.userCanEdit() && app.markers.markers.length > 0
+    app.auth.isEditor() && app.markers.markers.length > 0
       ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Delete</a>`
       : ''
   const forkLinkString =
@@ -2226,7 +2242,7 @@ const openMapSelectorPanel = async () => {
       ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Fork</a>`
       : ''
   const collaborateLinkString =
-    app.auth.userCanEdit() && app.markers.markers.length > 0
+    app.auth.isEditor() && app.markers.markers.length > 0
       ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Invite collaborators...</a>`
       : ''
   let contextMenuString = `
@@ -2343,7 +2359,7 @@ const openMapSelectorPanel = async () => {
   })
 
   // enable rename map link, if authorized
-  if (app.auth.userCanEdit()) {
+  if (app.auth.isEditor()) {
     $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
     $('.rename-map-link', selectedMapListItem).click((e) => {
       e.preventDefault()

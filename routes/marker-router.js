@@ -256,9 +256,12 @@ const markerRouter = ({ config }) => {
           { publicId: mapId },
           updates,
           { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
-        ).catch((err) => {
-          console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
-        })
+        )
+          .populate('contributors', ['_id', 'handle'])
+          .populate('issues.user', ['_id', 'handle'])
+          .catch((err) => {
+            console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+          })
 
         // console.log(`MAP: ${JSON.stringify(map, null, 2)}`)
 
@@ -419,6 +422,9 @@ const markerRouter = ({ config }) => {
           },
           { new: true }
         )
+          .populate('contributors', ['_id', 'handle'])
+          .populate('issues.user', ['_id', 'handle'])
+
         // add new images, if any
         if (req.files.length) {
           const filesToAdd = req.files
@@ -433,6 +439,8 @@ const markerRouter = ({ config }) => {
             },
             { new: true }
           )
+            .populate('contributors', ['_id', 'handle'])
+            .populate('issues.user', ['_id', 'handle'])
         }
 
         // // add this map to the user's list of maps
