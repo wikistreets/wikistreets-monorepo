@@ -821,6 +821,25 @@ async function initMap() {
 $(function () {
   // load map
   initMap()
+
+  // if user scrolls, expand info window
+  $('.info-window').scroll((e) => {
+    if (!app.infoPanel.isExpanded && !app.infoPanel.hasAutoExpanded) {
+      // console.log('scrolling')
+
+      const buttonEl = $('.expand-contract-button')
+      // app.markers.simulateClick($('.expand-contract-button').get(0))
+
+      // expand info window
+      $('.expand-contract-button img').attr(
+        'src',
+        '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
+      )
+      expandInfoWindow(100, 0)
+      buttonEl.addClass('expanded')
+      app.infoPanel.hasAutoExpanded = true // remember we expanded automatically so we don't do it again
+    }
+  })
 })
 
 // handle safari bug with vh units
@@ -1274,27 +1293,6 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
       buttonEl.addClass('expanded')
     }
   }) // if expand/contract button clicked
-
-  // if user scrolls, expand info window
-  $('.info-window').scroll((e) => {
-    if (!app.infoPanel.isExpanded && !app.infoPanel.hasAutoExpanded) {
-      // console.log('scrolling')
-
-      const buttonEl = $('.expand-contract-button')
-      // app.markers.simulateClick($('.expand-contract-button').get(0))
-
-      if ($('.info-window').get(0).scrollTop > 1) {
-        // expand info window
-        $('.expand-contract-button img').attr(
-          'src',
-          '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
-        )
-        expandInfoWindow(100, 0)
-        buttonEl.addClass('expanded')
-        app.infoPanel.hasAutoExpanded = true // remember we expanded automatically so we don't do it again
-      }
-    }
-  })
 } // showInfoWindow
 
 // hack to close tooltips on mobile... bootstrap's tooltips are buggy on mobile
