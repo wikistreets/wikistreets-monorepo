@@ -356,6 +356,7 @@ ul {
   width: 100%;
   left: 15px;
   position: fixed;
+  z-index: 101;
 }
 .info-window .prev-issue-link,
 .info-window .next-issue-link,
