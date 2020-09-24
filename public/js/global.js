@@ -1263,6 +1263,22 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
       buttonEl.addClass('expanded')
     }
   }) // if expand/contract button clicked
+
+  // if user scrolls, expand info window
+  $('.info-window').scroll((e) => {
+    if (!app.infoPanel.isExpanded) {
+      console.log('scrolling')
+      const buttonEl = $('.expand-contract-button')
+      // app.markers.simulateClick($('.expand-contract-button').get(0))
+      // expand info window
+      $('.expand-contract-button img').attr(
+        'src',
+        '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
+      )
+      expandInfoWindow(100, 0)
+      buttonEl.addClass('expanded')
+    }
+  })
 } // showInfoWindow
 
 // hack to close tooltips on mobile... bootstrap's tooltips are buggy on mobile
