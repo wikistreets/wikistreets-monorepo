@@ -819,8 +819,18 @@ async function initMap() {
 
 // on page load....
 $(function () {
+  // load map
   initMap()
 })
+
+// handle safari bug with vh units
+const setVh = () => {
+  const vh = window.innerHeight * 0.01
+  document.documentElement.style.setProperty('--vh', `${vh}px`)
+}
+window.addEventListener('load', setVh)
+window.addEventListener('resize', setVh)
+// end handle safari bug with vh units
 
 /**
  * Use Mapbox API to determine street address based on lat long coordinates.
@@ -1272,14 +1282,17 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 
       const buttonEl = $('.expand-contract-button')
       // app.markers.simulateClick($('.expand-contract-button').get(0))
-      // expand info window
-      $('.expand-contract-button img').attr(
-        'src',
-        '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
-      )
-      expandInfoWindow(100, 0)
-      buttonEl.addClass('expanded')
-      app.infoPanel.hasAutoExpanded = true // remember we expanded automatically so we don't do it again
+
+      if ($('.info-window').get(0).scrollTop > 1) {
+        // expand info window
+        $('.expand-contract-button img').attr(
+          'src',
+          '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
+        )
+        expandInfoWindow(100, 0)
+        buttonEl.addClass('expanded')
+        app.infoPanel.hasAutoExpanded = true // remember we expanded automatically so we don't do it again
+      }
     }
   })
 } // showInfoWindow
@@ -1314,6 +1327,13 @@ const hideSpinner = (containerEl) => {
 const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   app.infoPanel.isExpanded = infoWindowHeight == 100 ? true : false
 
+  // convert vh units to pixel units, since safari mobile is buggy in vh
+  const vH = window.innerHeight // actual viewport height
+  const infoWindowHeightPx = parseInt(vH * (infoWindowHeight / 100)) // desired height in pixels
+  const mapHeightPx = parseInt(vH * (mapHeight / 100)) // desired height in pixels
+
+  // console.log(`desired height: ${infoWindowHeightPx}`)
+
   // hide any existing spinners
   hideSpinner($('.info-window-content'))
 
@@ -1321,7 +1341,7 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   $('.info-window')
     .stop()
     .animate({
-      height: `${infoWindowHeight}vh`,
+      height: `${infoWindowHeightPx}px`,
     })
 
   // animate the info window open and scroll it to the top once open
@@ -1329,7 +1349,7 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
     .stop()
     .animate(
       {
-        height: `${mapHeight}vh`,
+        height: `${mapHeightPx}px`,
       },
       () => {
         // scroll the info window to the top, in case it was previously scrolled down
@@ -1347,7 +1367,7 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   hideAllTooltips()
 
   // resolve the promise once the animation is complete
-  return $('.issue-map, #map').promise()
+  return $('.issue-map, #map, .info-window').promise()
 }
 
 const collapseInfoWindow = async (e) => {
