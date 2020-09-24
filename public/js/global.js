@@ -1065,7 +1065,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   let contextMenuString = `
     <div class="context-menu dropdown">
       <a href="#" class="expand-contract-button">
-        <img src="/static/images/material_design_icons/open_in_full_white-24px.svg" title="expand" />
+        <img src="/static/images/material_design_icons/open_in_full_white-24px.svg" title="expand / contract" />
       </a>
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ...
@@ -1148,7 +1148,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   let infoWindowHeight = 70
   let mapHeight = 30
   if (app.infoPanel.isExpanded) {
-    console.log('already expanded')
+    // console.log('already expanded')
     // override proportions if info panel is already expanded to full height
     infoWindowHeight = 100
     mapHeight = 0
