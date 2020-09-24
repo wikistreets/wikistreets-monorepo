@@ -849,6 +849,7 @@ const setVh = () => {
 }
 window.addEventListener('load', setVh)
 window.addEventListener('resize', setVh)
+window.addEventListener('orientationchange', setVh)
 // end handle safari bug with vh units
 
 /**
