@@ -117,7 +117,7 @@ ul {
   width: 300px;
   left: 50%;
   margin: 0 auto;
-  z-index: 201;
+  z-index: 101;
 }
 .control-map-selector button.map-title {
   background-color: black;
