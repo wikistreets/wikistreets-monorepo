@@ -247,7 +247,7 @@ const app = {
   infoPanel: {
     // settings for the info panel
     content: null, // start off blank
-    open: false,
+    isExpanded: false,
     style: {
       height: '60', // percent
     },
@@ -394,8 +394,6 @@ app.browserGeolocation.update = async () => {
     })
 }
 
-app.infoPanel.open = (content) => {}
-app.infoPanel.close = () => {}
 app.markers.wipeMe = () => {
   // wipe out the me marker
   // console.log('wiping')
@@ -484,6 +482,9 @@ app.markers.place = (data, cluster) => {
           marker._id = `marker-${point._id}`
           // console.log(marker._id)
 
+          // flag whether the marker issue isopen
+          marker.isOpen = false
+
           // keep the index number of this marker to maintain order
           marker.index = app.markers.markers.length //i
 
@@ -502,6 +503,7 @@ app.markers.place = (data, cluster) => {
 
           // // detect click events
           marker.on('click', (e) => {
+            // prevent this even from firing twice in a row... which seems to be a problem
             showInfoWindow(marker)
           })
         } // if
@@ -515,8 +517,9 @@ app.markers.activate = (marker = app.markers.current) => {
   app.markers.current = marker
   marker.setIcon(app.markers.icons[marker.issueType].active)
   marker.setZIndexOffset(app.markers.zIndex.active)
+  // mark it as open
+  marker.isOpen = true
 }
-
 app.markers.deactivate = (marker = app.markers.current) => {
   // return selected marker to default state
   // console.log('deactivating')
@@ -524,7 +527,13 @@ app.markers.deactivate = (marker = app.markers.current) => {
     // de-highlight the current marker
     marker.setZIndexOffset(app.markers.zIndex.default)
     marker.setIcon(app.markers.icons[marker.issueType].default)
+    marker.isOpen = false // allows it to be opened next time clicked
     marker = null
+  } else {
+    // loop through and mark all as closed
+    app.markers.markers.forEach((marker) => {
+      marker.isOpen = false
+    })
   }
   // there is now no active marker
   app.markers.current = null
@@ -799,7 +808,7 @@ async function initMap() {
       //if there is a marker id in the url
       const marker = app.markers.findById(hash)
       // simulate click
-      if (marker) app.markers.simulateClick(marker)
+      if (marker && !marker.isOpen) app.markers.simulateClick(marker)
     } else {
       // no hash means no issue, so close info window
       collapseInfoWindow()
@@ -1019,7 +1028,7 @@ const showInfoWindow = (marker) => {
   // remove me marker if present
   app.markers.wipeMe()
 
-  //deactivate all markers
+  // deactivate all markers
   app.markers.deactivate()
 
   // the current marker is now the active one
@@ -1055,6 +1064,9 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
     : ''
   let contextMenuString = `
     <div class="context-menu dropdown">
+      <a href="#" class="expand-contract-button">
+        <img src="/static/images/material_design_icons/open_in_full_white-24px.svg" title="expand" />
+      </a>
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ...
       </button>
@@ -1133,9 +1145,21 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   window.location.hash = marker._id.substr(marker._id.indexOf('-') + 1)
 
   // console.log('opening infowindow');
-  expandInfoWindow(70, 30).then(() => {
+  let infoWindowHeight = 70
+  let mapHeight = 30
+  if (app.infoPanel.isExpanded) {
+    console.log('already expanded')
+    // override proportions if info panel is already expanded to full height
+    infoWindowHeight = 100
+    mapHeight = 0
+  }
+
+  expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
+    // hack to avoid duplicate marker click events (see where we check this value on click)
+
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
+    app.map.element.invalidateSize() // notify leaflet that size has changed
     app.map.panTo(marker.getLatLng())
 
     // handle click on username event
@@ -1199,13 +1223,46 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
       }) // myFetch.then
   }) // if delete link clicked
 
-  // activate delete button
+  // activate edit button
   $('.edit-issue-link').click((e) => {
     e.preventDefault()
     // grab the id of the issue to delete
     const issueId = $(e.target).attr('ws-issue-id')
     openEditIssueForm(issueId)
   }) // if edit link clicked
+
+  // handle situation where infoPanel is already expanded prior to showing this info
+  if (app.infoPanel.isExpanded) {
+    const buttonEl = $('.expand-contract-button')
+    buttonEl.addClass('expanded')
+    $('.expand-contract-button img').attr(
+      'src',
+      '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
+    )
+  }
+
+  // activate expand/contract button
+  $('.expand-contract-button').click((e) => {
+    e.preventDefault()
+    const buttonEl = $('.expand-contract-button')
+    if (buttonEl.hasClass('expanded')) {
+      // contract info window
+      $('.expand-contract-button img').attr(
+        'src',
+        '/static/images/material_design_icons/open_in_full_white-24px.svg'
+      )
+      expandInfoWindow(70, 30)
+      buttonEl.removeClass('expanded')
+    } else {
+      // expand info window
+      $('.expand-contract-button img').attr(
+        'src',
+        '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
+      )
+      expandInfoWindow(100, 0)
+      buttonEl.addClass('expanded')
+    }
+  }) // if expand/contract button clicked
 } // showInfoWindow
 
 // hack to close tooltips on mobile... bootstrap's tooltips are buggy on mobile
@@ -1236,6 +1293,8 @@ const hideSpinner = (containerEl) => {
 }
 
 const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
+  app.infoPanel.isExpanded = infoWindowHeight == 100 ? true : false
+
   // hide any existing spinners
   hideSpinner($('.info-window-content'))
 
@@ -1274,6 +1333,9 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
 
 const collapseInfoWindow = async (e) => {
   // console.log(`mode=${app.mode}`);
+
+  // remember it's collapsed
+  app.infoPanel.isExpanded = false
 
   // remove the hash from the url
   window.history.pushState('', document.title, window.location.pathname)
