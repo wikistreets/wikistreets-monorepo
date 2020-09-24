@@ -1620,6 +1620,13 @@ const openEditIssueForm = async (issueId) => {
   const infoWindowHTML = $('.edit-issue-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
+  // unescape html entities from title and address
+  const elem = document.createElement('textarea')
+  elem.innerHTML = data.title
+  data.title = elem.value
+  elem.innerHTML = data.address
+  data.address = elem.value
+
   // inject the data to the form
   $('.info-window-content .issueid').val(data._id)
   $('.info-window-content .issue-title').val(data.title)
