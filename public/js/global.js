@@ -248,6 +248,7 @@ const app = {
     // settings for the info panel
     content: null, // start off blank
     isExpanded: false,
+    hasAutoExpanded: false, // whether we've auto-expanded the info-panel once before
     style: {
       height: '60', // percent
     },
@@ -1266,8 +1267,9 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 
   // if user scrolls, expand info window
   $('.info-window').scroll((e) => {
-    if (!app.infoPanel.isExpanded) {
-      console.log('scrolling')
+    if (!app.infoPanel.isExpanded && !app.infoPanel.hasAutoExpanded) {
+      // console.log('scrolling')
+
       const buttonEl = $('.expand-contract-button')
       // app.markers.simulateClick($('.expand-contract-button').get(0))
       // expand info window
@@ -1277,6 +1279,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
       )
       expandInfoWindow(100, 0)
       buttonEl.addClass('expanded')
+      app.infoPanel.hasAutoExpanded = true // remember we expanded automatically so we don't do it again
     }
   })
 } // showInfoWindow
@@ -1352,6 +1355,9 @@ const collapseInfoWindow = async (e) => {
 
   // remember it's collapsed
   app.infoPanel.isExpanded = false
+
+  // wipe out any record of having auto-expanded an info-panel in the past
+  app.infoPanel.hasAutoExpanded = false
 
   // remove the hash from the url
   window.history.pushState('', document.title, window.location.pathname)
