@@ -32,6 +32,7 @@ const app = {
       'The email or password you entered is not correct.  Please correct and try again',
     signuperror:
       'An account exists with that email address.  Please sign in or create a new account',
+    mappermissionserror: 'You do not have permission to edit this map.',
     anonymousmaptitle: 'anonymous map',
     shareissuemessage: 'Link copied to clipboard.  Share anywhere!',
     sharemapmessage: 'Link copied to clipboard.  Share anywhere!',
@@ -696,9 +697,7 @@ async function initMap() {
 
   // pop open issue form when control icon clicked
   $('.control-add-issue').click(() => {
-    // check whether this user is authenticated and is allowed to contribute to this map
-    if (!app.auth.getToken()) openSigninPanel('Log in to create a post')
-    else if (!app.auth.isEditor()) {
+    if (app.auth.getToken() && !app.auth.isEditor()) {
       // user is logged-in, but not a contributor on this private map
       const errorString = $('.error-container').html()
       $('.info-window-content').html(errorString)
@@ -730,16 +729,20 @@ async function initMap() {
         return coords
       })
       .then((coords) => {
-        if (!app.auth.getToken()) {
-          // console.log('not logged in')
-          app.map.panTo(coords)
-          openSigninPanel('Log in to create a post here')
-        } else {
-          collapseInfoWindow().then(() => {
-            // console.log('logged in')
-            app.auth.isEditor() ? openIssueForm(coords) : openErrorPanel()
-          })
-        }
+        // if (!app.auth.getToken()) {
+        //   // console.log('not logged in')
+        //   app.map.panTo(coords)
+        //   openSigninPanel('Log in to create a post here')
+        // } else {
+        collapseInfoWindow().then(() => {
+          // console.log('logged in')
+          if (app.auth.getToken() && !app.auth.isEditor()) {
+            openErrorPanel(app.copy.mappermissionserror)
+          } else {
+            openIssueForm(coords)
+          }
+        })
+        // }
       })
       .catch((err) => {
         console.error('opening')
@@ -1435,8 +1438,12 @@ const meMarkerButtonClick = async () => {
   // close popup
   // app.markers.me.closePopup()
 
-  // open the info window
-  expandInfoWindow(60, 40).then(async () => {})
+  // check whether this user is authenticated and is allowed to contribute to this map
+  if (!app.auth.getToken()) openSigninPanel('Log in to create a post')
+  else {
+    // open the info window
+    expandInfoWindow(60, 40).then(async () => {})
+  }
 }
 
 const openIssueForm = async (point = false) => {
@@ -1900,14 +1907,12 @@ const openSearchAddressForm = () => {
           e.preventDefault()
           // what to do after clicking this address
           // app.map.panTo(data.coords)
-          if (!app.auth.getToken()) {
-            // console.log('not logged in')
-            app.map.panTo(data.coords)
-            openSigninPanel('Log in to create a post here')
+          if (app.auth.getToken() && !app.auth.isEditor()) {
+            openErrorPanel(app.copy.mappermissionserror)
           } else {
             collapseInfoWindow().then(() => {
               // console.log('logged in')
-              if (app.auth.isEditor()) openIssueForm(data.coords)
+              openIssueForm(data.coords)
             })
           }
         })
@@ -2193,6 +2198,9 @@ const openUserProfile = async (handle, userId) => {
 
       // populate the details
       $('.info-window-content .handle').text(handle)
+      $('.info-window-content .member-since').text(
+        DateDiff.asAge(data.createdAt)
+      )
       $('.info-window-content .num-posts').text(numIssues)
       $('.info-window-content .num-maps').text(data.maps.length)
 
