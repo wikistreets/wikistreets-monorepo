@@ -1362,7 +1362,7 @@ const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
     e.preventDefault()
     const buttonEl = $('.info-window .expand-contract-button')
     if (buttonEl.hasClass('expanded')) {
-      console.log(`contracting to ${infoWindowHeight} and ${mapHeight}`)
+      // console.log(`contracting to ${infoWindowHeight} and ${mapHeight}`)
       // contract info window
       $('.info-window .expand-contract-button img').attr(
         'src',
@@ -1371,7 +1371,7 @@ const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
       buttonEl.removeClass('expanded')
       expandInfoWindow(infoWindowHeight, mapHeight)
     } else {
-      console.log('expanding')
+      // console.log('expanding')
       // expand info window
       $('.info-window .expand-contract-button img').attr(
         'src',
