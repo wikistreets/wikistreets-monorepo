@@ -500,6 +500,7 @@
               </div>
             </div>
             <input class="btn btn-primary" type="submit" value="Save changes" />
+            <a class="cancel-link" href="#">Cancel</a>
           </section>
         </div>
 
@@ -604,8 +605,8 @@
 
     <!-- fork map -->
     <div class="fork-map-container hide">
-      <div class="row">
-        <header class="map-list-container col-12 col-md-4">
+      <!-- <div class="row"> -->
+      <!-- <header class="map-list-container">
           <h2 class="map-title selected-map">Map Name</h2>
           <p class="forked-from-container hide">
             Forked from <span class="forked-from-link"></span>
@@ -623,106 +624,107 @@
           </ul>
           <button class="btn btn-primary fork-button">Fork it</button>
           <a class="cancel-link" href="#">Cancel</a>
-        </header>
-        <article class="col-12 col-md-8">
-          <h2>About forks</h2>
-          <p>
-            Forking a map creates a clone of it that can be modified
-            independently of the original.
-          </p>
-        </article>
-      </div>
+        </header> -->
+      <article>
+        <h2>About forks</h2>
+        <p>
+          Forking a map creates a clone of it that can be modified independently
+          of the original.
+        </p>
+        <button class="btn btn-primary fork-button">Fork it</button>
+        <a class="cancel-link" href="#">Cancel</a>
+      </article>
+      <!-- </div> -->
     </div>
     <!-- // fork map -->
 
     <!-- select map -->
     <div class="select-map-container hide">
-      <div class="row">
-        <header class="map-details-container col-12 col-md-4">
-          <article class="map-list-item-template">
-            <h2>
-              <a
-                class="map-title selected-map rename-map-link"
-                title="Rename map"
-                alt="Rename map"
-                href="#"
-                >Map title</a
-              >
-            </h2>
-            <div class="feedback-message alert alert-info hide"></div>
-            <p class="forked-from-container hide">
-              Forked from <span class="forked-from-link"></span>
-            </p>
-            <p>
-              updated <span class="updatedat"></span> | created
-              <span class="createdat"></span>
-              <br />
-              <span class="num-markers">0</span>
-              <span class="marker-map-link">posts</span> |
-              <span class="num-contributors">0</span> contributors |
-              <span class="num-forks">0</span>
-              <a href="#" class="fork-map-link">forks</a>
-            </p>
-          </article>
-        </header>
-        <header class="rename-map-container hide col-12 col-md-4">
-          <h2>Rename this map</h2>
-          <form
-            class="rename-map-form"
-            method="POST"
-            action="/map/title"
-            enctype="multipart/form-data"
-          >
-            <div class="form-group">
-              <input
-                class="form-control"
-                type="text"
-                name="mapTitle"
-                id="mapTitle"
-                maxlength="50"
-                placeholder="Map name"
-              />
-            </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a class="cancel-link" href="#">Cancel</a>
-          </form>
-        </header>
-        <article class="settings-map-container hide col-12 col-md-4">
-          <form
-            class="settings-map-form"
-            method="POST"
-            action="/map/collaboration"
-            enctype="multipart/form-data"
-          >
-            <h2>Who can edit this map?</h2>
-            <div class="feedback-message alert alert-info hide"></div>
+      <header class="map-details-container">
+        <article class="map-list-item-template">
+          <h2>
+            <a
+              class="map-title selected-map rename-map-link"
+              title="Rename map"
+              alt="Rename map"
+              href="#"
+              >Map title</a
+            >
+          </h2>
+          <div class="feedback-message alert alert-info hide"></div>
+          <p class="forked-from-container hide">
+            Forked from <span class="forked-from-link"></span>
+          </p>
+          <p>
+            updated <span class="updatedat"></span> | created
+            <span class="createdat"></span>
+            <br />
+            <span class="num-markers">0</span>
+            <span class="marker-map-link">posts</span> |
+            <span class="num-contributors">0</span> contributors |
+            <span class="num-forks">0</span>
+            <a href="#" class="fork-map-link">forks</a>
+          </p>
+        </article>
+      </header>
+      <header class="rename-map-container hide">
+        <h2>Rename this map</h2>
+        <form
+          class="rename-map-form"
+          method="POST"
+          action="/map/title"
+          enctype="multipart/form-data"
+        >
+          <div class="form-group">
+            <input
+              class="form-control"
+              type="text"
+              name="mapTitle"
+              id="mapTitle"
+              maxlength="50"
+              placeholder="Map name"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Save</button>
+          <a class="cancel-link" href="#">Cancel</a>
+        </form>
+      </header>
+      <article class="settings-map-container hide">
+        <form
+          class="settings-map-form"
+          method="POST"
+          action="/map/collaboration"
+          enctype="multipart/form-data"
+        >
+          <h2>Who can edit this map?</h2>
+          <div class="feedback-message alert alert-info hide"></div>
 
-            <div class="form-check">
-              <input
-                class="form-check-input"
-                type="radio"
-                value="public"
-                name="limit_contributors"
-                id="limit_contributors_public"
-              />
-              <label class="form-check-label" for="limit_contributors_public"
-                >Anyone</label
-              >
-            </div>
-            <div class="form-check">
-              <input
-                class="form-check-input"
-                type="radio"
-                value="private"
-                name="limit_contributors"
-                id="limit_contributors_private"
-                checked="checked"
-              />
-              <label class="form-check-label" for="limit_contributors_private"
-                >Only invited collaborators</label
-              >
-            </div>
-            <!-- <br />
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              value="public"
+              name="limit_contributors"
+              id="limit_contributors_public"
+            />
+            <label class="form-check-label" for="limit_contributors_public"
+              >Anyone</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              value="private"
+              name="limit_contributors"
+              id="limit_contributors_private"
+              checked="checked"
+            />
+            <label class="form-check-label" for="limit_contributors_private"
+              >Only invited collaborators</label
+            >
+          </div>
+          <!-- <br />
             <h2>Who can view this map?</h2>
             <div class="form-check">
               <input class="form-check-input" type="radio" name="limit_viewers" id="limit_viewers_public" value="public" checked="checked">
@@ -732,42 +734,41 @@
               <input class="form-check-input" type="radio" name="limit_viewers" id="limit_viewers_private" value="private">
               <label class="form-check-label" for="limit_viewers_private">Only invited collaborators</label>
             </div> -->
-            <br />
-            <div class="form-group">
-              <h2>Invite collaborators:</h2>
-              <div class="form-row">
-                <div class="form-group col-8">
-                  <input
-                    class="collaborator-email form-control"
-                    type="email"
-                    placeholder="Email"
-                  />
-                </div>
-                <div class="form-group col-4">
-                  <button
-                    class="add-collaborator-button btn btn-secondary form-control"
-                  >
-                    Add
-                  </button>
-                </div>
+          <br />
+          <div class="form-group">
+            <h2>Invite collaborators:</h2>
+            <div class="form-row">
+              <div class="form-group col-8">
+                <input
+                  class="collaborator-email form-control"
+                  type="email"
+                  placeholder="Email"
+                />
               </div>
-              <input
-                type="hidden"
-                name="add_collaborators"
-                id="add_collaborators"
-              />
-              <ul class="collaborators-list list-group"></ul>
+              <div class="form-group col-4">
+                <button
+                  class="add-collaborator-button btn btn-secondary form-control"
+                >
+                  Add
+                </button>
+              </div>
             </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a class="cancel-link" href="#">Cancel</a>
-          </form>
-        </article>
-        <article class="more-maps-container col-12 col-md-8">
-          <h2><span class="user-handle">My</span> maps</h2>
-          <a class="btn btn-primary" href="/">Create a new map</a>
-          <div class="more-maps"></div>
-        </article>
-      </div>
+            <input
+              type="hidden"
+              name="add_collaborators"
+              id="add_collaborators"
+            />
+            <ul class="collaborators-list list-group"></ul>
+          </div>
+          <button type="submit" class="btn btn-primary">Save</button>
+          <a class="cancel-link" href="#">Cancel</a>
+        </form>
+      </article>
+      <article class="more-maps-container">
+        <h2><span class="user-handle">My</span> maps</h2>
+        <a class="btn btn-primary" href="/">Create a new map</a>
+        <div class="more-maps"></div>
+      </article>
     </div>
     <!-- // select map -->
 

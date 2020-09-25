@@ -823,23 +823,23 @@ $(function () {
   initMap()
 
   // if user scrolls, expand info window
-  $('.info-window').scroll((e) => {
-    if (!app.infoPanel.isExpanded && !app.infoPanel.hasAutoExpanded) {
-      // console.log('scrolling')
+  // $('.info-window').scroll((e) => {
+  //   if (!app.infoPanel.isExpanded && !app.infoPanel.hasAutoExpanded) {
+  //     // console.log('scrolling')
 
-      const buttonEl = $('.expand-contract-button')
-      // app.markers.simulateClick($('.expand-contract-button').get(0))
+  //     const buttonEl = $('.expand-contract-button')
+  //     // app.markers.simulateClick($('.expand-contract-button').get(0))
 
-      // expand info window
-      $('.expand-contract-button img').attr(
-        'src',
-        '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
-      )
-      expandInfoWindow(100, 0)
-      buttonEl.addClass('expanded')
-      app.infoPanel.hasAutoExpanded = true // remember we expanded automatically so we don't do it again
-    }
-  })
+  //     // expand info window
+  //     $('.expand-contract-button img').attr(
+  //       'src',
+  //       '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
+  //     )
+  //     expandInfoWindow(100, 0)
+  //     buttonEl.addClass('expanded')
+  //     app.infoPanel.hasAutoExpanded = true // remember we expanded automatically so we don't do it again
+  //   }
+  // }) // scroll handler
 })
 
 // handle safari bug with vh units
@@ -973,6 +973,9 @@ const createMapListItem = (
     $('.select-map-container')
   ).clone()
   mapListing.removeClass('.map-list-item-template')
+  if (isSelectedMap) {
+    mapListing.addClass('selected')
+  }
 
   // give selected class, if necessary
   if (isSelectedMap) $('h2 a', mapListing).addClass('selected-map')
@@ -1006,11 +1009,11 @@ const createMapListItem = (
   if (isSelectedMap && app.markers.markers.length) {
     // add links to first and last posts
     $(`
-      <div class= "row">
+      <div class="prevnext-issue-container row">
         <button class="navigate-issues-link btn btn-secondary col-6" onclick="app.markers.simulateClick(app.markers.markers[0]); return false">First post</button>
         <button class="navigate-issues-link btn btn-secondary col-6" onclick="app.markers.simulateClick(app.markers.markers[app.markers.markers.length - 1]); return false">Latest post</button>
       </div>
-    `).appendTo(mapListing)
+    `).prependTo(mapListing)
   }
 
   return mapListing
@@ -1099,7 +1102,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
         <img src="/static/images/material_design_icons/open_in_full_white-24px.svg" title="expand / contract" />
       </a>
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        ...
+        <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
         <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Share link</a>
@@ -1118,8 +1121,8 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
       <a class="prev-issue-link btn btn-secondary col-6" href="#">Prev</a>
       <a class="next-issue-link btn btn-secondary col-6" href="#">Next</a>
     </div>
+    ${contextMenuString}
     <header>
-        ${contextMenuString}
         <h2>${data.title}</h2>
         <p class="instructions">${attribution}</p>
     </header>
@@ -1187,6 +1190,9 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 
   expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
     // hack to avoid duplicate marker click events (see where we check this value on click)
+
+    // enable expand/contract button
+    enableExpandContractButtons(infoWindowHeight, mapHeight)
 
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
@@ -1271,29 +1277,6 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
       '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
     )
   }
-
-  // activate expand/contract button
-  $('.expand-contract-button').click((e) => {
-    e.preventDefault()
-    const buttonEl = $('.expand-contract-button')
-    if (buttonEl.hasClass('expanded')) {
-      // contract info window
-      $('.expand-contract-button img').attr(
-        'src',
-        '/static/images/material_design_icons/open_in_full_white-24px.svg'
-      )
-      expandInfoWindow(70, 30)
-      buttonEl.removeClass('expanded')
-    } else {
-      // expand info window
-      $('.expand-contract-button img').attr(
-        'src',
-        '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
-      )
-      expandInfoWindow(100, 0)
-      buttonEl.addClass('expanded')
-    }
-  }) // if expand/contract button clicked
 } // showInfoWindow
 
 // hack to close tooltips on mobile... bootstrap's tooltips are buggy on mobile
@@ -1367,6 +1350,33 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
 
   // resolve the promise once the animation is complete
   return $('.issue-map, #map, .info-window').promise()
+}
+
+const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
+  // activate expand/contract button
+  $('.info-window .expand-contract-button').click((e) => {
+    e.preventDefault()
+    const buttonEl = $('.info-window .expand-contract-button')
+    if (buttonEl.hasClass('expanded')) {
+      console.log('contracting')
+      // contract info window
+      $('.info-window .expand-contract-button img').attr(
+        'src',
+        '/static/images/material_design_icons/open_in_full_white-24px.svg'
+      )
+      buttonEl.removeClass('expanded')
+      expandInfoWindow(infoWindowHeight, mapHeight)
+    } else {
+      console.log('expanding')
+      // expand info window
+      $('.info-window .expand-contract-button img').attr(
+        'src',
+        '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
+      )
+      buttonEl.addClass('expanded')
+      expandInfoWindow(100, 0)
+    }
+  }) // if expand/contract button clicked
 }
 
 const collapseInfoWindow = async (e) => {
@@ -1716,7 +1726,7 @@ const openEditIssueForm = async (issueId) => {
   })
 
   // open the info panel
-  expandInfoWindow(60, 40).then(() => {})
+  expandInfoWindow(70, 30).then(() => {})
 
   // create a decent file uploader for photos
   const fuploader = new FUploader({
@@ -1752,6 +1762,12 @@ const openEditIssueForm = async (issueId) => {
   $('.info-window-content .add-photos-link').click((e) => {
     e.preventDefault()
     $('.info-window-content input[type="file"]').trigger('click')
+  })
+
+  // activate cancel button
+  $('.info-window .cancel-link').click(async (e) => {
+    e.preventDefault()
+    showInfoWindow(marker) // switch to issue detail view
   })
 
   // deal with form submissions
@@ -2266,33 +2282,33 @@ const openForkPanel = () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // grab fork button for later
-  const forkItButton = $('.btn-primary', $('.info-window-content'))
-  const cancelForkButton = $('.cancel-link', $('.info-window-content'))
+  // const forkItButton = $('.btn-primary', $('.info-window-content'))
+  // const cancelForkButton = $('.cancel-link', $('.info-window-content'))
 
   // prepare map data
   // populate this map's details
-  const mapData = {
-    title: app.map.getTitle(),
-    publicId: app.map.publicId,
-    numMarkers: app.markers.markers.length,
-    forks: app.map.forks,
-    numForks: app.map.numForks,
-    forkedFrom: app.map.forkedFrom,
-    numContributors: app.map.numContributors,
-    createdAt: app.map.timestamps.createdAt,
-    updatedAt: app.map.timestamps.updatedAt,
-  }
+  // const mapData = {
+  //   title: app.map.getTitle(),
+  //   publicId: app.map.publicId,
+  //   numMarkers: app.markers.markers.length,
+  //   forks: app.map.forks,
+  //   numForks: app.map.numForks,
+  //   forkedFrom: app.map.forkedFrom,
+  //   numContributors: app.map.numContributors,
+  //   createdAt: app.map.timestamps.createdAt,
+  //   updatedAt: app.map.timestamps.updatedAt,
+  // }
 
   // create a list item for the selected map
-  const selectedMapListItem = createMapListItem(mapData, true, false, true)
+  // const selectedMapListItem = createMapListItem(mapData, true, false, true)
 
   // add the fork button to it, if the map has markers
-  if (mapData.numMarkers > 0) {
-    forkItButton.appendTo(selectedMapListItem)
-    cancelForkButton.appendTo(selectedMapListItem)
-  }
+  // if (mapData.numMarkers > 0) {
+  //   forkItButton.appendTo(selectedMapListItem)
+  //   cancelForkButton.appendTo(selectedMapListItem)
+  // }
   // show the updated map data
-  $('.info-window .map-list-container').html(selectedMapListItem)
+  // $('.info-window .map-list-container').html(selectedMapListItem)
 
   // activate fork links
   activateForkButton()
@@ -2357,8 +2373,11 @@ const openMapSelectorPanel = async () => {
       : ''
   let contextMenuString = `
     <div class="context-menu dropdown">
+      <a href="#" class="expand-contract-button">
+        <img src="/static/images/material_design_icons/open_in_full_white-24px.svg" title="expand / contract" />
+      </a>
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        ...
+        <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
         <a class="copy-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Share link</a>
@@ -2386,7 +2405,7 @@ const openMapSelectorPanel = async () => {
           `<div class="feedback alert alert-success hide"></div>`
         )
         feedbackEl.html(app.copy.sharemapmessage)
-        feedbackEl.prependTo(selectedMapListItem)
+        feedbackEl.appendTo(selectedMapListItem)
         feedbackEl.show()
         setTimeout(() => {
           feedbackEl.fadeOut()
@@ -2421,6 +2440,7 @@ const openMapSelectorPanel = async () => {
     e.preventDefault()
     // show the settings map form
     $('.info-window-content .map-details-container').hide()
+    $('.info-window-content .more-maps-container').hide()
     $('.info-window-content .settings-map-container').show()
 
     // pre-select the correct contributor settings
@@ -2465,6 +2485,7 @@ const openMapSelectorPanel = async () => {
     e.preventDefault()
     // revert to the map list view
     $('.info-window-content .map-details-container').show()
+    $('.info-window-content .more-maps-container').show()
     $('.info-window-content .settings-map-container').hide()
   })
 
@@ -2538,7 +2559,10 @@ const openMapSelectorPanel = async () => {
   }
 
   // open the info window
-  expandInfoWindow(50, 50)
+  expandInfoWindow(50, 50).then(() => {
+    // enable expand/contract button
+    enableExpandContractButtons(50, 50)
+  })
 
   // populate rename map content
   // update visible map title when user renames it
@@ -2590,6 +2614,7 @@ const openMapSelectorPanel = async () => {
     // collapseInfoWindow()
     // show the settings map form
     $('.info-window-content .map-details-container').show()
+    $('.info-window-content .more-maps-container').show()
     $('.info-window-content .settings-map-container').hide()
     const feedbackEl = $(
       '.info-window-content .map-details-container .feedback-message'

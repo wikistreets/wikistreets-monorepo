@@ -205,18 +205,26 @@ ul {
   background-color: transparent;
   color: white;
 }
+
+/* context menu */
+.info-window .context-menu {
+  float: right;
+  /* border: 1px solid red; */
+  margin-top: 28px;
+}
 .info-window .context-menu.dropdown button,
 .info-window .context-menu.dropdown button:focus,
 .info-window .context-menu.dropdown.show button.btn-secondary.dropdown-toggle {
+  display: block;
   background-color: transparent;
   border-color: transparent;
   outline: transparent;
-  color: white;
-  position: absolute;
+  color: #6c757d;
+  /* position: absolute;
   top: 0;
-  right: 0;
-  padding: 0;
-  margin-top: -10px;
+  right: 0; */
+  padding: 10px 0;
+  /* margin-top: -10px; */
   box-shadow: none;
   font-size: 1.5em;
   letter-spacing: 0.1em;
@@ -227,9 +235,9 @@ ul {
   display: none;
 }
 .info-window .expand-contract-button {
-  position: absolute;
+  /* position: absolute;
   top: 0;
-  right: 50px;
+  right: 50px; */
 }
 
 .info-window-content {
@@ -268,9 +276,22 @@ ul {
   z-index: 201;
 }
 
+/* map selector */
+.info-window-content .more-maps-container {
+  border-top: 1px solid #6c757d;
+  padding-top: 10px;
+}
+
 /* issue details */
-.info-window-content .issue-detail header {
+.info-window-content .issue-detail header,
+.info-window-content .map-details-container {
   padding-top: 30px;
+}
+.info-window-content .map-details-container .prevnext-issue-container {
+  margin-top: -50px;
+}
+.info-window-content .map-details-container .context-menu {
+  margin-top: -5px;
 }
 
 /* info panel styles */
