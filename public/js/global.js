@@ -1209,7 +1209,6 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   // inject any comments
   data.comments.forEach((comment) => {
     const commentString = createComment(comment)
-    console.log('created comment')
     $(commentString).appendTo($('.info-window-content .existing-comments'))
   })
   if (!data.comments.length) {
@@ -1441,7 +1440,19 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 
         // inject the new comment
         const commentString = createComment(res.data)
-        $(commentString).appendTo($('.info-window-content .existing-comments'))
+        const commentEl = $(commentString)
+        // handle click on username event
+        $('.user-link', commentEl).click((e) => {
+          e.preventDefault()
+
+          // get target userid
+          const userId = $(e.target).attr('ws-user-id')
+
+          openUserProfile(data.user.handle, userId)
+        })
+
+        // stick this new comment into the page
+        commentEl.appendTo($('.info-window-content .existing-comments'))
         // make sure comments are visible, now that there's at least one.
         $('.info-window-content .existing-comments').show()
         // reset the form

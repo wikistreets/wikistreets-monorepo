@@ -568,14 +568,22 @@ const markerRouter = ({ config }) => {
           console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
         })
 
-        // return the response to client
-        const lastCommentIndex = map.issues[0].comments.length - 1
-        const commentData = map.issues[0].comments[lastCommentIndex]
-        res.json({
-          status: true,
-          message: 'success',
-          data: commentData, // return just the comment in question
+        // return the comment data to client
+        let foundIt = false
+        map.issues.forEach((issue) => {
+          // find the issue at hand
+          if (issue._id == issueId) {
+            const lastCommentIndex = issue.comments.length - 1
+            const commentData = issue.comments[lastCommentIndex]
+            return res.json({
+              status: true,
+              message: 'success',
+              data: commentData, // return just the comment in question
+            })
+          }
         })
+        // make sure we found the issue
+        if (!foundIt) throw `Can't comment on a non-existent post.`
       } catch (err) {
         // failed to save the new issue...
         console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
