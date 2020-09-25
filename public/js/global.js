@@ -1326,9 +1326,16 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   $('.info-window').show()
   $('.info-window')
     .stop()
-    .animate({
-      height: `${infoWindowHeightPx}px`,
-    })
+    .animate(
+      {
+        height: `${infoWindowHeightPx}px`,
+      },
+      () => {
+        // reposition add issue button
+        // const y = $('.info-window').position().top
+        // $('.control-add-issue').css('top', y - 50)
+      }
+    )
 
   // animate the info window open and scroll it to the top once open
   $('.issue-map, #map')
@@ -1429,6 +1436,9 @@ const collapseInfoWindow = async (e) => {
         }, 100)
       }
     )
+  // reposition add issue button
+  // const y = $('.control-map-selector').position().top
+  // $('.control-add-issue').css('top', y - 50)
 
   // resolve the promise once the animation is complete
   return $('.issue-map, #map').promise()
