@@ -65,6 +65,7 @@ const app = {
       postIssueUrl: '/markers/create',
       editIssueUrl: '/markers/edit',
       deleteIssueUrl: '/markers/delete',
+      postCommentUrl: '/markers/comments/create',
       getUserUrl: '/users',
       mapTitleUrl: '/map/title',
       collaborationSettingsUrl: '/map/collaboration',
@@ -1022,6 +1023,59 @@ const createMapListItem = (
   return mapListing
 }
 
+const createComment = (data) => {
+  let contentString = ''
+
+  // format the date the marker was created
+  // console.log(JSON.stringify(data, null, 2))
+  const date = DateDiff.asAge(data.createdAt)
+  // give attribution to author
+  const attribution = `
+Posted by
+<a class="user-link" ws-user-id="${data.user._id}" href="#">${data.user.handle}</a> ${date}
+`
+
+  let imgString = createPhotoCarousel(data.photos)
+  // console.log(imgString)
+
+  // // generate the context menu
+  // // only show delete link to logged-in users who have permissions to edit this map
+  // const deleteLinkString = app.auth.isEditor()
+  //   ? `<a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>`
+  //   : ''
+  // let contextMenuString = `
+  //   <div class="context-menu dropdown">
+  //     <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  //       <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
+  //     </button>
+  //     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+  //       ${deleteLinkString}
+  //     </div>
+  //   </div>
+  // `
+
+  contentString += `
+<div class="issue-detail comment">
+    <header>
+        <p class="instructions">${attribution}</p>
+    </header>
+    <article>
+    ${imgString}
+    `
+  contentString += !data.body
+    ? ''
+    : `
+        <p>${marked(data.body)}</p>
+    `
+  contentString += `
+    </article>
+  `
+  contentString += `
+</div>
+    `
+  return contentString
+}
+
 const createPhotoCarousel = (photos) => {
   // abort if no photos
   if (!photos || photos.length == 0) return ''
@@ -1145,8 +1199,23 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 </div>
     `
 
+  // add comments form
+  const commentsString = $('.comments-container').html()
+  contentString += commentsString
+
   // update the infoWindow content
   $('.info-window-content').html(contentString)
+
+  // inject any comments
+  data.comments.forEach((comment) => {
+    const commentString = createComment(comment)
+    console.log('created comment')
+    $(commentString).appendTo($('.info-window-content .existing-comments'))
+  })
+  if (!data.comments.length) {
+    // hide comments section if none there
+    $('.info-window-content .existing-comments').hide()
+  }
 
   // handle previous and next issue button clicks
   $('.info-window-content .prev-issue-link').click((e) => {
@@ -1157,6 +1226,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
     e.preventDefault()
     app.markers.next(marker)
   })
+
   // allow left and right arrow keys to perform prev/next iterator
   // $('html').keyup((e) => {
   //   const key = e.which
@@ -1281,6 +1351,115 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
       '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
     )
   }
+
+  // enable comment form
+
+  // create a decent file uploader for photos
+  const fuploader = new FUploader({
+    container: {
+      el: document.querySelector('.info-window-content .file-upload-container'),
+      activeClassName: 'active',
+    },
+    fileSelector: {
+      el: document.querySelector('.info-window-content input[type="file"]'),
+    },
+    buttonContainer: {
+      el: document.querySelector('.info-window-content .button-container'),
+    },
+    thumbsContainer: {
+      el: document.querySelector('.info-window-content .thumbs-container'),
+      thumbClassName: 'thumb',
+      thumbImgClassName: 'thumb-img',
+      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
+      closeIconClassName: 'close-icon',
+      // closeIconCallback: removeIssueImage,
+    },
+    dropContainer: {
+      el: document.querySelector('.info-window-content .drop-container'),
+      activeClassName: 'active',
+    },
+    form: {
+      el: document.querySelector('.info-window-content .issue-form'),
+      droppedFiles: [], // nothing yet
+    },
+  })
+  fuploader.init() // initalize settings
+
+  // activate add image link
+  $('.info-window-content .add-photos-link').click((e) => {
+    e.preventDefault()
+    $('.info-window-content input[type="file"]').trigger('click')
+  })
+
+  // deal with form submissions
+  $('.info-window-content form.comment-form .issueid').val(marker.issueData._id)
+  $('.info-window-content form.comment-form').on('submit', async (e) => {
+    // prevent page reload
+    e.preventDefault()
+
+    // show the spinner till done
+    showSpinner($('.info-window-content'))
+
+    // force user login before an issue can be submitted
+    if (!app.auth.getToken()) {
+      // open signin form
+      openSigninPanel('Log in to leave a comment.')
+      return // exit function
+    }
+
+    // construct a FormData object from the form DOM element
+    let formData = new FormData(e.target)
+
+    // remove the input type='file' data, since we don't need it
+    formData.delete('files-excuse')
+
+    // add any drag-and-dropped files to this
+    const files = fuploader.getDroppedFiles()
+    // console.log(files)
+
+    // add files from array to formdata
+    $.each(files, function (i, file) {
+      formData.append('files', file)
+    })
+
+    // post to server
+    app
+      .myFetch(app.apis.wikistreets.postCommentUrl, 'POST', formData)
+      .then((res) => {
+        if (!res.status) {
+          openErrorPanel(res.message)
+          return
+        }
+
+        // get a marker cluster
+        const cluster = app.markers.cluster
+          ? app.markers.cluster
+          : app.markers.createCluster()
+
+        // bring back the map controls
+        $('.map-control').show()
+
+        // inject the new comment
+        const commentString = createComment(res.data)
+        $(commentString).appendTo($('.info-window-content .existing-comments'))
+        // reset the form
+        $('.info-window-content form').get(0).reset()
+        fuploader.reset()
+
+        // hide spinner when done
+        hideSpinner($('.info-window-content'))
+      })
+      .catch((err) => {
+        console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        // boot user out of login
+        // app.auth.setToken(''); // wipe out JWT token
+        // openSigninPanel()
+        // open error panel
+        openErrorPanel(
+          'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
+        )
+      })
+  }) // comment-form submit
 } // showInfoWindow
 
 // hack to close tooltips on mobile... bootstrap's tooltips are buggy on mobile
@@ -1449,7 +1628,7 @@ const meMarkerButtonClick = async () => {
   // app.markers.me.closePopup()
 
   // check whether this user is authenticated and is allowed to contribute to this map
-  if (!app.auth.getToken()) openSigninPanel('Log in to create a post')
+  if (!app.auth.getToken()) openSigninPanel('Log in to create a post.')
   else {
     // open the info window
     expandInfoWindow(60, 40).then(async () => {})

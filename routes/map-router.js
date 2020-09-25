@@ -400,6 +400,7 @@ const mapRouter = ({ config }) => {
       })
         .populate('contributors', ['_id', 'handle'])
         .populate('issues.user', ['_id', 'handle'])
+        .populate('issues.comments.user', ['_id', 'handle'])
         .populate('forkedFrom', ['title', 'publicId'])
         .catch((err) => {
           return res.status(500).json({

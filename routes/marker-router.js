@@ -14,6 +14,7 @@ const path = require('path')
 const { Map } = require('../models/map')
 const { Issue } = require('../models/issue')
 const { File } = require('../models/file')
+const { Comment } = require('../models/comment')
 const { User } = require('../models/user')
 
 // image editing service
@@ -259,6 +260,7 @@ const markerRouter = ({ config }) => {
         )
           .populate('contributors', ['_id', 'handle'])
           .populate('issues.user', ['_id', 'handle'])
+          .populate('issues.comments.user', ['_id', 'handle'])
           .catch((err) => {
             console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
           })
@@ -326,6 +328,7 @@ const markerRouter = ({ config }) => {
     upload.array('files', config.markers.maxFiles), // multer file upload
     handleImages(markerImageService), // sharp file editing
     [
+      body('mapId').not().isEmpty().trim(),
       body('issueid').not().isEmpty().trim(),
       body('lat').not().isEmpty().trim(),
       body('lng').not().isEmpty().trim(),
@@ -423,6 +426,7 @@ const markerRouter = ({ config }) => {
           { new: true }
         )
           .populate('contributors', ['_id', 'handle'])
+          .populate('issues.comments.user', ['_id', 'handle'])
           .populate('issues.user', ['_id', 'handle'])
 
         // add new images, if any
@@ -440,6 +444,7 @@ const markerRouter = ({ config }) => {
             { new: true }
           )
             .populate('contributors', ['_id', 'handle'])
+            .populate('issues.comments.user', ['_id', 'handle'])
             .populate('issues.user', ['_id', 'handle'])
         }
 
@@ -488,6 +493,111 @@ const markerRouter = ({ config }) => {
       }
     }
   ) // '/edit' route
+
+  // route for HTTP POST requests to create a new comment
+  router.post(
+    '/comments/create',
+    passportJWT, // jwt authentication
+    upload.array('files', config.markers.maxFiles), // multer file upload
+    handleImages(markerImageService), // sharp file editing
+    [
+      body('body').trim(),
+      body('mapId').not().isEmpty().trim(),
+      body('issueid').not().isEmpty().trim(),
+    ],
+    async (req, res, next) => {
+      const mapId = req.body.mapId
+      const issueId = req.body.issueid
+      const data = {
+        user: req.user._id,
+        photos: req.files,
+        body: req.body.body,
+      }
+
+      // reject posts with no map or no issue
+      let errors = validationResult(req)
+      if (!errors.isEmpty() || (!data.photos.length && !data.body)) {
+        console.log(`ERRORS: ${JSON.stringify(errors, null, 2)}`)
+        const err = 'Invalid map data.... please be reconsider your choices.'
+        return res.status(400).json({
+          status: false,
+          message: err,
+          err: err,
+        })
+      }
+
+      // if we've reached here, the data is valid...
+      errors = false
+      try {
+        // create a Comment object
+        const comment = new Comment(data)
+
+        console.log(`COMMENT: ${JSON.stringify(comment, null, 2)}`)
+
+        // set up changes we want to make to the map
+        const map = await Map.findOneAndUpdate(
+          { publicId: mapId, 'issues._id': issueId },
+          {
+            $push: {
+              'issues.$.comments': comment,
+            },
+            $addToSet: {
+              contributors: req.user,
+            },
+          },
+          { new: true }
+        )
+          .populate('contributors', ['_id', 'handle'])
+          .populate('issues.comments.user', ['_id', 'handle'])
+          .populate('issues.user', ['_id', 'handle'])
+          .catch((err) => {
+            errors = err
+            console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+          })
+
+        // increment the number of posts this user has created
+        User.update(
+          { _id: req.user._id },
+          {
+            $addToSet: { maps: map },
+            $inc: { numComments: 1 },
+          },
+          { new: true }
+        ).catch((err) => {
+          errors = err
+          console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        })
+
+        // return the response to client
+        const lastCommentIndex = map.issues[0].comments.length - 1
+        const commentData = map.issues[0].comments[lastCommentIndex]
+        res.json({
+          status: true,
+          message: 'success',
+          data: commentData, // return just the comment in question
+        })
+      } catch (err) {
+        // failed to save the new issue...
+        console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        // delete any uploaded files if the entire route fails for some reason
+        if (req.files && req.files.length > 0) {
+          req.files.map((file, i) => {
+            if (file.path) {
+              // if it was stored on disk, delete it
+              markerImageService.delete(file.path)
+            }
+          })
+        }
+
+        //return failure response
+        return res.status(500).json({
+          status: false,
+          message: 'An error occurred trying to save this issue',
+          err: err,
+        })
+      }
+    }
+  ) // '/create' route
 
   return router
 }

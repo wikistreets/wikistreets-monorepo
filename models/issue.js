@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 const { fileSchema } = require('./file')
+const { commentSchema } = require('./comment')
 
 // an issue
 const issueSchema = new Schema(
@@ -18,7 +19,7 @@ const issueSchema = new Schema(
     title: { type: String, required: true },
     body: String,
     photos: [fileSchema],
-    comments: String,
+    comments: [commentSchema],
   },
   { timestamps: true }
 )

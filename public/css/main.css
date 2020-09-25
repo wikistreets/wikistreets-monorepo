@@ -399,52 +399,54 @@ ul {
   font-weight: bold;
 }
 
-.issue-form .file-upload-container {
+/* file uploader */
+.file-upload-container {
   margin-top: 10px;
   border: 2px dotted white;
   padding: 10px;
   background-color: black;
 }
-.issue-form .file-upload-container * {
+.file-upload-container * {
   pointer-events: none; /* prevent inner elements from triggering dragleave events */
 }
-.issue-form .file-upload-container a.add-photos-link {
+.file-upload-container a.add-photos-link {
   pointer-events: all; /* allow clicks! */
 }
-.issue-form .file-upload-container.active {
+.file-upload-container.active {
   background-color: blue;
   color: white;
 }
-.issue-form .drop-container {
+.drop-container {
   text-align: center;
   padding-bottom: 15px;
 }
-.issue-form .thumbs-container,
+.thumbs-container,
 .issue-form .existing-thumbs-container {
   margin-top: 10px;
 }
-.issue-form .existing-thumbs-container {
+.existing-thumbs-container {
   margin-left: -5px;
 }
-.issue-form .thumbs-container .thumb,
-.issue-form .existing-thumbs-container .thumb {
+.thumbs-container .thumb,
+.existing-thumbs-container .thumb {
   position: relative;
   margin-left: 10px;
   margin-bottom: 10px;
   border: 1px solid white;
 }
-.issue-form .thumbs-container .thumb img.thumb-img,
+.thumbs-container .thumb img.thumb-img,
 .issue-form .existing-thumbs-container .thumb img.thumb-img {
   height: 100px;
 }
-.issue-form .thumbs-container .thumb .close-icon,
-.issue-form .existing-thumbs-container .thumb .close-icon {
+.thumbs-container .thumb .close-icon,
+.existing-thumbs-container .thumb .close-icon {
   top: 0;
   right: 0;
   background-color: white;
   cursor: pointer;
   pointer-events: all; /* allow clicks! */
 }
+/* // file uploader */
 
 /* search results */
 .matching-addresses .list-group-item {
@@ -456,4 +458,13 @@ ul {
 .matching-addresses .list-group-item-action:hover {
   background-color: transparent;
   color: white;
+}
+
+/* comments */
+.comments {
+  border-top: 1px dotted #555;
+  padding-top: 20px;
+}
+.comment {
+  border-bottom: 1px dotted #555;
 }

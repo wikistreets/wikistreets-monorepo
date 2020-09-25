@@ -166,4 +166,9 @@ function FUploader(config) {
       i++
     })
   }
+
+  this.reset = () => {
+    config.form.droppedFiles = []
+    config.thumbsContainer.el.innerHTML = ''
+  }
 }
