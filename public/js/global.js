@@ -1442,6 +1442,8 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
         // inject the new comment
         const commentString = createComment(res.data)
         $(commentString).appendTo($('.info-window-content .existing-comments'))
+        // make sure comments are visible, now that there's at least one.
+        $('.info-window-content .existing-comments').show()
         // reset the form
         $('.info-window-content form').get(0).reset()
         fuploader.reset()
