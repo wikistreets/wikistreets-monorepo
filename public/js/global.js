@@ -1181,6 +1181,10 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   // console.log('opening infowindow');
   let infoWindowHeight = 70
   let mapHeight = 30
+
+  // enable expand/contract button to this height ratio
+  enableExpandContractButtons(infoWindowHeight, mapHeight)
+
   if (app.infoPanel.isExpanded) {
     // console.log('already expanded')
     // override proportions if info panel is already expanded to full height
@@ -1190,9 +1194,6 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 
   expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
     // hack to avoid duplicate marker click events (see where we check this value on click)
-
-    // enable expand/contract button
-    enableExpandContractButtons(infoWindowHeight, mapHeight)
 
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
@@ -1358,7 +1359,7 @@ const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
     e.preventDefault()
     const buttonEl = $('.info-window .expand-contract-button')
     if (buttonEl.hasClass('expanded')) {
-      console.log('contracting')
+      console.log(`contracting to ${infoWindowHeight} and ${mapHeight}`)
       // contract info window
       $('.info-window .expand-contract-button img').attr(
         'src',
