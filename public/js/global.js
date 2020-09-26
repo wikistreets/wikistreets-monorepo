@@ -1142,7 +1142,8 @@ Posted by
   const deleteLinkString = app.auth.isEditor()
     ? `<a class="delete-comment-link dropdown-item" ws-comment-id="${data._id}" onclick="deleteComment('${data._id}', '${issueId}'); return false;" href="#">Delete</a>`
     : ''
-  let contextMenuString = `
+  let contextMenuString = app.auth.isEditor()
+    ? `
     <div class="context-menu dropdown">
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
@@ -1152,6 +1153,7 @@ Posted by
       </div>
     </div>
   `
+    : ''
 
   contentString += `
 <div class="issue-detail comment" ws-comment-id="${data._id}">
@@ -1259,7 +1261,7 @@ const showInfoWindow = (marker) => {
 
   // inject any comments
   data.comments.forEach((comment) => {
-    console.log(`issueId: ${data._id}`)
+    // console.log(`issueId: ${data._id}`)
     const commentString = createComment(comment, data._id)
     $(commentString).appendTo($('.info-window-content .existing-comments'))
   })
@@ -1451,7 +1453,7 @@ const showInfoWindow = (marker) => {
     e.preventDefault()
 
     // show the spinner till done
-    showSpinner($('.info-window-content'))
+    showSpinner($('.info-window'))
 
     // force user login before an issue can be submitted
     if (!app.auth.getToken()) {
@@ -1514,7 +1516,7 @@ const showInfoWindow = (marker) => {
         fuploader.reset()
 
         // hide spinner when done
-        hideSpinner($('.info-window-content'))
+        hideSpinner($('.info-window'))
       })
       .catch((err) => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
@@ -1543,9 +1545,14 @@ const showSpinner = (containerEl) => {
   // show the spinner
   const spinner = $('.spinner-container .spinner-overlay').clone()
   spinner.appendTo($(containerEl)) // add to element
-  spinner.css('height', containerEl.height()) // match height
+  // match width and height
+  spinner.css({
+    width: containerEl.width(),
+    height: containerEl.height(),
+  })
   spinner.show() // in case it was previously hidden
   const topMargin =
+    parseInt($(containerEl).scrollTop()) +
     parseInt($(containerEl).height() / 2) -
     parseInt($('.spinner-overlay img', containerEl).height() / 2)
   $('.spinner-overlay img', containerEl).css('margin-top', topMargin)
@@ -1567,7 +1574,7 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   // console.log(`desired height: ${infoWindowHeightPx}`)
 
   // hide any existing spinners
-  hideSpinner($('.info-window-content'))
+  hideSpinner($('.info-window'))
 
   $('.info-window').show()
   $('.info-window')
@@ -1838,7 +1845,7 @@ const openIssueForm = async (point = false) => {
     e.preventDefault()
 
     // show the spinner till done
-    showSpinner($('.info-window-content'))
+    showSpinner($('.info-window'))
 
     // force user login before an issue can be submitted
     if (!app.auth.getToken()) {
@@ -2040,7 +2047,7 @@ const openEditIssueForm = async (issueId) => {
     e.preventDefault()
 
     // show the spinner till done
-    showSpinner($('.info-window-content'))
+    showSpinner($('.info-window'))
 
     // force user login before an issue can be submitted
     if (!app.auth.getToken()) {
