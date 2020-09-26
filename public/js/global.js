@@ -1298,7 +1298,7 @@ const showInfoWindow = (marker) => {
 
   // update the page title
   $('head title').html(
-    `${data.address} - ${app.map.getTitle(true)} - Wikistreets`
+    `${data.title} - ${app.map.getTitle(true)} - Wikistreets`
   ) // window title
 
   // update the url hash tag
