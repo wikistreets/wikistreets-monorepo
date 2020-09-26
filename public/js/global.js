@@ -874,6 +874,14 @@ window.addEventListener('resize', setVh)
 window.addEventListener('orientationchange', setVh)
 // end handle safari bug with vh units
 
+// handle map resize
+const resizeMap = () => {
+  app.map.element.invalidateSize() // notify leaflet that size has changed
+}
+window.addEventListener('resize', resizeMap)
+window.addEventListener('orientationchange', resizeMap)
+// end handle map resize
+
 /**
  * Use Mapbox API to determine street address based on lat long coordinates.
  * @param {*} lat The latitude
@@ -1456,6 +1464,12 @@ const showInfoWindow = (marker) => {
     $('.info-window-content .comment-form-container textarea').focus() // focus on textarea
     $('.info-window-content .show-comment-form-button button').hide() // hide the button
   })
+
+  // expand textarea when clicked into
+  // $('.info-window-content .comment-form textarea').focus((e) => {
+  //   console.log('focused')
+  //   $(e.target).animate({ height: '100px' }, 100)
+  // })
 
   // deal with form submissions
   $('.info-window-content form.comment-form .issueid').val(marker.issueData._id)

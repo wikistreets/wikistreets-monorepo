@@ -284,10 +284,10 @@ button.dropdown-toggle img {
 /* issue details */
 .info-window-content .issue-detail header,
 .info-window-content .map-details-container {
-  padding-top: 30px;
+  padding-top: 40px;
 }
 .info-window-content .map-details-container .prevnext-issue-container {
-  margin-top: -50px;
+  margin-top: -60px;
 }
 .info-window-content .map-details-container .context-menu {
   margin-top: -5px;
