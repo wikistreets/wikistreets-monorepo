@@ -1450,10 +1450,10 @@ const showInfoWindow = (marker) => {
   $('.info-window-content .show-comment-form-button button').click((e) => {
     $('.info-window-content .comment-form-container').show() // show the form
     // scroll to textarea field
-    $('.info-window-content .comment-form-container textarea').focus() // focus on textarea
     $('.info-window').scrollTop(
       $('.info-window-content .comment-form-container').offset().top
     )
+    $('.info-window-content .comment-form-container textarea').focus() // focus on textarea
     $('.info-window-content .show-comment-form-button button').hide() // hide the button
   })
 
