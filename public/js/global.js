@@ -66,6 +66,7 @@ const app = {
       editIssueUrl: '/markers/edit',
       deleteIssueUrl: '/markers/delete',
       postCommentUrl: '/markers/comments/create',
+      deleteCommentUrl: '/markers/comments/delete',
       getUserUrl: '/users',
       mapTitleUrl: '/map/title',
       collaborationSettingsUrl: '/map/collaboration',
@@ -293,7 +294,7 @@ app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
     // loop through object fields
     const keys = Object.keys(data) // get keys
     keys.forEach((key, index) => {
-      const val = courses[key]
+      const val = data[key]
       // add to params
       queryParams.push(`${key}=${val}`)
       // console.log(`${key}: ${courses[key]}`)
@@ -463,6 +464,23 @@ app.markers.place = (data, cluster) => {
         lat: point.position.lat,
         lng: point.position.lng,
       }) // reposition it
+      // update visible info, if it's currently open on the page
+      const issueEls = $(`.issue-detail[ws-issue-id="${point._id}"]`)
+      if (issueEls.length) {
+        // check for comments not yet on the page
+        point.comments.forEach((comment) => {
+          const commentEl = $(`.comment[ws-comment-id="${comment._id}"]`)
+          if (!commentEl.length) {
+            // comment is not on the page... put it there
+            const commentString = createComment(comment, point._id)
+            $(commentString).appendTo(
+              $('.info-window-content .existing-comments')
+            )
+            // make sure the comments are showing
+            $('.info-window-content .existing-comments').show()
+          }
+        }) // foreach comment
+      } // if issueEls.length
     } else {
       // new marker
       // add delay before dropping marker onto map
@@ -1023,7 +1041,88 @@ const createMapListItem = (
   return mapListing
 }
 
-const createComment = (data) => {
+const createIssue = (data) => {
+  // create the HTML code for a post
+  let contentString = ''
+
+  // format the date the marker was created
+  // console.log(JSON.stringify(data, null, 2))
+  const date = DateDiff.asAge(data.createdAt)
+  // give attribution to author
+  const attribution = `
+Posted by
+<a class="user-link" ws-user-id="${data.user._id}" href="#">${
+    data.user.handle
+  }</a> ${date}
+near ${data.address.substr(0, data.address.lastIndexOf(','))}.
+`
+
+  let imgString = createPhotoCarousel(data.photos)
+  // console.log(imgString)
+
+  // generate the context menu
+  // only show delete link to logged-in users who have permissions to edit this map
+  const deleteLinkString = app.auth.isEditor()
+    ? `<a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>`
+    : ''
+  const editLinkString = app.auth.isEditor()
+    ? `<a class="edit-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Edit</a>`
+    : ''
+  let contextMenuString = `
+    <div class="context-menu dropdown">
+      <a href="#" class="expand-contract-button">
+        <img src="/static/images/material_design_icons/open_in_full_white-24px.svg" title="expand / contract" />
+      </a>
+      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
+      </button>
+      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+        <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Share link</a>
+        ${editLinkString}
+        ${deleteLinkString}
+      </div>
+    </div>
+  `
+
+  // do some cleanup of the text comment
+  // data.body = data.body.replace(/\n/g, '<br />')
+
+  contentString += `
+<div class="issue-detail" ws-issue-id="${data._id}">
+    <div class="prevnext-issue-container row">
+      <a class="prev-issue-link btn btn-secondary col-6" href="#">Prev</a>
+      <a class="next-issue-link btn btn-secondary col-6" href="#">Next</a>
+    </div>
+    ${contextMenuString}
+    <header>
+        <h2>${data.title}</h2>
+        <p class="instructions">${attribution}</p>
+    </header>
+    <div class="feedback alert alert-success hide"></div>
+    <article>
+    ${imgString}
+    `
+  contentString += !data.body
+    ? ''
+    : `
+        <p>${marked(data.body)}</p>
+    `
+  contentString += `
+    </article>
+  `
+  contentString += `
+</div>
+    `
+
+  // add comments form
+  const commentsString = $('.comments-container').html()
+  contentString += commentsString
+
+  return contentString
+}
+
+const createComment = (data, issueId) => {
+  // create the HTML code for a comment
   let contentString = ''
 
   // format the date the marker was created
@@ -1038,24 +1137,25 @@ Posted by
   let imgString = createPhotoCarousel(data.photos)
   // console.log(imgString)
 
-  // // generate the context menu
-  // // only show delete link to logged-in users who have permissions to edit this map
-  // const deleteLinkString = app.auth.isEditor()
-  //   ? `<a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>`
-  //   : ''
-  // let contextMenuString = `
-  //   <div class="context-menu dropdown">
-  //     <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-  //       <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
-  //     </button>
-  //     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-  //       ${deleteLinkString}
-  //     </div>
-  //   </div>
-  // `
+  // generate the context menu
+  // only show delete link to logged-in users who have permissions to edit this map
+  const deleteLinkString = app.auth.isEditor()
+    ? `<a class="delete-comment-link dropdown-item" ws-comment-id="${data._id}" onclick="deleteComment('${data._id}', '${issueId}'); return false;" href="#">Delete</a>`
+    : ''
+  let contextMenuString = `
+    <div class="context-menu dropdown">
+      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
+      </button>
+      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+        ${deleteLinkString}
+      </div>
+    </div>
+  `
 
   contentString += `
-<div class="issue-detail comment">
+<div class="issue-detail comment" ws-comment-id="${data._id}">
+    ${contextMenuString}
     <header>
         <p class="instructions">${attribution}</p>
     </header>
@@ -1074,6 +1174,29 @@ Posted by
 </div>
     `
   return contentString
+}
+
+const deleteComment = (commentId, issueId) => {
+  // delete the given comment from the given issue
+  // console.log(`deleting comment: ${commentId} from issue ${issueId}`)
+  // send delete request to server
+  app
+    .myFetch(`${app.apis.wikistreets.deleteCommentUrl}/${commentId}`, 'GET', {
+      issueid: issueId,
+    })
+    .then((res) => {
+      // console.log(JSON.stringify(res, null, 2))
+      if (res.status == true) {
+        // remove the comment from the page
+        $(`.comment[ws-comment-id="${commentId}"]`).remove()
+      } else {
+        throw 'Error deleting comment.'
+      }
+    }) // myFetch.then
+    .catch((err) => {
+      console.log(err)
+      openErrorPanel('Error deleting comment.')
+    })
 }
 
 const createPhotoCarousel = (photos) => {
@@ -1128,87 +1251,16 @@ const showInfoWindow = (marker) => {
   // extract the data from the marker
   const data = marker.issueData
 
-  let contentString = ''
-
-  // format the date the marker was created
-  // console.log(JSON.stringify(data, null, 2))
-  const date = DateDiff.asAge(data.createdAt)
-  // give attribution to author
-  const attribution = `
-Posted by
-<a class="user-link" ws-user-id="${data.user._id}" href="#">${
-    data.user.handle
-  }</a> ${date}
-near ${data.address.substr(0, data.address.lastIndexOf(','))}.
-`
-
-  let imgString = createPhotoCarousel(data.photos)
-  // console.log(imgString)
-
-  // generate the context menu
-  // only show delete link to logged-in users who have permissions to edit this map
-  const deleteLinkString = app.auth.isEditor()
-    ? `<a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>`
-    : ''
-  const editLinkString = app.auth.isEditor()
-    ? `<a class="edit-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Edit</a>`
-    : ''
-  let contextMenuString = `
-    <div class="context-menu dropdown">
-      <a href="#" class="expand-contract-button">
-        <img src="/static/images/material_design_icons/open_in_full_white-24px.svg" title="expand / contract" />
-      </a>
-      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
-      </button>
-      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Share link</a>
-        ${editLinkString}
-        ${deleteLinkString}
-      </div>
-    </div>
-  `
-
-  // do some cleanup of the text comment
-  // data.body = data.body.replace(/\n/g, '<br />')
-
-  contentString += `
-<div class="issue-detail">
-    <div class="prevnext-issue-container row">
-      <a class="prev-issue-link btn btn-secondary col-6" href="#">Prev</a>
-      <a class="next-issue-link btn btn-secondary col-6" href="#">Next</a>
-    </div>
-    ${contextMenuString}
-    <header>
-        <h2>${data.title}</h2>
-        <p class="instructions">${attribution}</p>
-    </header>
-    <div class="feedback alert alert-success hide"></div>
-    <article>
-    ${imgString}
-    `
-  contentString += !data.body
-    ? ''
-    : `
-        <p>${marked(data.body)}</p>
-    `
-  contentString += `
-    </article>
-  `
-  contentString += `
-</div>
-    `
-
-  // add comments form
-  const commentsString = $('.comments-container').html()
-  contentString += commentsString
+  // create the HTML code for a post
+  const contentString = createIssue(data)
 
   // update the infoWindow content
   $('.info-window-content').html(contentString)
 
   // inject any comments
   data.comments.forEach((comment) => {
-    const commentString = createComment(comment)
+    console.log(`issueId: ${data._id}`)
+    const commentString = createComment(comment, data._id)
     $(commentString).appendTo($('.info-window-content .existing-comments'))
   })
   if (!data.comments.length) {
@@ -1308,6 +1360,8 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 
   // activate delete button
   $('.delete-issue-link').click((e) => {
+    e.preventDefault()
+
     // grab the id of the issue to delete
     const issueId = $(e.target).attr('ws-issue-id')
     // send delete request to server
@@ -1439,7 +1493,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
         $('.map-control').show()
 
         // inject the new comment
-        const commentString = createComment(res.data)
+        const commentString = createComment(res.data, marker.issueData._id)
         const commentEl = $(commentString)
         // handle click on username event
         $('.user-link', commentEl).click((e) => {

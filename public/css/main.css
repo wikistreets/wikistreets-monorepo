@@ -465,6 +465,9 @@ ul {
   border-top: 1px dotted #555;
   padding-top: 20px;
 }
+.existing-comments {
+  margin-bottom: 20px;
+}
 .comment {
   border-bottom: 1px dotted #555;
 }

@@ -1,6 +1,6 @@
 // express
 const express = require('express')
-const { body, validationResult } = require('express-validator')
+const { body, param, query, validationResult } = require('express-validator')
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const passportConfig = require('../passportConfig')
@@ -75,16 +75,27 @@ const markerRouter = ({ config }) => {
   })
 
   // route for HTTP GET requests to an issue's JSON data
-  router.get('/json', (req, res) => {
+  router.get('/json', [query('mapId').not().isEmpty().trim()], (req, res) => {
+    let errors = validationResult(req)
     const mapId = req.query.mapId // get mapId from query string
-    const data = Issue.find({ mapId }, (err, docs) => {
-      if (!err) {
-        //console.log(docs);
-        res.json(docs)
-      } else {
-        throw err
-      }
-    }).populate('user', 'handle') // populate each doc with the user's handle
+    if (errors.isEmpty() && mapId) {
+      const data = Issue.find({ mapId }, (err, docs) => {
+        if (!err) {
+          //console.log(docs);
+          res.json(docs)
+        } else {
+          throw err
+        }
+      }).populate('user', 'handle') // populate each doc with the user's handle
+    } else {
+      // validation error
+      const err = JSON.stringify(errors)
+      return res.status(400).json({
+        status: false,
+        message: err,
+        err: err,
+      })
+    }
   })
 
   // route for HTTP GET requests to the map JSON dataa
@@ -109,20 +120,25 @@ const markerRouter = ({ config }) => {
   // })
 
   // get a given user's markers
-  router.get('/user/:userId', (req, res) => {
-    const userId = req.params.userId
-    if (!userId) return
+  router.get(
+    '/user/:userId',
+    [param('userId').not().isEmpty().trim()],
+    (req, res) => {
+      let errors = validationResult(req)
+      const userId = req.params.userId
+      if (!errors.isEmpty() || !userId) return
 
-    // get user's markers
-    Issue.find({ user: userId }, (err, docs) => {
-      if (!err) {
-        // respond with docs
-        res.json(docs)
-      } else {
-        throw err
-      }
-    })
-  })
+      // get user's markers
+      Issue.find({ user: userId }, (err, docs) => {
+        if (!err) {
+          // respond with docs
+          res.json(docs)
+        } else {
+          throw err
+        }
+      })
+    }
+  )
 
   // // route for HTTP GET requests to the map JSON data
   // router.get('/add-user', async (req, res) => {
@@ -130,11 +146,20 @@ const markerRouter = ({ config }) => {
   //   res.json({ 'status': 'ok'})
   // });
 
-  // route for HTTP POST requests to create a new marker
+  // route for HTTP GET requests to delete a marker
   router.get(
     '/delete/:issueId',
     passportJWT, // jwt authentication
+    [
+      query('mapId').not().isEmpty().trim(),
+      param('issueId').not().isEmpty().trim(),
+    ],
     async (req, res, next) => {
+      let errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw 'Invalid map or issue identifier'
+      }
+
       // extract necessary info
       const mapId = req.query.mapId // get mapId from query string
       const issueId = req.params.issueId
@@ -192,6 +217,11 @@ const markerRouter = ({ config }) => {
       body('mapTitle').trim().escape(),
     ],
     async (req, res, next) => {
+      let errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw 'Invalid map or issue identifier'
+      }
+
       const mapId = req.body.mapId
       const mapTitle = req.body.mapTitle
       const data = {
@@ -338,6 +368,11 @@ const markerRouter = ({ config }) => {
       body('files_to_delete').trim().escape(),
     ],
     async (req, res, next) => {
+      let errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw 'Invalid map or issue details'
+      }
+
       const mapId = req.body.mapId
       const issueId = req.body.issueid // the issue at issue
 
@@ -506,6 +541,11 @@ const markerRouter = ({ config }) => {
       body('issueid').not().isEmpty().trim(),
     ],
     async (req, res, next) => {
+      let errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw 'Invalid map or issue identifier'
+      }
+
       const mapId = req.body.mapId
       const issueId = req.body.issueid
       const data = {
@@ -515,8 +555,7 @@ const markerRouter = ({ config }) => {
       }
 
       // reject posts with no map or no issue
-      let errors = validationResult(req)
-      if (!errors.isEmpty() || (!data.photos.length && !data.body)) {
+      if (!data.photos.length && !data.body) {
         console.log(`ERRORS: ${JSON.stringify(errors, null, 2)}`)
         const err = 'Invalid map data.... please be reconsider your choices.'
         return res.status(400).json({
@@ -532,7 +571,7 @@ const markerRouter = ({ config }) => {
         // create a Comment object
         const comment = new Comment(data)
 
-        console.log(`COMMENT: ${JSON.stringify(comment, null, 2)}`)
+        // console.log(`COMMENT: ${JSON.stringify(comment, null, 2)}`)
 
         // set up changes we want to make to the map
         const map = await Map.findOneAndUpdate(
@@ -573,6 +612,7 @@ const markerRouter = ({ config }) => {
         map.issues.forEach((issue) => {
           // find the issue at hand
           if (issue._id == issueId) {
+            foundIt = true // match!
             const lastCommentIndex = issue.comments.length - 1
             const commentData = issue.comments[lastCommentIndex]
             return res.json({
@@ -605,7 +645,65 @@ const markerRouter = ({ config }) => {
         })
       }
     }
-  ) // '/create' route
+  ) // '/comments/create' route
+
+  // route for HTTP POST requests to delete a marker
+  router.get(
+    '/comments/delete/:commentId',
+    passportJWT, // jwt authentication
+    [
+      param('commentId').not().isEmpty().trim(),
+      query('mapId').not().isEmpty().trim(),
+      query('issueid').not().isEmpty().trim(),
+    ],
+    async (req, res, next) => {
+      let errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw 'Invalid map, issue, or comment identifier'
+      }
+
+      // extract necessary info
+      const mapId = req.query.mapId
+      const issueId = req.query.issueid
+      const commentId = req.params.commentId
+
+      // console.log(`all data: ${mapId} / ${issueId} / ${commentId}`)
+
+      if (mapId && issueId && commentId) {
+        // remove the comment from the issue on the map
+        const map = await Map.findOneAndUpdate(
+          { publicId: mapId, 'issues._id': issueId },
+          {
+            $pull: { 'issues.$.comments': { _id: commentId } }, // remove the comment from the issue
+          },
+          { new: true } // new = return doc as it is after update, upsert = insert new doc if none exists
+        )
+          .then((map) => {
+            // return the response to client
+            res.json({
+              status: true,
+              message: 'success',
+            })
+          })
+          .catch((err) => {
+            // invalid map or issue id
+            return res.status(400).json({
+              status: false,
+              message: err,
+              err: err,
+            })
+          })
+      } else {
+        // invalid map or issue id
+        const err = 'Invalid map, issue, or comment identifiers.'
+        return res.status(400).json({
+          status: false,
+          message: err,
+          err: err,
+        })
+      }
+    }
+  ) // /comments/delete route
 
   return router
 }
