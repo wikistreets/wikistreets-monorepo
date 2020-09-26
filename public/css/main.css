@@ -281,6 +281,11 @@ button.dropdown-toggle img {
   padding-top: 10px;
 }
 
+/* info window content */
+.info-window-content.container {
+  padding: 0; /* override bootstrap default padding */
+}
+
 /* issue details */
 .info-window-content .issue-detail header,
 .info-window-content .map-details-container {
