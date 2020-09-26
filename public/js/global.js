@@ -876,7 +876,10 @@ window.addEventListener('orientationchange', setVh)
 
 // handle map resize
 const resizeMap = () => {
-  app.map.element.invalidateSize() // notify leaflet that size has changed
+  // don't do this before map has loaded
+  if (app.map && app.map.element) {
+    app.map.element.invalidateSize(true) // notify leaflet that size has changed
+  }
 }
 window.addEventListener('resize', resizeMap)
 window.addEventListener('orientationchange', resizeMap)
@@ -897,6 +900,7 @@ const reverseGeocode = async (coords) => {
       let street = 'Anonymous location'
       let address = 'Anonymous location'
       if (data.features.length && data.features[0].place_name) {
+        console.log(JSON.stringify(data.features, null, 2))
         address = data.features[0].place_name
         street = address.substring(0, address.indexOf(',')) // up till the comma
         // console.log(address)
@@ -1331,7 +1335,7 @@ const showInfoWindow = (marker) => {
 
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
-    app.map.element.invalidateSize() // notify leaflet that size has changed
+    app.map.element.invalidateSize(true) // notify leaflet that size has changed
     app.map.panTo(marker.getLatLng())
 
     // handle click on username event
