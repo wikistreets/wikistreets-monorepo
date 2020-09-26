@@ -1446,6 +1446,17 @@ const showInfoWindow = (marker) => {
     $('.info-window-content input[type="file"]').trigger('click')
   })
 
+  // show comment form when button clicked
+  $('.info-window-content .show-comment-form-button button').click((e) => {
+    $('.info-window-content .comment-form-container').show() // show the form
+    // scroll to textarea field
+    $('.info-window').scrollTop(
+      $('.info-window-content .comment-form-container textarea').offset().top
+    )
+    $('.info-window-content .comment-form-container textarea').focus() // focus on textarea
+    $('.info-window-content .show-comment-form-button button').hide() // hide the button
+  })
+
   // deal with form submissions
   $('.info-window-content form.comment-form .issueid').val(marker.issueData._id)
   $('.info-window-content form.comment-form').on('submit', async (e) => {

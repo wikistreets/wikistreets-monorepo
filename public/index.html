@@ -836,40 +836,45 @@
     <div class="comments-container hide">
       <section class="comments">
         <div class="existing-comments"><h2>Comments</h2></div>
-        <h2>Leave a comment</h3>
-        <form class="comment-form" action="/markers/comment" method="POST">
-          <input type="hidden" name="issueid" class="issueid" />
-          <textarea
-            name="body"
-            class="form-control"
-            placeholder="Comment"
-          ></textarea>
-          <div class="file-upload-container">
-            <div class="button-container">
-              <input
-                class="form-control-file hide"
-                id="files"
-                name="files-excuse"
-                type="file"
-                multiple
-              />
-              <a class="add-photos-link" href="#">Add photos</a>
-              <span class="display-none d-md-inline"
-                >(drag-and-drop or
-                <a href="#" class="add-photos-link">click here</a>)</span
-              >
+        <div class="show-comment-form-button">
+          <button class="form-control btn btn-primary">Leave a comment</button>
+        </div>
+        <div class="comment-form-container hide">
+          <h2>Leave a comment</h3>
+          <form class="comment-form" action="/markers/comment" method="POST">
+            <input type="hidden" name="issueid" class="issueid" />
+            <textarea
+              name="body"
+              class="form-control"
+              placeholder="Comment (markdown supported)"
+            ></textarea>
+            <div class="file-upload-container">
+              <div class="button-container">
+                <input
+                  class="form-control-file hide"
+                  id="files"
+                  name="files-excuse"
+                  type="file"
+                  multiple
+                />
+                <a class="add-photos-link" href="#">Add photos</a>
+                <span class="display-none d-md-inline"
+                  >(drag-and-drop or
+                  <a href="#" class="add-photos-link">click here</a>)</span
+                >
+              </div>
+              <div class="drop-container hide">
+                <p>Drop your photos here</p>
+              </div>
+              <div class="thumbs-container row">
+                <!-- photo thumbnails will go here -->
+              </div>
             </div>
-            <div class="drop-container hide">
-              <p>Drop your photos here</p>
-            </div>
-            <div class="thumbs-container row">
-              <!-- photo thumbnails will go here -->
-            </div>
-          </div>
-          <button type="submit" class="form-control btn btn-primary">
-            Submit
-          </button>
-        </form>
+            <button type="submit" class="form-control btn btn-primary col-3">
+              Submit
+            </button>
+          </form>
+        </div><!-- //.new-comment -->
       </section>
     </div>
     <!-- // comments-container -->

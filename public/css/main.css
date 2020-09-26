@@ -234,10 +234,9 @@ ul {
   content: '';
   display: none;
 }
-.info-window .expand-contract-button {
-  /* position: absolute;
-  top: 0;
-  right: 50px; */
+.info-window .expand-contract-button img,
+button.dropdown-toggle img {
+  width: 30px;
 }
 
 .info-window-content {
