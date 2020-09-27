@@ -1108,7 +1108,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
     ${contextMenuString}
     <header>
         <h2>${data.title}</h2>
-        <p class="instructions">${attribution}</p>
+        <p class="instructions attribution lead">${attribution}</p>
     </header>
     <div class="feedback alert alert-success hide"></div>
     <article>
@@ -1171,7 +1171,7 @@ Posted by
 <div class="issue-detail comment" ws-comment-id="${data._id}">
     ${contextMenuString}
     <header>
-        <p class="instructions">${attribution}</p>
+        <p class="instructions attribution lead">${attribution}</p>
     </header>
     <article>
     ${imgString}
@@ -1191,6 +1191,9 @@ Posted by
 }
 
 const deleteComment = (commentId, issueId) => {
+  // put up one small barrier
+  if (!window.confirm(`Delete this comment?`)) return
+
   // delete the given comment from the given issue
   // console.log(`deleting comment: ${commentId} from issue ${issueId}`)
   // send delete request to server
@@ -1375,6 +1378,8 @@ const showInfoWindow = (marker) => {
   // activate delete button
   $('.delete-issue-link').click((e) => {
     e.preventDefault()
+    // put up one small barrier
+    if (!window.confirm(`Delete this post?`)) return
 
     // grab the id of the issue to delete
     const issueId = $(e.target).attr('ws-issue-id')

@@ -323,6 +323,11 @@ button.dropdown-toggle img {
   color: #cccccc;
 }
 
+.attribution {
+  font-size: 15px;
+  /* color: #bbb; */
+}
+
 /* photo carousel */
 .carousel {
   width: 100%;
@@ -470,6 +475,11 @@ button.dropdown-toggle img {
   border-top: 1px dotted #555;
   padding-top: 20px;
 }
+.issue-detail.comment header {
+  /** override default issue-detail headers **/
+  padding-top: 15px;
+}
+
 .existing-comments {
   margin-bottom: 20px;
 }
