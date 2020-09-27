@@ -104,7 +104,7 @@ const userRouter = ({ config }) => {
       emailService.send(
         user.email,
         'Welcome!',
-        `Dear ${user.handle} - Welcome to Wikistreets!\n\nTo get started, just visit wikistreets.io`
+        `Dear ${user.handle} - Welcome to Wikistreets!\n\nTo get started, just visit https://wikistreets.io`
       )
 
       // if this signup is from an email invitation, let this user edit the map they were invited to
@@ -188,7 +188,7 @@ const userRouter = ({ config }) => {
           emailService.send(
             user.email,
             'Password reset',
-            `${newPassword}\n\nTo get started, just visit wikistreets.io`
+            `${newPassword}\n\nTo get started, just visit https://wikistreets.io`
           )
         } else {
           err = 'No account found with that email'
