@@ -1466,7 +1466,7 @@ const showInfoWindow = (marker) => {
       $('.info-window-content .comment-form-container').offset().top
     )
     $('.info-window-content .comment-form-container textarea').focus() // focus on textarea
-    $('.info-window-content .show-comment-form-button button').hide() // hide the button
+    $('.info-window-content .show-comment-form-button').hide() // hide the button
   })
 
   // expand textarea when clicked into
@@ -1543,6 +1543,10 @@ const showInfoWindow = (marker) => {
         // reset the form
         $('.info-window-content form').get(0).reset()
         fuploader.reset()
+
+        // hide comment form and show button again
+        $('.info-window-content .show-comment-form-button').show() // show the button
+        $('.info-window-content .comment-form-container').hide() // show the button
 
         // hide spinner when done
         hideSpinner($('.info-window'))
