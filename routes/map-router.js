@@ -12,6 +12,7 @@ const passportConfig = require('../passportConfig')
 
 // database schemas and models
 const mongoose = require('mongoose')
+const ObjectId = require('mongoose').Types.ObjectId
 const { Map } = require('../models/map')
 const { Issue } = require('../models/issue')
 const { User } = require('../models/user')
@@ -117,82 +118,69 @@ const mapRouter = ({ config }) => {
     }
   )
 
-  router.get('/map/remove/:mapId', passportJWT, async (req, res) => {
-    const mapId = req.params.mapId
-    console.log(`removing map ${mapId}...`)
-    // find the map in question
-    let errorMessage = ''
-    let map = await Map.findOne({
-      publicId: mapId,
-    }).catch((err) => {
-      errorMessage = err
-    })
-    if (map) {
-      console.log(`found map ${map._id}`)
-      let user = req.user
-      // first, remove this map from this user's list of maps
-      user = await User.findOneAndUpdate(
-        {
-          _id: req.user._id,
-        },
-        {
-          $pull: { maps: map._id },
-        },
-        {
-          new: true, // return updated doc
-        },
-        (err, doc) => {
-          if (err) {
-            console.log('error pulling map from user list')
-            errorMessage = err
-          } else {
-            console.log('pulled map from user list')
-          }
+  router.get(
+    '/map/remove/:mapId',
+    passportJWT,
+    [param('mapId').not().isEmpty().trim()],
+    async (req, res) => {
+      try {
+        // check for validation errors
+        const errors = validationResult(req)
+        if (!errors.isEmpty()) {
+          throw 'No map specified'
         }
-      )
 
-      // remove this user from the map's list of contributors
-      map.contributors.pull(user)
-      if (map.contributors.length == 0) {
-        console.log(`no more contributors`)
-        // if there are no more contributors to the map, delete it completely
-        await Map.deleteOne({
-          _id: map._id,
-        }).catch((err) => {
-          errorMessage = err
+        const mapId = req.params.mapId
+
+        console.log(`finding map ${mapId}...`)
+        // find the map in question, assuming the user is in-fact a contributor
+        let map = await Map.findOne({
+          publicId: mapId,
+          contributors: req.user, // user must be a contributor in order to match
         })
-      } else {
-        console.log(`other contributors exist`)
-        // remove this user from the map, but keep the map for other users
-        map = await map.save((err, doc) => {
-          if (err) {
-            errorMessage = err
-          } else {
-            console.log(`saved map updates`)
+        console.log(`found map ${map._id}`)
+
+        // remove this user from the map's list of contributors
+        map.contributors.pull(req.user)
+        if (map.contributors.length == 0) {
+          console.log(`no more contributors`)
+          // if there are no more contributors to the map, delete it completely
+          await Map.deleteOne({
+            _id: map._id,
+          })
+        } else {
+          console.log(`other contributors exist`)
+          // remove this user from the map, but keep the map for other users
+          map = await map.save()
+          console.log('saved map without this user')
+        }
+
+        // remove this map from this user's list of maps
+        await User.update(
+          {
+            _id: req.user._id,
+          },
+          {
+            $pull: { maps: map._id },
           }
+        )
+
+        // all worked well... tell the client
+        res.json({
+          status: true,
+          message: 'success',
+        })
+      } catch (err) {
+        // for all errors...
+        console.log(`Error: ${err}`)
+        return res.status(500).json({
+          status: false,
+          message: err,
+          error: err,
         })
       }
-    } // if map
-    else {
-      errorMessage = 'Unable to find map.'
     }
-
-    // for all errors...
-    if (errorMessage) {
-      console.log(`Error: ${errorMessage}`)
-      return res.status(500).json({
-        status: false,
-        message: errorMessage,
-        error: errorMessage,
-      })
-    } else {
-      // all worked well...
-      res.json({
-        status: true,
-        message: 'success',
-      })
-    }
-  })
+  )
 
   // route to change collaboration settings
   router.post(
@@ -215,11 +203,32 @@ const mapRouter = ({ config }) => {
         })
       }
 
+      // verify that this user has editor permissions
+      let map = Map.findOne({
+        publicId: mapId,
+        $or: [{ limitContributors: false }, { contributors: req.user }],
+      })
+      if (!map)
+        throw 'You do not have permission to modify collaboration settings'
+
       // console.log(JSON.stringify(req.body, null, 2))
 
       // extract any new collaborators
-      const newContributorEmails = req.body.add_collaborators.split(',')
-      const nonUserContributorEmails = [...newContributorEmails] // assume none are users right now
+      let newContributorEmails = req.body.add_collaborators.split(',')
+      let nonUserContributorEmails = [...newContributorEmails] // assume none are users right now
+      // clean up user lists... some kind of bug where the array has a blank string if none specified
+      if (
+        nonUserContributorEmails.length == 1 &&
+        nonUserContributorEmails[0] == ''
+      ) {
+        // make it a proper blank string
+        nonUserContributorEmails = []
+      }
+      if (newContributorEmails.length == 1 && newContributorEmails[0] == '') {
+        // make it a proper blank string
+        newContributorEmails = []
+      }
+
       const newContributors = []
       // match emails to ids for any new collaborators
       await User.find(
@@ -259,7 +268,7 @@ const mapRouter = ({ config }) => {
       }
 
       // make the damn map updates
-      const map = await Map.findOneAndUpdate(
+      map = await Map.findOneAndUpdate(
         { publicId: req.body.mapId },
         updates,
         { new: true } // return updated document

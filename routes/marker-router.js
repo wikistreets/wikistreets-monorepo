@@ -98,7 +98,7 @@ const markerRouter = ({ config }) => {
     }
   })
 
-  // route for HTTP GET requests to the map JSON dataa
+  // route for HTTP GET requests to the map KML data
   // router.get('/kml', (req, res) => {
   //   const mapId = req.query.mapId // get mapId from query string
   //   const data = Issue.find({ mapId }, (err, docs) => {
@@ -166,16 +166,20 @@ const markerRouter = ({ config }) => {
       if (mapId && issueId) {
         // remove the issue from the map
         const map = await Map.findOneAndUpdate(
-          { publicId: mapId },
+          {
+            publicId: mapId,
+            $or: [{ limitContributors: false }, { contributors: req.user }],
+          },
           {
             $pull: { issues: { _id: issueId } }, // remove the issue from the map
           },
           { new: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         )
           .then((map) => {
+            if (!map) throw 'You do not have permission to modify this map'
             // console.log(JSON.stringify(map, null, 2))
             // save changes
-            map.save()
+            // map.save()
             // return the response to client
             res.json({
               status: true,
@@ -284,7 +288,10 @@ const markerRouter = ({ config }) => {
 
         // save the updated map, if existent, or new map if not
         const map = await Map.findOneAndUpdate(
-          { publicId: mapId },
+          {
+            publicId: mapId,
+            $or: [{ limitContributors: false }, { contributors: req.user }],
+          },
           updates,
           { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         )
@@ -295,6 +302,7 @@ const markerRouter = ({ config }) => {
             console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
           })
 
+        if (!map) throw 'No map found.'
         // console.log(`MAP: ${JSON.stringify(map, null, 2)}`)
 
         // tack on the current user to the issue
@@ -427,7 +435,11 @@ const markerRouter = ({ config }) => {
         // find and update the Issue object
         // issueObjectId = ObjectId.fromString(issueId)
         await Map.update(
-          { publicId: mapId, 'issues._id': issueId },
+          {
+            publicId: mapId,
+            $or: [{ limitContributors: false }, { contributors: req.user }],
+            'issues._id': issueId,
+          },
           {
             $set: {
               centerPoint: data.position, // map's center point
@@ -448,7 +460,11 @@ const markerRouter = ({ config }) => {
 
         // pull deleted images
         let map = await Map.findOneAndUpdate(
-          { publicId: mapId, 'issues._id': issueId },
+          {
+            publicId: mapId,
+            $or: [{ limitContributors: false }, { contributors: req.user }],
+            'issues._id': issueId,
+          },
           {
             $pull: {
               'issues.$.photos': {
@@ -468,7 +484,11 @@ const markerRouter = ({ config }) => {
         if (req.files.length) {
           const filesToAdd = req.files
           map = await Map.findOneAndUpdate(
-            { publicId: mapId, 'issues._id': issueId },
+            {
+              publicId: mapId,
+              $or: [{ limitContributors: false }, { contributors: req.user }],
+              'issues._id': issueId,
+            },
             {
               $push: {
                 'issues.$.photos': {
@@ -575,7 +595,11 @@ const markerRouter = ({ config }) => {
 
         // set up changes we want to make to the map
         const map = await Map.findOneAndUpdate(
-          { publicId: mapId, 'issues._id': issueId },
+          {
+            publicId: mapId,
+            // $or: [{ limitContributors: false }, { contributors: req.user }], // currently allowing any users to comment
+            'issues._id': issueId,
+          },
           {
             $push: {
               'issues.$.comments': comment,
@@ -593,6 +617,8 @@ const markerRouter = ({ config }) => {
             errors = err
             console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
           })
+
+        if (!map) throw 'No map found'
 
         // increment the number of posts this user has created
         User.update(
@@ -672,7 +698,11 @@ const markerRouter = ({ config }) => {
       if (mapId && issueId && commentId) {
         // remove the comment from the issue on the map
         const map = await Map.findOneAndUpdate(
-          { publicId: mapId, 'issues._id': issueId },
+          {
+            publicId: mapId,
+            $or: [{ limitContributors: false }, { contributors: req.user }],
+            'issues._id': issueId,
+          },
           {
             $pull: { 'issues.$.comments': { _id: commentId } }, // remove the comment from the issue
           },

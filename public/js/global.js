@@ -900,7 +900,7 @@ const reverseGeocode = async (coords) => {
       let street = 'Anonymous location'
       let address = 'Anonymous location'
       if (data.features.length && data.features[0].place_name) {
-        console.log(JSON.stringify(data.features, null, 2))
+        // console.log(JSON.stringify(data.features, null, 2))
         address = data.features[0].place_name
         street = address.substring(0, address.indexOf(',')) // up till the comma
         // console.log(address)
@@ -1605,6 +1605,8 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   // hide any existing spinners
   hideSpinner($('.info-window'))
 
+  // scroll the info window to the top, in case it was previously scrolled down
+  $('.info-window').scrollTop(0)
   $('.info-window').show()
   $('.info-window')
     .stop()
@@ -1619,7 +1621,7 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
       }
     )
 
-  // animate the info window open and scroll it to the top once open
+  // animate the map open
   $('.issue-map, #map')
     .stop()
     .animate(
@@ -1627,8 +1629,6 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
         height: `${mapHeightPx}px`,
       },
       () => {
-        // scroll the info window to the top, in case it was previously scrolled down
-        $('.info-window').scrollTop(0)
         // inform the map that it has been dynamically resized
         setTimeout(() => {
           app.map.element.invalidateSize(true)

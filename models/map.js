@@ -14,6 +14,7 @@ const mapSchema = new Schema(
     publicId: {
       type: String,
       lowercase: true,
+      unique: true,
       required: true,
     },
     title: {
