@@ -2672,6 +2672,10 @@ const openMapSelectorPanel = async () => {
     app.auth.getToken() && app.markers.markers.length > 0
       ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Fork</a>`
       : ''
+  const renameLinkString =
+    app.auth.getToken() && app.markers.markers.length > 0
+      ? `<a class="rename-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Rename</a>`
+      : ''
   const collaborateLinkString =
     app.auth.isEditor() && app.markers.markers.length > 0
       ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Invite collaborators...</a>`
@@ -2686,6 +2690,7 @@ const openMapSelectorPanel = async () => {
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
         <a class="copy-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Share link</a>
+        ${renameLinkString}
         ${collaborateLinkString}
         ${forkLinkString}
         ${deleteLinkString}
@@ -2750,21 +2755,19 @@ const openMapSelectorPanel = async () => {
 
     // pre-select the correct contributor settings
     if (app.map.limitContributors) {
-      $('.settings-map-container input#limit_contributors_public').removeAttr(
-        'checked'
-      )
-      $('.settings-map-container input#limit_contributors_private').attr(
-        'checked',
-        'checked'
-      )
+      $(
+        '.info-window-content .settings-map-container input#limit_contributors_public'
+      ).removeAttr('checked')
+      $(
+        '.info-window-content .settings-map-container input#limit_contributors_private'
+      ).attr('checked', 'checked')
     } else {
-      $('.settings-map-container input#limit_contributors_public').attr(
-        'checked',
-        'checked'
-      )
-      $('.settings-map-container input#limit_contributors_private').removeAttr(
-        'checked'
-      )
+      $(
+        '.info-window-content .settings-map-container input#limit_contributors_public'
+      ).attr('checked', 'checked')
+      $(
+        '.info-window-content .settings-map-container input#limit_contributors_private'
+      ).removeAttr('checked')
     }
 
     // add collaborators behavior
@@ -2786,7 +2789,10 @@ const openMapSelectorPanel = async () => {
     })
   })
   // add cancel link behavior
-  $('.settings-map-form .cancel-link', $('.info-window-content')).click((e) => {
+  $(
+    '.info-window-content .settings-map-form .cancel-link',
+    $('.info-window-content')
+  ).click((e) => {
     e.preventDefault()
     // revert to the map list view
     $('.info-window-content .map-details-container').show()
@@ -2915,6 +2921,10 @@ const openMapSelectorPanel = async () => {
       console.log('not sending to server')
     }
 
+    // wipe the form for next time
+    $('.info-window-content .settings-map-form').get(0).reset()
+    $('.info-window-content .collaborators-list').html('') // wipe out visual list
+
     // close the infowindow
     // collapseInfoWindow()
     // show the settings map form
@@ -2929,7 +2939,7 @@ const openMapSelectorPanel = async () => {
     setTimeout(() => {
       feedbackEl.fadeOut()
     }, 3000)
-  })
+  }) // settings-map-form submit
 } // openMapSelectorPanel
 
 // enable bootstrap tooltips
