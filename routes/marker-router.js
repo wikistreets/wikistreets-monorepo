@@ -762,3 +762,5 @@ const markerRouter = ({ config }) => {
 
   return router
 }
+
+module.exports = markerRouter
