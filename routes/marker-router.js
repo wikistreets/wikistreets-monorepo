@@ -22,6 +22,9 @@ const { ImageService } = require('../services/ImageService')
 const handleImages = require('../middlewares/handle-images.js') // our own image handler
 const user = require('../models/user')
 
+// email service
+const { EmailService } = require('../services/EmailService')
+
 // markdown support
 // const marked = require('marked')
 
@@ -597,16 +600,18 @@ const markerRouter = ({ config }) => {
         const map = await Map.findOneAndUpdate(
           {
             publicId: mapId,
-            // $or: [{ limitContributors: false }, { contributors: req.user }], // currently allowing any users to comment
+            // $or: [{ limitContributors: false }, { contributors: req.user }], // currently allowing any users to comment... uncommemnt this to only allow listed contributors
             'issues._id': issueId,
           },
           {
             $push: {
               'issues.$.comments': comment,
             },
-            $addToSet: {
-              contributors: req.user,
-            },
+            // don't make this user a contributor since we're allowing anyone to comment
+            // and becoming a contributor gives them admin rights
+            // $addToSet: {
+            //   contributors: req.user,
+            // },
           },
           { new: true }
         )
@@ -619,6 +624,26 @@ const markerRouter = ({ config }) => {
           })
 
         if (!map) throw 'No map found'
+
+        // send email to the original poster, if a different user
+        map.issues.forEach(async (issue) => {
+          // only send emails if it's not the user themselves who commented
+          // if (issue.user._id != req.user._id) {
+          if (issue._id == issueId) {
+            // get the email of this user... it's not included in map data we got earlier for privacy reasons
+            const recipient = await User.findOne({ _id: issue.user._id })
+            // console.log(`sending email to ${recipient.email}`)
+            // send email notification
+            const mapPhrase = map.title ? `, on the map, '${map.title}'` : ''
+            const emailService = new EmailService({})
+            emailService.send(
+              recipient.email,
+              `New comment from ${req.user.handle} on '${issue.title}'!`,
+              `Dear ${recipient.handle} - ${req.user.handle} commented on your post, '${issue.title}'${mapPhrase}!\n\nTo view, visit https://wikistreets.io/map/${map.publicId}#${issue._id}`
+            )
+          }
+          // }
+        })
 
         // increment the number of posts this user has created
         User.update(
