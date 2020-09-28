@@ -2678,7 +2678,7 @@ const openMapSelectorPanel = async () => {
       ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Fork</a>`
       : ''
   const renameLinkString =
-    app.auth.getToken() && app.markers.markers.length > 0
+    app.auth.isEditor() && app.markers.markers.length > 0
       ? `<a class="rename-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Rename</a>`
       : ''
   const collaborateLinkString =
