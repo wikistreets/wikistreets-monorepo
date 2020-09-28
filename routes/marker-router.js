@@ -643,11 +643,14 @@ const markerRouter = ({ config }) => {
                 const mapPhrase = map.title
                   ? `, on the map, '${map.title}'`
                   : ''
+                const bodyPhrase = data.body
+                  ? `\n\n--\n${data.body.substr(0, 100)}...\n--\n\n`
+                  : ''
                 const emailService = new EmailService({})
                 emailService.send(
                   recipient.email,
                   `New comment from ${req.user.handle} on '${issue.title}'!`,
-                  `Dear ${recipient.handle},\n\n${req.user.handle} commented on your post, '${issue.title}'${mapPhrase}!\n\nTo view in full, please visit https://wikistreets.io/map/${map.publicId}#${issue._id}`,
+                  `Dear ${recipient.handle},\n\n${req.user.handle} commented on your post, '${issue.title}'${mapPhrase}!${bodyPhrase}\n\nTo view in full, please visit https://wikistreets.io/map/${map.publicId}#${issue._id}`,
                   true,
                   recipient._id
                 )
