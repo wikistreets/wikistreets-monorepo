@@ -27,7 +27,7 @@ const userSchema = new Schema(
     numPosts: { type: Number, default: 0 },
     numComments: { type: Number, default: 0 },
     maps: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
-    notifications: notificationsSchema,
+    notifications: { type: notificationsSchema, required: true },
   },
   { timestamps: true }
 )
