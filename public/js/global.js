@@ -116,7 +116,8 @@ const app = {
     },
     zoom: {
       default: 4,
-      issuelocate: 16,
+      issuelocate: 17,
+      issueview: 15,
       getDefault: () => {
         return localStorage.getItem('zoom')
           ? parseInt(localStorage.getItem('zoom'))
@@ -1355,6 +1356,11 @@ const showInfoWindow = (marker) => {
     mapHeight = 0
   }
 
+  // zoom in nice and close, if zoomed out
+  if (app.map.zoom.getDefault() < app.map.zoom.issueview) {
+    app.map.element.setZoom(app.map.zoom.issueview)
+  }
+
   expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
     // hack to avoid duplicate marker click events (see where we check this value on click)
 
@@ -1772,8 +1778,10 @@ const meMarkerButtonClick = async () => {
 const openIssueForm = async (point = false) => {
   // zoom into map
   if (app.mode != 'issuelocate') {
-    // zoom in nice and close
-    // app.map.element.setZoom(app.map.zoom.issuelocate)
+    // zoom in nice and close, if zoomed out
+    if (app.map.zoom.getDefault() < app.map.zoom.issuelocate) {
+      app.map.element.setZoom(app.map.zoom.issuelocate)
+    }
 
     // keep track
     app.mode = 'issuelocate'
