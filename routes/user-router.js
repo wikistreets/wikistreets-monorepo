@@ -216,6 +216,18 @@ const userRouter = ({ config }) => {
       })
   })
 
+  // route for unsubscribing from email notifications
+  router.get(
+    '/unsubscribe/email',
+    passportJWT, // jwt authentication
+    async (req, res, next) => {
+      // change their email notifications
+      req.user.notifications.email = false
+      req.user.save()
+      res.send('You have been unsubscribed from email notifications.')
+    }
+  )
+
   // try to gain access to some content that is hidden behind the JWT authentication wall
   router.get('/secret', passportJWT, (req, res) => {
     // passport will only execute this if correct jwt token supplied
