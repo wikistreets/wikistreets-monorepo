@@ -643,9 +643,13 @@ const markerRouter = ({ config }) => {
                 const mapPhrase = map.title
                   ? `, on the map, '${map.title}'`
                   : ''
-                const bodyPhrase = data.body
-                  ? `\n\n"""\n${data.body.substr(0, 100)}...\n"""`
+                const imagesPhrase = data.photos.length
+                  ? '[images not displayed]'
                   : ''
+                const bodyPhrase = `\n\n"""\n${data.body.substr(
+                  0,
+                  100
+                )}... ${imagesPhrase}\n"""`
                 const emailService = new EmailService({})
                 emailService.send(
                   recipient.email,
