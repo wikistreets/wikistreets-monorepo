@@ -895,7 +895,6 @@ const resizeMap = () => {
   if (app.map && app.map.element) {
     // check whether an issue is showing
     if (app.markers.current) {
-      console.log('resizing')
       // if so, we need to re-size the map and info panel
       let infoWindowHeight = 70
       let mapHeight = 30
@@ -916,7 +915,7 @@ const handleResizeWindow = () => {
   // wait half a second because safari mobile has a bug sizing elements otherwise
   // this still doesn't stop all the buginess on safari mobile when orientation changes
   resizeTimeout = window.setTimeout(() => {
-    console.log('resizing!')
+    // console.log('resizing!')
     setVh()
     resizeMap()
   }, 400)
@@ -1661,7 +1660,7 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   const infoWindowHeightPx = parseInt(vH * (infoWindowHeight / 100)) // desired height in pixels
   const mapHeightPx = parseInt(vH * (mapHeight / 100)) // desired height in pixels
 
-  console.log(`vh=${vH};iwh=${infoWindowHeightPx};mh=${mapHeightPx}`)
+  // console.log(`vh=${vH};iwh=${infoWindowHeightPx};mh=${mapHeightPx}`)
 
   // hide any existing spinners
   hideSpinner($('.info-window'))
