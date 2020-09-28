@@ -29,12 +29,18 @@ function EmailService({ config }) {
   }
 
   // send the mail!
-  this.send = (to, subject, text, unsubscribeLink = true) => {
+  this.send = (
+    to,
+    subject,
+    text,
+    unsubscribeLink = true,
+    recipientUserId = false
+  ) => {
     // add signature
     text += '\n\nSincerely,\nThe Wikistreets.io Team'
     // tack on unsubscribe info, if desired
-    if (unsubscribeLink) {
-      text += `\n\n--\nWe aim to keep email notifications to a minimum, only sending email when we think it is of direct interest to you.  If you wish to unsubscribe from all email notifications, first log in and then visit https://wikistreets.io/users/unsubscribe/email.`
+    if (unsubscribeLink && recipientUserId) {
+      text += `\n\n--\nWe aim to keep email notifications to a minimum, only sending email when we think it is of direct interest to your use of your maps.  If you wish to unsubscribe from all email notifications, first log in and then visit https://wikistreets.io/users/unsubscribe/email/${recipientUserId}.`
     }
 
     const transporter = this.getTransporter()

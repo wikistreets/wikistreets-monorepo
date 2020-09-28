@@ -629,7 +629,12 @@ const markerRouter = ({ config }) => {
         map.issues.forEach(async (issue) => {
           // only send emails if it's not the user themselves who commented
           if (issue._id == issueId) {
-            if (issue.user._id != req.user._id) {
+            if (
+              issue.user._id.toString().trim() != req.user._id.toString().trim()
+            ) {
+              console.log(
+                `creator: ${issue.user._id.valueOf()}\nsenator: ${req.user._id.valueOf()}`
+              )
               // get the email of this user... it's not included in map data we got earlier for privacy reasons
               const recipient = await User.findOne({ _id: issue.user._id })
               // console.log(`sending email to ${recipient.email}`)
@@ -642,7 +647,9 @@ const markerRouter = ({ config }) => {
                 emailService.send(
                   recipient.email,
                   `New comment from ${req.user.handle} on '${issue.title}'!`,
-                  `Dear ${recipient.handle},\n\n${req.user.handle} commented on your post, '${issue.title}'${mapPhrase}!\n\nTo view, visit https://wikistreets.io/map/${map.publicId}#${issue._id}`
+                  `Dear ${recipient.handle},\n\n${req.user.handle} commented on your post, '${issue.title}'${mapPhrase}!\n\nTo view in full, please visit https://wikistreets.io/map/${map.publicId}#${issue._id}`,
+                  true,
+                  recipient._id
                 )
               }
             }

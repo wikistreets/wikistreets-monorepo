@@ -1,6 +1,6 @@
 // express
 const express = require('express')
-const { body, validationResult } = require('express-validator')
+const { body, param, validationResult } = require('express-validator')
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const passportConfig = require('../passportConfig')
@@ -218,13 +218,27 @@ const userRouter = ({ config }) => {
 
   // route for unsubscribing from email notifications
   router.get(
-    '/unsubscribe/email',
-    passportJWT, // jwt authentication
-    async (req, res, next) => {
-      // change their email notifications
-      req.user.notifications.email = false
-      req.user.save()
-      res.send('You have been unsubscribed from email notifications.')
+    '/unsubscribe/email/:userId',
+    [param('userId').not().isEmpty().trim()],
+
+    async (req, res) => {
+      // find the user
+      const user = await User.findOneAndUpdate(
+        {
+          _id: req.params.userId,
+        },
+        {
+          'notifications.email': false,
+        }
+      )
+      if (!user) {
+        const msg = `No user found ${req.params.userId}.`
+        res.send(msg)
+        throw msg
+      }
+      res.send(
+        `Hi ${user.handle}! - you have been unsubscribed from email notifications.`
+      )
     }
   )
 
