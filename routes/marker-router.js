@@ -632,9 +632,9 @@ const markerRouter = ({ config }) => {
             if (
               issue.user._id.toString().trim() != req.user._id.toString().trim()
             ) {
-              console.log(
-                `creator: ${issue.user._id.valueOf()}\nsenator: ${req.user._id.valueOf()}`
-              )
+              // console.log(
+              //   `creator: ${issue.user._id.valueOf()}\nsenator: ${req.user._id.valueOf()}`
+              // )
               // get the email of this user... it's not included in map data we got earlier for privacy reasons
               const recipient = await User.findOne({ _id: issue.user._id })
               // console.log(`sending email to ${recipient.email}`)
