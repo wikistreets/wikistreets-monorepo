@@ -1069,7 +1069,7 @@ Posted by
 near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 `
 
-  let imgString = createPhotoCarousel(data.photos)
+  let imgString = createPhotoCarousel(data.photos, data._id)
   // console.log(imgString)
 
   // generate the context menu
@@ -1146,7 +1146,7 @@ Posted by
 <a class="user-link" ws-user-id="${data.user._id}" href="#">${data.user.handle}</a> ${date}
 `
 
-  let imgString = createPhotoCarousel(data.photos)
+  let imgString = createPhotoCarousel(data.photos, data._id)
   // console.log(imgString)
 
   // generate the context menu
@@ -1216,10 +1216,12 @@ const deleteComment = (commentId, issueId) => {
     })
 }
 
-const createPhotoCarousel = (photos) => {
+const createPhotoCarousel = (photos, uniqueId) => {
   // abort if no photos
   if (!photos || photos.length == 0) return ''
 
+  // generate a unique carousel id
+  const carouselId = `photo-carousel-${uniqueId}`
   // loop through photos
   let slides = ''
   let indicators = ''
@@ -1232,7 +1234,7 @@ const createPhotoCarousel = (photos) => {
       </div>
 `
     let indicator = `
-          <li data-target="#photo-carousel-0" data-slide-to="${i}" class="${activeClass}"></li>
+          <li data-target="#${carouselId}" data-slide-to="${i}" class="${activeClass}"></li>
 `
     slides = slides + slide
     indicators = indicators + indicator
@@ -1247,6 +1249,10 @@ const createPhotoCarousel = (photos) => {
   // place slides and indicators into the HTML carousel template
   $('#carouselTemplate .carousel-indicators').html(indicators)
   $('#carouselTemplate .carousel-inner').html(slides)
+  // update with this carousel's unique id
+  $('#carouselTemplate > div.carousel').attr('id', carouselId)
+  $('#carouselTemplate .carousel-control-prev').attr('href', `#${carouselId}`)
+  $('#carouselTemplate .carousel-control-next').attr('href', `#${carouselId}`)
 
   // return the update carousel html code
   return $('#carouselTemplate').html()
