@@ -644,7 +644,7 @@ const markerRouter = ({ config }) => {
                   ? `, on the map, '${map.title}'`
                   : ''
                 const bodyPhrase = data.body
-                  ? `\n\n--\n${data.body.substr(0, 100)}...\n--\n\n`
+                  ? `\n\n"""\n${data.body.substr(0, 100)}...\n"""`
                   : ''
                 const emailService = new EmailService({})
                 emailService.send(
