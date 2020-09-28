@@ -41,9 +41,9 @@ const app = {
   browserGeolocation: {
     enabled: false,
     coords: {
-      // default geolocation near center of croton-on-hudson
-      lat: 41.1974622,
-      lng: -73.8802434,
+      // default geolocation at a random point
+      lat: Math.random() * 140 - 70, // bewteen -70 to +70... sorry arctic and antarctic
+      lng: Math.random() * 360 - 180, // bewteen -180 to +180
     },
     address: null,
     options: {
@@ -110,12 +110,21 @@ const app = {
     htmlElementId: 'map',
     htmlElementSelector: '#map', // the id of the map element in the html
     geolocation: {
-      lat: 41.1974622,
-      lng: -73.8802434,
+      // default geolocation at a random point
+      lat: Math.random() * 140 - 70, // bewteen -70 to +70... sorry arctic and antarctic
+      lng: Math.random() * 360 - 180, // bewteen -180 to +180
     },
     zoom: {
-      default: 14,
+      default: 4,
       issuelocate: 16,
+      getDefault: () => {
+        return localStorage.getItem('zoom')
+          ? parseInt(localStorage.getItem('zoom'))
+          : 4
+      },
+      setDefault: (zoomLevel = 4) => {
+        localStorage.setItem('zoom', zoomLevel)
+      },
     },
     contributors: [],
     numContributors: 0,
@@ -661,7 +670,7 @@ async function initMap() {
     // attributionControl: false,
     zoomControl: false,
     doubleClickZoom: false,
-  }).setView([coords.lat, coords.lng], app.map.zoom.default)
+  }).setView([coords.lat, coords.lng], app.map.zoom.getDefault())
   app.map.element.attributionControl.setPrefix('')
 
   // load map tiles
@@ -777,6 +786,13 @@ async function initMap() {
   $('.logo').click(openAboutUsForm)
 
   // handle map events...
+
+  app.map.element.on('zoom', (e) => {
+    if (e.target && e.target._zoom) {
+      // save this zoom level as new default
+      app.map.zoom.setDefault(e.target._zoom)
+    }
+  })
 
   app.map.element.on('dblclick', (e) => {
     const point = e.latlng
