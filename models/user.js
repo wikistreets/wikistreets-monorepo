@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs')
 const { Map, mapSchema } = require('./map')
 
 const notificationsSchema = new Schema({
-  email: { type: Boolean, default: true },
+  email: { type: Boolean, default: true, required: true },
 })
 
 // a user
