@@ -476,8 +476,12 @@ button.dropdown-toggle img {
   padding-top: 20px;
 }
 .issue-detail.comment header {
-  /** override default issue-detail headers **/
+  /** override default for issue-detail **/
   padding-top: 15px;
+}
+.issue-detail.comment div.context-menu {
+  /** override default for issue-detail **/
+  margin-top: 0px;
 }
 
 .existing-comments {
