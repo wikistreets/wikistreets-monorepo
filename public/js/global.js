@@ -895,7 +895,19 @@ window.addEventListener('orientationchange', setVh)
 const resizeMap = () => {
   // don't do this before map has loaded
   if (app.map && app.map.element) {
-    app.map.element.invalidateSize(true) // notify leaflet that size has changed
+    // check whether an issue is showing
+    if (app.markers.current) {
+      // if so, we need to re-size the map and info panel
+      let infoWindowHeight = 70
+      let mapHeight = 30
+      if (app.infoPanel.isExpanded) {
+        // override proportions if info panel is already expanded to full height
+        infoWindowHeight = 100
+        mapHeight = 0
+      }
+      expandInfoWindow(infoWindowHeight, mapHeight)
+    }
+    // app.map.element.invalidateSize(true) // notify leaflet that size has changed
   }
 }
 window.addEventListener('resize', resizeMap)
