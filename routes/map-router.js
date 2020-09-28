@@ -312,7 +312,7 @@ const mapRouter = ({ config }) => {
         emailService.send(
           email,
           `Invitation to collaborate on '${mapTitle}'!`,
-          `You have been cordially invited by ${req.user.handle} to collaborate on '${mapTitle}'!\n\nTo get started, visit the map on wikistreets.io by clicking the following link: ${mapLink}`
+          `You have been cordially invited by ${req.user.handle} to collaborate on '${mapTitle}'!\n\nTo get started, visit ${mapLink}!`
         )
       })
 

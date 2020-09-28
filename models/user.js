@@ -3,6 +3,10 @@ const Schema = mongoose.Schema
 const bcrypt = require('bcryptjs')
 const { Map, mapSchema } = require('./map')
 
+const notificationsSchema = new Schema({
+  email: { type: Boolean, default: true },
+})
+
 // a user
 const userSchema = new Schema(
   {
@@ -23,6 +27,7 @@ const userSchema = new Schema(
     numPosts: { type: Number, default: 0 },
     numComments: { type: Number, default: 0 },
     maps: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
+    notifications: notificationsSchema,
   },
   { timestamps: true }
 )

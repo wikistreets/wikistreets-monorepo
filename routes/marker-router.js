@@ -628,19 +628,23 @@ const markerRouter = ({ config }) => {
         // send email to the original poster, if a different user
         map.issues.forEach(async (issue) => {
           // only send emails if it's not the user themselves who commented
-          if (issue.user._id != req.user._id) {
-            if (issue._id == issueId) {
+          if (issue._id == issueId) {
+            if (issue.user._id != req.user._id) {
               // get the email of this user... it's not included in map data we got earlier for privacy reasons
               const recipient = await User.findOne({ _id: issue.user._id })
               // console.log(`sending email to ${recipient.email}`)
-              // send email notification
-              const mapPhrase = map.title ? `, on the map, '${map.title}'` : ''
-              const emailService = new EmailService({})
-              emailService.send(
-                recipient.email,
-                `New comment from ${req.user.handle} on '${issue.title}'!`,
-                `Dear ${recipient.handle} - ${req.user.handle} commented on your post, '${issue.title}'${mapPhrase}!\n\nTo view, visit https://wikistreets.io/map/${map.publicId}#${issue._id}`
-              )
+              // send email notification, if the recipient has not opted-out of emails
+              if (recipient.notifications.email) {
+                const mapPhrase = map.title
+                  ? `, on the map, '${map.title}'`
+                  : ''
+                const emailService = new EmailService({})
+                emailService.send(
+                  recipient.email,
+                  `New comment from ${req.user.handle} on '${issue.title}'!`,
+                  `Dear ${recipient.handle},\n\n${req.user.handle} commented on your post, '${issue.title}'${mapPhrase}!\n\nTo view, visit https://wikistreets.io/map/${map.publicId}#${issue._id}`
+                )
+              }
             }
           }
         })

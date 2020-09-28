@@ -104,7 +104,7 @@ const userRouter = ({ config }) => {
       emailService.send(
         user.email,
         'Welcome!',
-        `Dear ${user.handle} - Welcome to Wikistreets!\n\nTo get started, just visit https://wikistreets.io`
+        `Dear ${user.handle},\n\nWelcome to Wikistreets!\n\nTo get started, just visit https://wikistreets.io`
       )
 
       // if this signup is from an email invitation, let this user edit the map they were invited to
