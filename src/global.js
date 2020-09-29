@@ -2559,8 +2559,6 @@ const openUserProfile = async (handle, userId) => {
   app
     .myFetch(`${app.apis.wikistreets.getUserUrl}/${userId}`)
     .then((data) => {
-      const numIssues = data.numPosts
-
       // copy the user profile html into the infowindow
       const infoWindowHTML = $('.user-profile-container').html()
       $('.info-window-content').html(infoWindowHTML)
@@ -2570,7 +2568,8 @@ const openUserProfile = async (handle, userId) => {
       $('.info-window-content .member-since').text(
         DateDiff.asAge(data.createdAt)
       )
-      $('.info-window-content .num-posts').text(numIssues)
+      $('.info-window-content .num-posts').text(data.numPosts)
+      $('.info-window-content .num-comments').text(data.numComments)
       $('.info-window-content .num-maps').text(data.maps.length)
 
       // fill out the user profile's list of maps
