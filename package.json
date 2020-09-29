@@ -1,7 +1,8 @@
 {
-  "name": "street_audit",
+  "name": "wikistreets",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
+  "description": "Wikistreets is a simple yet powerful online map maker. Snap and map photos and notes while at home or on the road. Share your map and invite others to collaborate. Fork (i.e. copy) any map.",
   "main": "index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=production node index",
@@ -9,10 +10,11 @@
     "test": "cross-env NODE_ENV=test mocha --timeout 5000 __tests__/**/*.test.js",
     "report": "cross-env NODE_ENV=test nyc --reporter=lcov mocha --timeout 5000 __tests__/**/*.test.js",
     "text-report": "cross-env NODE_ENV=test nyc --reporter=text-summary mocha --timeout 5000 __tests__/**/*.test.js",
-    "nyc": "cross-env NODE_ENV=test nyc mocha --timeout 5000 __tests__/**/*.test.js"
+    "nyc": "cross-env NODE_ENV=test nyc mocha --timeout 5000 __tests__/**/*.test.js",
+    "build-browser-js": "webpack --config webpack.config.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "wikistreets.io",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -25,7 +27,6 @@
     "jpeg-autorotate": "^6.0.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.20",
-    "marked": "^1.1.1",
     "mongoose": "^5.9.1",
     "morgan": "^1.9.1",
     "multer": "^1.4.2",
@@ -37,16 +38,25 @@
     "sharp": "^0.25.2"
   },
   "devDependencies": {
+    "bootstrap": "^4.5.2",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
     "cross-env": "^7.0.2",
     "faker": "^4.1.0",
+    "jquery": "3.4.1",
+    "leaflet": "~1.3.1",
+    "leaflet-extra-markers": "^1.2.1",
+    "leaflet.markercluster": "^1.4.1",
+    "marked": "^1.2.0",
     "mocha": "^7.1.1",
     "nodemon": "^2.0.2",
     "nyc": "^15.0.0",
+    "popper.js": "^1.16.1",
     "rewire": "^5.0.0",
     "sinon": "^9.0.1",
-    "sinon-chai": "^3.5.0"
+    "sinon-chai": "^3.5.0",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12"
   },
   "nyc": {
     "exclude": [

@@ -58,8 +58,11 @@
 
     <title>Wikistreets - The collaborative browser-based map maker</title>
 
-    <!-- JQUERY -->
-    <script src="/static/frameworks/jquery/jquery-3.4.1.min.js"></script>
+    <!-- BUNDLED JS -->
+    <script type="text/javascript" src="/static/js/date_diff.js"></script>
+    <script type="text/javascript" src="/static/js/fuploader.js"></script>
+    <script type="text/javascript" src="/static/js/leaflet.bundle.js"></script>
+    <script type="text/javascript" src="/static/js/global.bundle.js"></script>
 
     <!-- BOOTSTRAP CDN -->
     <link
@@ -68,12 +71,6 @@
       integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
       crossorigin="anonymous"
     />
-    <script
-      src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"
-      integrity="sha384-LtrjvnR4Twt/qOuYxE721u19sVFLVSA4hf/rRt6PrZTmiPltdZcI7q7PXQBYTKyf"
-      crossorigin="anonymous"
-    ></script>
-
     <!-- LEAFLET.JS CDN -->
     <link
       rel="stylesheet"
@@ -81,26 +78,19 @@
       integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
       crossorigin=""
     />
-    <script
-      src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
-      integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-      crossorigin=""
-    ></script>
-
-    <!-- LEAFLET EXTRA MARKERS PLUGIN -->
+    <!-- FONTAWESOME FOR LEAFLET EXTRA MARKERS PLUGIN -->
     <link
       href="/static/frameworks/fontawesome-free-5.12.1-web/css/all.css"
       rel="stylesheet"
     />
-    <!--load all styles -->
+    <!--LEAFLET EXTRA MARKERS PLUGIN STYLES -->
     <link
       rel="stylesheet"
       href="/static/frameworks/leaflet.extra-markers/css/leaflet.extra-markers.min.css"
     />
-    <script src="/static/frameworks/leaflet.extra-markers/js/leaflet.extra-markers.min.js"></script>
 
     <!-- LEAFLET MARKER CLUSTERS PLUGIN -->
-    <link
+    <!-- <link
       rel="stylesheet"
       href="/static/frameworks/leaflet.markercluster/MarkerCluster.css"
     />
@@ -108,16 +98,10 @@
       rel="stylesheet"
       href="/static/frameworks/leaflet.markercluster/MarkerCluster.Default.css"
     />
-    <script src="/static/frameworks/leaflet.markercluster/leaflet.markercluster-src.js"></script>
-
-    <!-- MARKED MARKDOWN SUPPORT -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="/static/frameworks/leaflet.markercluster/leaflet.markercluster-src.js"></script> -->
 
     <!-- CUSTOM -->
     <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
-    <script type="text/javascript" src="/static/js/date_diff.js"></script>
-    <script type="text/javascript" src="/static/js/fuploader.js"></script>
-    <script type="text/javascript" src="/static/js/global.js"></script>
   </head>
   <body>
     <header>
@@ -422,14 +406,13 @@
         </div>
 
         <div class="map-popup-container hide">
-          <p>near <strong class="street-address"></strong></p>
-          <button
-            onclick="meMarkerButtonClick()"
-            class="btn btn-primary me-marker-go-button"
-          >
-            Create post at this location
-          </button>
-          <p>... or drag marker somewhere else!</p>
+          <div class="popup-content">
+            <p>near <strong class="street-address"></strong></p>
+            <button class="btn btn-primary me-marker-go-button" >
+              Create post at this location
+            </button>
+            <p>... or drag marker somewhere else!</p>
+          </div>
         </div>
       </form>
     </div>
