@@ -1897,7 +1897,7 @@ const openIssueForm = async (point = false) => {
 
     // update street address
     const address = await updateAddress(coords)
-    console.log(`coords: ${JSON.stringify(coords, null, 2)}`)
+    // console.log(`coords: ${JSON.stringify(coords, null, 2)}`)
 
     // attach a popup
     marker = attachMeMarkerPopup(marker, address)

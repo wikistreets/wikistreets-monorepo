@@ -1,7 +1,7 @@
 const path = require('path')
 
 module.exports = {
-  mode: 'development',
+  mode: 'production',
   entry: {
     global: './src/global.js',
     leaflet: './src/leaflet.js',
