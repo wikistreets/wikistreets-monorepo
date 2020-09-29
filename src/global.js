@@ -51,9 +51,12 @@ const app = {
   browserGeolocation: {
     enabled: false,
     coords: {
+      // default geolocation at a random point
+      lat: Math.random() * 140 - 70, // bewteen -70 to +70... sorry arctic and antarctic
+      lng: Math.random() * 360 - 180, // bewteen -180 to +180
       // default geolocation at Tecumseh, NE
-      lat: 40.3658739,
-      lng: -96.1884458,
+      // lat: 40.3658739,
+      // lng: -96.1884458,
     },
     address: null,
     options: {
@@ -120,9 +123,12 @@ const app = {
     htmlElementId: 'map',
     htmlElementSelector: '#map', // the id of the map element in the html
     geolocation: {
+      // default geolocation at a random point
+      lat: Math.random() * 140 - 70, // bewteen -70 to +70... sorry arctic and antarctic
+      lng: Math.random() * 360 - 180, // bewteen -180 to +180
       // default geolocation at Tecumseh, NE
-      lat: 40.3658739,
-      lng: -96.1884458,
+      // lat: 40.3658739,
+      // lng: -96.1884458,
     },
     zoom: {
       default: 4,
@@ -701,7 +707,7 @@ async function initMap() {
   }).addTo(app.map.element)
 
   // fetch this user's info, if logged-in
-  if (app.auth.getToken()) await app.user.fetch()
+  if (app.auth.getToken()) awaitapp.user.fetch()
 
   // load and add map data and markers to the map
   populateMap()
