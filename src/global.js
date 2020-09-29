@@ -1797,7 +1797,7 @@ const attachMeMarkerPopup = (marker, address) => {
     : address
 
   $('.street-address', myPopup).html(street)
-  console.log(`address: ${address}`)
+  // console.log(`address: ${address}`)
   myPopup = myPopup.get(0)
   marker.bindPopup(myPopup)
   $('.me-marker-go-button', myPopup).on('click', (e) => {
