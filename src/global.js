@@ -498,10 +498,8 @@ app.markers.place = (data, cluster) => {
           const commentEl = $(`.comment[ws-comment-id="${comment._id}"]`)
           if (!commentEl.length) {
             // comment is not on the page... put it there
-            const commentString = createComment(comment, point._id)
-            $(commentString).appendTo(
-              $('.info-window-content .existing-comments')
-            )
+            const commentEl = createComment(comment, point._id)
+            commentEl.appendTo($('.info-window-content .existing-comments'))
             // make sure the comments are showing
             $('.info-window-content .existing-comments').show()
           }
@@ -1226,7 +1224,22 @@ Posted by
   contentString += `
 </div>
     `
-  return contentString
+
+  const contentEl = $(contentString)
+  // handle delete context menu clicks
+  $('.delete-comment-link', contentEl).on('click', (e) => {
+    e.preventDefault()
+    deleteComment(data._id, issueId)
+  })
+  // handle click on username
+  $('.user-link', contentEl).click((e) => {
+    e.preventDefault()
+    // open user profile for this user
+    const userId = $(e.target).attr('ws-user-id')
+    openUserProfile(data.user.handle, userId)
+  })
+
+  return contentEl
 }
 
 const deleteComment = (commentId, issueId) => {
@@ -1322,12 +1335,7 @@ const showInfoWindow = (marker) => {
   // inject any comments
   data.comments.forEach((comment) => {
     // console.log(`issueId: ${data._id}`)
-    const commentString = createComment(comment, data._id)
-    const commentEl = $(commentString)
-    $('.delete-comment-link', commentEl).on('click', (e) => {
-      e.preventDefault()
-      deleteComment(comment._id, data._id)
-    })
+    const commentEl = createComment(comment, data._id)
     commentEl.appendTo($('.info-window-content .existing-comments'))
   })
   if (!data.comments.length) {
@@ -1584,17 +1592,8 @@ const showInfoWindow = (marker) => {
         $('.map-control').show()
 
         // inject the new comment
-        const commentString = createComment(res.data, marker.issueData._id)
-        const commentEl = $(commentString)
-        // handle click on username event
-        $('.user-link', commentEl).click((e) => {
-          e.preventDefault()
-
-          // get target userid
-          const userId = $(e.target).attr('ws-user-id')
-
-          openUserProfile(data.user.handle, userId)
-        })
+        const commentEl = createComment(res.data, marker.issueData._id)
+        commentEl.appendTo($('.info-window-content .existing-comments'))
 
         // stick this new comment into the page
         commentEl.appendTo($('.info-window-content .existing-comments'))
