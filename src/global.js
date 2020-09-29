@@ -1051,9 +1051,10 @@ const createMapListItem = (
   $('.num-markers', mapListing).html(mapData.numMarkers)
   // show link to view markers, if relevant
   if (isSelectedMap && app.markers.markers.length) {
-    $('.marker-map-link', mapListing).html(
-      `<a href="#" onclick="app.markers.simulateClick(app.markers.markers[0]); return false">posts</a>`
-    )
+    $('.marker-map-link', mapListing).html(`<a href="#">posts</a>`)
+    $('.marker-map-link a', mapListing).on('click', (e) => {
+      app.markers.simulateClick(app.markers.markers[0])
+    })
   }
 
   $('.num-contributors', mapListing).html(mapData.numContributors)
@@ -1071,10 +1072,20 @@ const createMapListItem = (
     // add links to first and last posts
     $(`
       <div class="prevnext-issue-container row">
-        <button class="navigate-issues-link btn btn-secondary col-6" onclick="app.markers.simulateClick(app.markers.markers[0]); return false">First post</button>
-        <button class="navigate-issues-link btn btn-secondary col-6" onclick="app.markers.simulateClick(app.markers.markers[app.markers.markers.length - 1]); return false">Latest post</button>
+        <button class="navigate-issues-link first-issue-link btn btn-secondary col-6">First post</button>
+        <button class="navigate-issues-link last-issue-link btn btn-secondary col-6">Latest post</button>
       </div>
     `).prependTo(mapListing)
+    $('.first-issue-link', mapListing).on('click', (e) => {
+      e.preventDefault()
+      app.markers.simulateClick(app.markers.markers[0])
+    })
+    $('.last-issue-link', mapListing).on('click', (e) => {
+      e.preventDefault()
+      app.markers.simulateClick(
+        app.markers.markers[app.markers.markers.length - 1]
+      )
+    })
   }
 
   return mapListing
@@ -1179,7 +1190,7 @@ Posted by
   // generate the context menu
   // only show delete link to logged-in users who have permissions to edit this map
   const deleteLinkString = app.auth.isEditor()
-    ? `<a class="delete-comment-link dropdown-item" ws-comment-id="${data._id}" onclick="deleteComment('${data._id}', '${issueId}'); return false;" href="#">Delete</a>`
+    ? `<a class="delete-comment-link dropdown-item" ws-comment-id="${data._id}" href="#">Delete</a>`
     : ''
   let contextMenuString = app.auth.isEditor()
     ? `
@@ -1311,7 +1322,12 @@ const showInfoWindow = (marker) => {
   data.comments.forEach((comment) => {
     // console.log(`issueId: ${data._id}`)
     const commentString = createComment(comment, data._id)
-    $(commentString).appendTo($('.info-window-content .existing-comments'))
+    const commentEl = $(commentString)
+    $('.delete-comment-link', commentEl).on('click', (e) => {
+      e.preventDefault()
+      deleteComment(comment._id, data._id)
+    })
+    commentEl.appendTo($('.info-window-content .existing-comments'))
   })
   if (!data.comments.length) {
     // hide comments section if none there
