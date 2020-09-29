@@ -707,7 +707,7 @@ async function initMap() {
   }).addTo(app.map.element)
 
   // fetch this user's info, if logged-in
-  if (app.auth.getToken()) awaitapp.user.fetch()
+  if (app.auth.getToken()) await app.user.fetch()
 
   // load and add map data and markers to the map
   populateMap()
