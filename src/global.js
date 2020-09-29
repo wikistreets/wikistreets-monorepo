@@ -1053,6 +1053,7 @@ const createMapListItem = (
   if (isSelectedMap && app.markers.markers.length) {
     $('.marker-map-link', mapListing).html(`<a href="#">posts</a>`)
     $('.marker-map-link a', mapListing).on('click', (e) => {
+      e.preventDefault()
       app.markers.simulateClick(app.markers.markers[0])
     })
   }
