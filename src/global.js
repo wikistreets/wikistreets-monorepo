@@ -131,7 +131,7 @@ const app = {
       // lng: -96.1884458,
     },
     zoom: {
-      default: 4,
+      default: 5,
       issuelocate: 17,
       issueview: 15,
       getDefault: () => {
@@ -1392,9 +1392,9 @@ const showInfoWindow = (marker) => {
   }
 
   // zoom in nice and close, if zoomed out
-  if (app.map.zoom.getDefault() < app.map.zoom.issueview) {
-    app.map.element.setZoom(app.map.zoom.issueview)
-  }
+  // if (app.map.zoom.getDefault() < app.map.zoom.issueview) {
+  //   app.map.element.setZoom(app.map.zoom.issueview)
+  // }
 
   expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
     // hack to avoid duplicate marker click events (see where we check this value on click)
@@ -1814,10 +1814,10 @@ const attachMeMarkerPopup = (marker, address) => {
 const openIssueForm = async (point = false) => {
   // zoom into map
   if (app.mode != 'issuelocate') {
-    // zoom in nice and close, if zoomed out
-    if (app.map.zoom.getDefault() < app.map.zoom.issuelocate) {
-      app.map.element.setZoom(app.map.zoom.issuelocate)
-    }
+    // // zoom in nice and close, if zoomed out
+    // if (app.map.zoom.getDefault() < app.map.zoom.issuelocate) {
+    //   app.map.element.setZoom(app.map.zoom.issuelocate)
+    // }
 
     // keep track
     app.mode = 'issuelocate'
