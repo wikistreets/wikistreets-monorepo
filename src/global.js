@@ -2727,7 +2727,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 
   // special message if no markers exist on this map
   if (!app.markers.markers.length) {
-    contentEl = $('.no-posts-container').clone().removeClass('hide')
+    contentEl = $('.no-posts-container.hide').clone().removeClass('hide')
     $('.map-select-link', contentEl).on('click', (e) => {
       e.preventDefault()
       if (app.auth.getToken()) openMapSelectorPanel()
