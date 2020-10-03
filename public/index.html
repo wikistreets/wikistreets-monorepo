@@ -104,63 +104,78 @@
     <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
   </head>
   <body>
-    <header>
-      <h1 class="logo display-4">Wikistreets</h1>
-    </header>
 
-    <section class="issue-map">
-      <div id="map">loading map...</div>
+    <div class="row">
 
-      <div class="control-map-selector dropdown">
-        <button
-          class="map-title selected-map btn btn-secondary dropdown-toggle"
-          type="button"
-          id="dropdownMenuButton"
-          aria-haspopup="true"
-          aria-expanded="false"
-        ></button>
+      <section class="issue-map col-12  col-md-6 col-lg-7">
+          <header>
+            <h1 class="logo display-4">Wikistreets</h1>
+          </header>
+        <div id="map">loading map...</div>
+
+        <div class="control-map-selector dropdown d-block d-md-none">
+          <button
+            class="map-title selected-map btn btn-secondary dropdown-toggle"
+            type="button"
+            id="dropdownMenuButton"
+            aria-haspopup="true"
+            aria-expanded="false"
+          ></button>
+        </div>
+
+        <div class="map-controls">
+          <div class="map-control control-add-issue">
+            <img
+              alt="Place a new marker"
+              title="Place a new marker"
+              src="/static/images/material_design_icons/add_circle_outline-24px.svg"
+            />
+          </div>
+
+          <div class="map-control control-find-location">
+            <img
+              alt="Find my location"
+              title="Find my location"
+              src="/static/images/material_design_icons/gps_fixed-24px.svg"
+            />
+          </div>
+
+          <div class="map-control control-search-address">
+            <img
+              data-toggle="tooltip"
+              data-placement="top"
+              alt="Search by address"
+              title="Search by address"
+              src="/static/images/material_design_icons/search-24px.svg"
+            />
+          </div>
+        </div>
+        <!-- //.map-controls -->
+        <!-- <div class="clear"></div> -->
+      </section>
+      <!-- //.issue-map -->
+
+      <!-- info window -->
+      <div class="info-window-container col-12 col-md-6 col-lg-5">
+        <div class="control-map-selector dropdown d-none d-md-block">
+          <button
+            class="map-title selected-map btn btn-secondary dropdown-toggle"
+            type="button"
+            id="dropdownMenuButton"
+            aria-haspopup="true"
+            aria-expanded="false"
+          ></button>
+        </div>
+
+        <section class="info-window">
+          <!-- info window icons -->
+          <!-- <img class="close-icon" src="/static/images/material_design_icons/close-24px.svg" /> -->
+
+          <section class="info-window-content col-sm-10 container"></section>
+        </section>
       </div>
-
-      <div class="map-controls">
-        <div class="map-control control-add-issue">
-          <img
-            alt="Place a new marker"
-            title="Place a new marker"
-            src="/static/images/material_design_icons/add_circle_outline-24px.svg"
-          />
-        </div>
-
-        <div class="map-control control-find-location">
-          <img
-            alt="Find my location"
-            title="Find my location"
-            src="/static/images/material_design_icons/gps_fixed-24px.svg"
-          />
-        </div>
-
-        <div class="map-control control-search-address">
-          <img
-            data-toggle="tooltip"
-            data-placement="top"
-            alt="Search by address"
-            title="Search by address"
-            src="/static/images/material_design_icons/search-24px.svg"
-          />
-        </div>
-      </div>
-      <!-- //.map-controls -->
-      <!-- <div class="clear"></div> -->
-    </section>
-    <!-- //.issue-map -->
-
-    <!-- info window -->
-    <section class="info-window">
-      <!-- info window icons -->
-      <!-- <img class="close-icon" src="/static/images/material_design_icons/close-24px.svg" /> -->
-
-      <section class="info-window-content col-12 col-sm-10 col-md-9 col-lg-8 col-xl-7 container"></section>
-    </section>
-    <!-- // info window -->
+      <!-- // info window -->
+    </div>
 
     <!-- search address -->
     <div class="search-address-form-container hide">
@@ -169,7 +184,6 @@
           class="search-address-form"
           action="/search"
           method="POST"
-          class="row"
         >
           <h2>Search for a place</h2>
           <input
@@ -188,7 +202,7 @@
 
     <!-- geolocation error -->
     <div class="geoposition-error-container hide">
-      <h2>Could not locate you</h2>
+      <h2 class="gps-error">Could not locate you</h2>
       <p>We were not able to locate you using your device's GPS.</p>
       <p>
         You are welcome to try again or manually drag the map.
@@ -202,18 +216,17 @@
 
     <!-- signin form -->
     <div class="signin-form-container hide">
-      <h2 class="panel-title">Log in</h2>
+      <h2 class="log-in panel-title">Log in</h2>
       <div class="feedback-message alert alert-danger hide"></div>
-      <div class="row">
         <form
-          class="signin-form col-12 col-md-6"
+          class="signin-form"
           action="/users/signin"
           method="POST"
         >
           <div class="form-group">
             <input
               type="email"
-              class="form-control"
+              class="form-control col-md-12"
               name="email"
               id="signin-email"
               placeholder="Email address"
@@ -223,7 +236,7 @@
             <!-- <label for="signin-password">Password</label> -->
             <input
               type="password"
-              class="form-control"
+              class="form-control col-md-12"
               name="password"
               id="signin-password"
               placeholder="Password"
@@ -234,7 +247,7 @@
           <br />
         </form>
 
-        <article class="col-12 col-md-6">
+        <article>
           <h2>Don't have an account?</h2>
           <p>
             <a href="#" class="signup-link">Create an account</a> to be able to
@@ -246,17 +259,15 @@
             <a href="#" class="reset-password-link">send you a new one</a>.
           </p>
         </article>
-      </div>
     </div>
     <!-- // signin form-->
 
     <!-- signup form -->
     <div class="signup-form-container hide">
-      <h2 class="panel-title">Sign up</h2>
+      <h2 class="sign-up panel-title">Sign up</h2>
       <div class="feedback-message alert alert-danger hide"></div>
-      <div class="row">
         <form
-          class="signup-form col-12 col-md-6"
+          class="signup-form"
           action="/users/signup"
           method="POST"
         >
@@ -290,14 +301,16 @@
             />
           </div>
           <button type="submit" class="btn btn-primary">Sign up</button>
+          <br />
+          <br />
         </form>
-        <article class="col-12 col-md-6">
+        <article>
           <h2>Already have an account?</h2>
           <p>
             <a href="#" class="signin-link">Log in</a> to an existing account.
           </p>
         </article>
-        <article class="col-12">
+        <article>
           <p>
             <small>
               By using this app, you agree to our
@@ -311,17 +324,15 @@
             </small>
           </p>
         </article>
-      </div>
     </div>
     <!-- // signup form-->
 
     <!-- reset password form -->
     <div class="reset-password-form-container hide">
-      <h2 class="panel-title">Reset password</h2>
+      <h2 class="reset-password panel-title">Reset password</h2>
       <div class="feedback-message alert alert-danger hide"></div>
-      <div class="row">
         <form
-          class="reset-password-form col-12 col-md-6"
+          class="reset-password-form"
           action="/users/reset-password"
           method="POST"
         >
@@ -338,11 +349,10 @@
           <br />
         </form>
 
-        <article class="col-12 col-md-6">
+        <article>
           <h2>We'll send you a new password</h2>
           <p>Check your email after you submit the form.</p>
         </article>
-      </div>
     </div>
     <!-- // reset password form-->
 
@@ -358,8 +368,7 @@
         <input type="hidden" name="lat" class="lat" />
         <input type="hidden" name="lng" class="lng" />
 
-        <div class="row">
-          <section class="col-12 submit-container">
+          <section class="submit-container">
             <h2 class="panel-title">Post</h2>
             <p class="nearby-address">
               near <span class="address">Anonymous location</span>
@@ -403,7 +412,6 @@
             </div>
             <input class="btn btn-primary" type="submit" value="Submit" />
           </section>
-        </div>
 
         <div class="map-popup-container hide">
           <div class="popup-content">
@@ -431,8 +439,7 @@
         <input type="hidden" name="lat" class="lat" />
         <input type="hidden" name="lng" class="lng" />
 
-        <div class="row">
-          <section class="col-12 submit-container">
+          <section class="submit-container">
             <h2 class="panel-title">Edit post</h2>
             <p class="nearby-address">
               near <span class="address">Anonymous location</span>
@@ -487,7 +494,6 @@
             <input class="btn btn-primary" type="submit" value="Save changes" />
             <a class="cancel-link" href="#">Cancel</a>
           </section>
-        </div>
 
         <div class="map-popup-container hide">
           <p>near <strong class="street-address"></strong></p>
@@ -504,8 +510,7 @@
 
     <!-- about us -->
     <div class="about-us-container hide">
-      <div class="row">
-        <header class="col-12 col-md-6">
+        <header class="about-us">
           <h2 class="panel-title">Wikistreets</h2>
           <ul>
             <li>Maps for everyone</li>
@@ -516,7 +521,7 @@
             <li>Fork (i.e. copy) any map</li>
           </ul>
         </header>
-        <article class="col-12">
+        <article>
           <small>
             &copy; <strong>Wikistreets.io</strong> 2020. All rights reserved.  
             <br />
@@ -564,8 +569,6 @@
             </p>
           </small>
         </article>
-      </div>
-      <!-- //row -->
     </div>
     <!-- // about us-->
 
@@ -615,7 +618,7 @@
           <button class="btn btn-primary fork-button">Fork it</button>
           <a class="cancel-link" href="#">Cancel</a>
         </header> -->
-      <article>
+      <article class="about-forks">
         <h2>About forks</h2>
         <p>
           Forking a map creates a clone of it that can be modified independently
@@ -755,8 +758,10 @@
         </form>
       </article>
       <article class="more-maps-container">
-        <h2><span class="user-handle">My</span> maps</h2>
-        <a class="btn btn-primary" href="/">Create a new map</a>
+        <div class="new-map-button-container">
+          <a class="btn btn-primary col-12" href="/">Create a new map</a>
+        </div>
+        <h2 class="other-maps-heading"><span class="user-handle">My</span> other maps:</h2>
         <div class="more-maps"></div>
       </article>
     </div>
@@ -809,15 +814,22 @@
 
     <!-- error message -->
     <div class="error-container hide">
-      <div class="row">
         <header>
           <h2>Sorry...</h2>
           <p class="error-message"></p>
           <button class="ok-button btn btn-primary">Ok</button>
         </header>
-      </div>
     </div>
     <!-- // error-container -->
+
+    <!-- no posts message -->
+    <div class="no-posts-container hide">
+      <header>
+        <img class="img-fluid" src="/static/images/share_image.png" />
+        <h2>Welcome to Wikistreets</h2>
+        <p>Create a post on this map or <a class="map-select-link" href="#">switch to a different map</a>.</p>
+      </header>
+    </div>
 
     <!-- comments container -->
     <div class="comments-container hide">
@@ -858,7 +870,7 @@
                 <!-- photo thumbnails will go here -->
               </div>
             </div>
-            <button type="submit" class="form-control btn btn-primary col-4 col-sm-3 col-lg-2">
+            <button type="submit" class="form-control btn btn-primary col-4 col-sm-3 col-md-6 col-lg-5 col-xl-4">
               Submit
             </button>
           </form>

@@ -110,10 +110,11 @@ ul {
 
 /* map controls */
 
+/** mobile version **/
 .control-map-selector {
   position: absolute;
   cursor: pointer;
-  bottom: 0px;
+  bottom: -1px;
   width: 300px;
   left: 50%;
   margin: 0 auto;
@@ -123,6 +124,8 @@ ul {
   background-color: black;
   width: 240px;
   margin-left: -120px;
+  border: none;
+  box-shadow: none;
 }
 
 .leaflet-control-attribution,
@@ -144,12 +147,13 @@ ul {
 
 .control-add-issue {
   width: 40px;
-  left: 50%;
-  margin: 0 auto;
-  bottom: 50px;
+  top: 144px;
+  left: auto;
+  right: 30px;
+  margin: 0;
 }
 .control-add-issue img {
-  margin-left: -20px;
+  margin-left: 0;
   width: 100%;
 }
 .control-find-location {
@@ -240,7 +244,7 @@ button.dropdown-toggle img {
 }
 
 .info-window-content {
-  margin-top: 20px;
+  /* margin-top: 20px; */
 }
 .info-window-content article,
 .info-window-content header {
@@ -276,9 +280,12 @@ button.dropdown-toggle img {
 }
 
 /* map selector */
-.info-window-content .more-maps-container {
-  border-top: 1px solid #6c757d;
-  padding-top: 10px;
+.info-window-content .more-maps-container .other-maps-heading {
+  margin-bottom: 10px;
+}
+.new-map-button-container a.btn {
+  margin-top: 0;
+  margin-bottom: 15px;
 }
 
 /* info window content */
@@ -286,13 +293,18 @@ button.dropdown-toggle img {
   padding: 0; /* override bootstrap default padding */
 }
 
+/* about us */
+.about-us {
+  padding-top: 20px;
+}
+
 /* issue details */
 .info-window-content .issue-detail header,
 .info-window-content .map-details-container {
-  padding-top: 40px;
+  padding-top: 20px;
 }
 .info-window-content .map-details-container .prevnext-issue-container {
-  margin-top: -60px;
+  /* margin-top: -60px; */
 }
 .info-window-content .map-details-container .context-menu {
   margin-top: -5px;
@@ -387,11 +399,14 @@ button.dropdown-toggle img {
 
 /* previous and next issue links */
 .prevnext-issue-container {
-  margin-top: -20px;
-  margin-bottom: 10px;
-  width: 100%;
-  left: 15px;
-  position: fixed;
+  /* margin-top: -20px;
+  margin-bottom: 10px; */
+  /* width: 100%;
+  left: 15px; */
+  /* position: fixed; */
+  position: -webkit-sticky; /* Safari */
+  position: sticky;
+  top: 2px;
   z-index: 101;
 }
 .info-window .prev-issue-link,
@@ -401,6 +416,9 @@ button.dropdown-toggle img {
   color: black;
 }
 
+.issue-form {
+  margin-top: 25px;
+}
 .issue-form .nearby-address {
   font-size: 0.75em;
 }
@@ -490,3 +508,83 @@ button.dropdown-toggle img {
 .comment {
   border-bottom: 1px dotted #555;
 }
+
+/* move content away from the top of info-panel */
+.issue-list-container h2,
+.rename-map-container,
+.about-forks,
+.settings-map-container,
+.log-in,
+.sign-up,
+.reset-password,
+.search-address-form,
+.gps-error {
+  padding-top: 20px;
+}
+.no-posts-container header {
+  /* center the welcome message */
+  text-align: center;
+}
+
+/** desktop version **/
+@media only screen and (min-width: 768px) {
+  h1.logo {
+    left: 0px;
+    bottom: 0px;
+    top: auto;
+    margin-left: 0;
+    padding-top: 0;
+    border-top-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .issue-map,
+  .info-window-container {
+    /* no space between columns */
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .issue-map .control-map-selector {
+    /* hide the map selector that appears on mobile at bottom of map */
+    display: none;
+  }
+  .control-map-selector {
+    /* situate map selector at top, instead of bottom */
+    width: 100%;
+    left: 0;
+    top: 0;
+    bottom: auto;
+    z-index: auto;
+  }
+  .control-map-selector button.map-title {
+    /* simpler map-selector styles */
+    width: 100%;
+    margin: 0;
+    border-color: transparent;
+    border-radius: none;
+  }
+  .info-window {
+    /* info window is always visible */
+    display: block;
+    height: auto;
+    overflow: auto;
+    width: 100%;
+    position: static;
+    margin-top: 38px;
+    padding: 0;
+  }
+  .info-window .info-window-content {
+    padding-bottom: 100px;
+  }
+  .prevnext-issue-container {
+    top: 0;
+  }
+  .prevnext-issue-container a {
+    /* margin: 0 !important; */
+  }
+  .expand-contract-button {
+    display: none;
+  }
+  .issue-list-item * {
+    /* pointer-events: none; */
+  }
+} /* // desktop version */

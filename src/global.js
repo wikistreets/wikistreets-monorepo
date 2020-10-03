@@ -37,13 +37,20 @@ const app = {
       )
     },
   },
+  responsive: {
+    isMobile: () => {
+      // determine whether window width is below bootstrap's 'medium' breakpoint
+      const yes = window.innerWidth < 768
+      return yes
+    },
+  },
   copy: {
     signinerror:
       'The email or password you entered is not correct.  Please correct and try again',
     signuperror:
       'An account exists with that email address.  Please sign in or create a new account',
     mappermissionserror: 'You do not have permission to edit this map.',
-    anonymousmaptitle: 'anonymous map',
+    anonymousmaptitle: 'unnamed map',
     shareissuemessage: 'Link copied to clipboard.  Share anywhere!',
     sharemapmessage: 'Link copied to clipboard.  Share anywhere!',
   },
@@ -476,7 +483,7 @@ app.markers.findById = (issueId) => {
   })
   return match
 }
-app.markers.place = (data, cluster) => {
+app.markers.place = async (data, cluster) => {
   if (!data) return // ignore no data!
   // make a marker from each data point
   const latency = 15 // latency between marker animation drops
@@ -508,53 +515,54 @@ app.markers.place = (data, cluster) => {
     } else {
       // new marker
       // add delay before dropping marker onto map
-      setTimeout(() => {
-        if (point.position != undefined && point.position != null) {
-          const coords = [point.position.lat, point.position.lng]
-          const marker = L.marker(coords, {
-            zIndexOffset: app.markers.zIndex.default,
-            riseOffset: app.markers.zIndex.default,
-            riseOnHover: true,
-          })
+      // setTimeout(() => {
+      if (point.position != undefined && point.position != null) {
+        const coords = [point.position.lat, point.position.lng]
+        const marker = L.marker(coords, {
+          zIndexOffset: app.markers.zIndex.default,
+          riseOffset: app.markers.zIndex.default,
+          riseOnHover: true,
+        })
 
-          if (point.photos && point.photos.length) {
-            marker.issueType = 'unknownPhoto'
-          } else {
-            marker.issueType = 'unknownText'
-          }
+        if (point.photos && point.photos.length) {
+          marker.issueType = 'unknownPhoto'
+        } else {
+          marker.issueType = 'unknownText'
+        }
 
-          // add a unique id to each marker for later reference
-          marker._id = `marker-${point._id}`
-          // console.log(marker._id)
+        // add a unique id to each marker for later reference
+        marker._id = `marker-${point._id}`
+        // console.log(marker._id)
 
-          // flag whether the marker issue isopen
-          marker.isOpen = false
+        // flag whether the marker issue isopen
+        marker.isOpen = false
 
-          // keep the index number of this marker to maintain order
-          marker.index = app.markers.markers.length //i
+        // keep the index number of this marker to maintain order
+        marker.index = app.markers.markers.length //i
 
-          // attach the data to the marker
-          marker.issueData = point
+        // attach the data to the marker
+        marker.issueData = point
 
-          // cluster.addLayer(marker) // add to the marker cluster
-          app.map.element.addLayer(marker) // add directly to map
+        // cluster.addLayer(marker) // add to the marker cluster
+        app.map.element.addLayer(marker) // add directly to map
 
-          // de-highlight the current marker
-          marker.setZIndexOffset(app.markers.zIndex.default)
-          marker.setIcon(app.markers.icons[marker.issueType].default)
+        // de-highlight the current marker
+        marker.setZIndexOffset(app.markers.zIndex.default)
+        marker.setIcon(app.markers.icons[marker.issueType].default)
 
-          // add to list of markers
-          app.markers.markers.push(marker)
+        // add to list of markers
+        app.markers.markers.push(marker)
 
-          // // detect click events
-          marker.on('click', (e) => {
-            // prevent this even from firing twice in a row... which seems to be a problem
-            showInfoWindow(marker)
-          })
-        } // if
-      }, i * latency) // setTimeout
+        // // detect click events
+        marker.on('click', (e) => {
+          // prevent this even from firing twice in a row... which seems to be a problem
+          showInfoWindow(marker)
+        })
+      } // if
+      // }, i * latency) // setTimeout
     } // else if marker doesn't yet exist
   }) // data.map
+  return true
 }
 
 app.markers.activate = (marker = app.markers.current) => {
@@ -567,19 +575,13 @@ app.markers.activate = (marker = app.markers.current) => {
 }
 app.markers.deactivate = (marker = app.markers.current) => {
   // return selected marker to default state
-  // console.log('deactivating')
-  if (marker) {
-    // de-highlight the current marker
+  const markerList = marker ? [marker] : app.markers.markers
+  // loop through and mark all as closed
+  markerList.forEach((marker) => {
+    marker.isOpen = false
     marker.setZIndexOffset(app.markers.zIndex.default)
     marker.setIcon(app.markers.icons[marker.issueType].default)
-    marker.isOpen = false // allows it to be opened next time clicked
-    marker = null
-  } else {
-    // loop through and mark all as closed
-    app.markers.markers.forEach((marker) => {
-      marker.isOpen = false
-    })
-  }
+  })
   // there is now no active marker
   app.markers.current = null
 }
@@ -676,7 +678,7 @@ const populateMap = async (recenter = true) => {
   const issues = data.issues
 
   // place new markers down
-  app.markers.place(issues, cluster)
+  await app.markers.place(issues, cluster)
 }
 
 async function initMap() {
@@ -708,7 +710,10 @@ async function initMap() {
   if (app.auth.getToken()) await app.user.fetch()
 
   // load and add map data and markers to the map
-  populateMap()
+  await populateMap()
+
+  // open the map list of posts for desktop viewers
+  openIssueList()
 
   // load any marker in the url hash
   // need to wait till all the markers have been placed
@@ -735,7 +740,9 @@ async function initMap() {
 
   // check that user is logged in when they try to expand the map selector
   $('.control-map-selector').click(() => {
-    app.auth.getToken() ? openMapSelectorPanel() : openSigninPanel()
+    app.auth.getToken()
+      ? openMapSelectorPanel()
+      : openSigninPanel('Log in to view your maps')
   })
 
   $('.signin-link').click((e) => {
@@ -874,7 +881,7 @@ async function initMap() {
       collapseInfoWindow()
     }
   }
-}
+} // initMap
 
 // handle safari bug with vh units
 const setVh = () => {
@@ -898,7 +905,9 @@ const resizeMap = () => {
         infoWindowHeight = 100
         mapHeight = 0
       }
-      expandInfoWindow(infoWindowHeight, mapHeight)
+      expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
+        app.map.element.invalidateSize(true)
+      })
     }
     // app.map.element.invalidateSize(true) // notify leaflet that size has changed
   }
@@ -1052,7 +1061,8 @@ const createMapListItem = (
     $('.marker-map-link', mapListing).html(`<a href="#">posts</a>`)
     $('.marker-map-link a', mapListing).on('click', (e) => {
       e.preventDefault()
-      app.markers.simulateClick(app.markers.markers[0])
+      // app.markers.simulateClick(app.markers.markers[0])
+      openIssueList()
     })
   }
 
@@ -1067,26 +1077,6 @@ const createMapListItem = (
   $('.createdat', mapListing).html(DateDiff.asAge(mapData.createdAt))
   $('.updatedat', mapListing).html(DateDiff.asAge(mapData.updatedAt))
 
-  if (isSelectedMap && app.markers.markers.length) {
-    // add links to first and last posts
-    $(`
-      <div class="prevnext-issue-container row">
-        <button class="navigate-issues-link first-issue-link btn btn-secondary col-6">First post</button>
-        <button class="navigate-issues-link last-issue-link btn btn-secondary col-6">Latest post</button>
-      </div>
-    `).prependTo(mapListing)
-    $('.first-issue-link', mapListing).on('click', (e) => {
-      e.preventDefault()
-      app.markers.simulateClick(app.markers.markers[0])
-    })
-    $('.last-issue-link', mapListing).on('click', (e) => {
-      e.preventDefault()
-      app.markers.simulateClick(
-        app.markers.markers[app.markers.markers.length - 1]
-      )
-    })
-  }
-
   return mapListing
 }
 
@@ -1100,9 +1090,9 @@ const createIssue = (data) => {
   // give attribution to author
   const attribution = `
 Posted by
-<a class="user-link" ws-user-id="${data.user._id}" href="#">${
+<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${
     data.user.handle
-  }</a> ${date}
+  }" href="#">${data.user.handle}</a> ${date}
 near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 `
 
@@ -1180,7 +1170,7 @@ const createComment = (data, issueId) => {
   // give attribution to author
   const attribution = `
 Posted by
-<a class="user-link" ws-user-id="${data.user._id}" href="#">${data.user.handle}</a> ${date}
+<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${data.user.handle}" href="#">${data.user.handle}</a> ${date}
 `
 
   let imgString = createPhotoCarousel(data.photos, data._id)
@@ -1236,7 +1226,8 @@ Posted by
     e.preventDefault()
     // open user profile for this user
     const userId = $(e.target).attr('ws-user-id')
-    openUserProfile(data.user.handle, userId)
+    const userHandle = $(e.target).attr('ws-user-handle')
+    openUserProfile(userHandle, userId)
   })
 
   return contentEl
@@ -1410,8 +1401,9 @@ const showInfoWindow = (marker) => {
 
       // get target userid
       const userId = $(e.target).attr('ws-user-id')
+      const userHandle = $(e.target).attr('ws-user-handle')
 
-      openUserProfile(data.user.handle, userId)
+      openUserProfile(userHandle, userId)
     })
   })
 
@@ -1669,36 +1661,47 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   hideSpinner($('.info-window'))
 
   // scroll the info window to the top, in case it was previously scrolled down
+  $('.info-window').show() // just in case
   $('.info-window').scrollTop(0)
-  $('.info-window').show()
-  $('.info-window')
-    .stop()
-    .animate(
-      {
-        height: `${infoWindowHeightPx}px`,
-      },
-      () => {
-        // reposition add issue button
-        // const y = $('.info-window').position().top
-        // $('.control-add-issue').css('top', y - 50)
-      }
-    )
 
-  // animate the map open
-  $('.issue-map, #map')
-    .stop()
-    .animate(
-      {
-        height: `${mapHeightPx}px`,
-      },
-      () => {
-        // inform the map that it has been dynamically resized
-        setTimeout(() => {
-          app.map.element.invalidateSize(true)
-        }, 100)
-      }
-    )
+  // do not do any size changes for desktop...
+  if (app.responsive.isMobile()) {
+    $('.info-window').show()
+    $('.info-window')
+      .stop()
+      .animate(
+        {
+          height: `${infoWindowHeightPx}px`,
+        },
+        () => {
+          // reposition add issue button
+          // const y = $('.info-window').position().top
+          // $('.control-add-issue').css('top', y - 50)
+        }
+      )
 
+    // animate the map open
+    $('.issue-map, #map')
+      .stop()
+      .animate(
+        {
+          height: `${mapHeightPx}px`,
+        },
+        () => {
+          // inform the map that it has been dynamically resized
+          setTimeout(() => {
+            app.map.element.invalidateSize(true)
+          }, 100)
+        }
+      )
+  } else {
+    // user is on a desktop-sized device... make sure it's full size
+    $('.info-window').height(window.innerHeight)
+    $('.issue-map, #map').height(window.innerHeight)
+    setTimeout(() => {
+      app.map.element.invalidateSize(true)
+    }, 200)
+  }
   // close any open tooltips... this is to fix bootstrap's buggy tooltips on mobile
 
   // hide tooltips on mobile after clicked
@@ -1737,7 +1740,6 @@ const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
 
 const collapseInfoWindow = async (e) => {
   // console.log(`mode=${app.mode}`);
-
   // remember it's collapsed
   app.infoPanel.isExpanded = false
 
@@ -1747,11 +1749,16 @@ const collapseInfoWindow = async (e) => {
   // remove the hash from the url
   window.history.pushState('', document.title, window.location.pathname)
 
-  // hide the info window
-  $('.info-window').css({
-    display: 'none',
-    height: '0vh',
-  })
+  // hide the info window on mobile
+  if (app.responsive.isMobile()) {
+    $('.info-window').css({
+      display: 'none',
+      height: '0vh',
+    })
+  } else {
+    // desktop mode... show list of markers
+    openIssueList()
+  }
 
   // animate the map to take up full screen
   $('.issue-map, #map')
@@ -1801,7 +1808,7 @@ const attachMeMarkerPopup = (marker, address) => {
   marker.bindPopup(myPopup)
   $('.me-marker-go-button', myPopup).on('click', (e) => {
     // check whether this user is authenticated and is allowed to contribute to this map
-    if (!app.auth.getToken()) openSigninPanel('Log in to create a post.')
+    if (!app.auth.getToken()) openSigninPanel('Log in to create a post')
     else {
       // open the info window
       openIssueForm()
@@ -1868,9 +1875,15 @@ const openIssueForm = async (point = false) => {
   marker = attachMeMarkerPopup(marker, address)
   marker.openPopup()
 
-  // copy the issue form into the infowindow
-  const infoWindowHTML = $('.new-issue-form-container').html()
-  $('.info-window-content').html(infoWindowHTML)
+  // show post form if user is logged in
+  if (app.auth.getToken()) {
+    // copy the issue form into the infowindow
+    const infoWindowHTML = $('.new-issue-form-container').html()
+    $('.info-window-content').html(infoWindowHTML)
+  } else {
+    // show login form for other users
+    openSigninPanel('Log in to create a post', false, false)
+  }
 
   // insert address
   $('.info-window-content .address').html(address)
@@ -2387,7 +2400,7 @@ const formatDate = (date) => {
 }
 
 // authorize the current user
-const openSigninPanel = async (title = false) => {
+const openSigninPanel = async (title = false, expand = true) => {
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.signin-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -2439,7 +2452,7 @@ const openSigninPanel = async (title = false) => {
   })
 
   // open the info window
-  expandInfoWindow(50, 50).then(async () => {})
+  if (expand) expandInfoWindow(50, 50).then(async () => {})
 }
 
 // create a new user account
@@ -2621,6 +2634,111 @@ const openUserProfile = async (handle, userId) => {
       console.error(JSON.stringify(err, null, 2))
     })
 }
+
+// show a list of markers on the map
+const openIssueList = async () => {
+  const markers = app.markers.markers
+  let contentEl = $(`
+  <div class="issue-list-container">
+    <div class="prevnext-issue-container row">
+      <button class="navigate-issues-link first-issue-link btn btn-secondary col-6">First post</button>
+      <button class="navigate-issues-link last-issue-link btn btn-secondary col-6">Latest post</button>
+    </div>
+    <h2>Posts in ${app.map.title || app.copy.anonymousmaptitle}</h2>
+  </div>
+  `)
+  // position and activate the first/last issue links
+  $('.first-issue-link', contentEl).on('click', (e) => {
+    e.preventDefault()
+    app.markers.simulateClick(app.markers.markers[0])
+  })
+  $('.last-issue-link', contentEl).on('click', (e) => {
+    e.preventDefault()
+    app.markers.simulateClick(
+      app.markers.markers[app.markers.markers.length - 1]
+    )
+  })
+
+  const listEl = $('<ul class="issue-list list-group"></ul>')
+  markers.forEach((marker) => {
+    const data = marker.issueData
+    const date = DateDiff.asAge(data.createdAt)
+    const attribution = `
+Posted by
+<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${
+      data.user.handle
+    }"href="#">${data.user.handle}</a> ${date}
+near ${data.address.substr(0, data.address.lastIndexOf(','))}.
+`
+    const commentsString = data.comments.length
+      ? `<br />${data.comments.length} comment${
+          data.comments.length > 1 ? 's' : ''
+        }`
+      : ''
+
+    const item = $(
+      `<li class="issue-list-item list-group-item" ws-issue-id="${data._id}">
+        <a href="#${data._id}">${data.title}</a>
+        <p class="instructions attribution lead">${attribution}${commentsString}</p>
+        
+      </li>`
+    )
+
+    // handle issue list item click
+    item.on('click', (e) => {
+      const marker = app.markers.findById(data._id)
+      app.markers.simulateClick(marker)
+    })
+
+    item.appendTo(listEl)
+  })
+
+  // handle mouseover issue in list
+  $('.issue-list-item', listEl).on('mouseenter', (e) => {
+    // pan to the relevant marker for this issue
+    const issueId = $(e.target).attr('ws-issue-id')
+    const marker = app.markers.findById(issueId)
+    try {
+      // deselect all
+      app.markers.deactivate()
+      // select the target marker
+      app.markers.activate(marker)
+      app.map.element.panTo(marker.getLatLng())
+    } catch (err) {
+      // ignore mouseouts on sub-elements
+    }
+  })
+
+  // handle click on username
+  $('.user-link', listEl).click((e) => {
+    e.preventDefault()
+    e.stopPropagation() // prevent list item click event from being triggered
+    // open user profile for this user
+    const userId = $(e.target).attr('ws-user-id')
+    const userHandle = $(e.target).attr('ws-user-handle')
+    openUserProfile(userHandle, userId)
+  })
+
+  // handle mouseout from entire list
+  listEl.on('mouseleave', (e) => {
+    // deselect all
+    app.markers.deactivate()
+  })
+
+  // special message if no markers exist on this map
+  if (!app.markers.markers.length) {
+    contentEl = $('.no-posts-container').clone().removeClass('hide')
+    $('.map-select-link', contentEl).on('click', (e) => {
+      e.preventDefault()
+      openMapSelectorPanel()
+    })
+  }
+
+  // add to page
+  $('.info-window-content').html('')
+  listEl.appendTo(contentEl)
+  contentEl.appendTo('.info-window-content')
+} // openIssueList
 
 // show a particular user's profile
 const openErrorPanel = (message) => {
@@ -2911,6 +3029,28 @@ const openMapSelectorPanel = async () => {
   // show the updated map data
   $('.info-window .map-list-item-template').replaceWith(selectedMapListItem)
 
+  // create first/last issue button links
+  if (app.markers.markers.length) {
+    // add links to first and last posts
+    $(`
+      <div class="prevnext-issue-container row">
+        <button class="navigate-issues-link first-issue-link btn btn-secondary col-6">First post</button>
+        <button class="navigate-issues-link last-issue-link btn btn-secondary col-6">Latest post</button>
+      </div>
+    `).prependTo('.info-window-content')
+    // position and activate the first/last issue links
+    $('.first-issue-link').on('click', (e) => {
+      e.preventDefault()
+      app.markers.simulateClick(app.markers.markers[0])
+    })
+    $('.last-issue-link').on('click', (e) => {
+      e.preventDefault()
+      app.markers.simulateClick(
+        app.markers.markers[app.markers.markers.length - 1]
+      )
+    })
+  }
+
   // extract the maps
   const maps = data.maps
 
@@ -2918,6 +3058,9 @@ const openMapSelectorPanel = async () => {
   $('.info-window-content .more-maps').html('') // wipe out any previously-generated list
   let mapListTemporaryContainer = $('<div>')
   maps.map((data, i, arr) => {
+    // skip the map already displaying
+    if (data.publicId == app.map.id.get()) return
+
     // remove any previous message that there are no maps
     $('.no-maps-message').hide()
 
