@@ -2730,7 +2730,8 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
     contentEl = $('.no-posts-container').clone().removeClass('hide')
     $('.map-select-link', contentEl).on('click', (e) => {
       e.preventDefault()
-      openMapSelectorPanel()
+      if (app.auth.getToken()) openMapSelectorPanel()
+      else openSigninPanel('Log in to view your maps')
     })
   }
 
