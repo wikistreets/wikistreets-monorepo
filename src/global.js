@@ -856,14 +856,13 @@ async function initMap() {
     // deactivate any currently-selected markers
     app.markers.deactivate()
 
-    // close any open infowindow
-    if (app.mode == 'issuedetails') {
+    // close any open infowindow for mobile users only
+    if (app.mode == 'issuedetails' && app.responsive.isMobile()) {
       // console.log('dragstart');
       collapseInfoWindow()
     }
   })
 
-  // minimize any open infowindow while dragging
   app.map.element.on('dragend', (e) => {
     // console.log('map drag end');
   })
