@@ -518,7 +518,8 @@ button.dropdown-toggle img {
 .sign-up,
 .reset-password,
 .search-address-form,
-.gps-error {
+.gps-error,
+.user-stats {
   padding-top: 20px;
 }
 .no-posts-container header {

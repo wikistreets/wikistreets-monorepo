@@ -15,6 +15,7 @@ const issueSchema = new Schema(
       lat: { type: Number, required: true },
       lng: { type: Number, required: true },
     },
+    zoom: { type: Number },
     address: { type: String, required: true },
     title: { type: String, required: true },
     body: String,

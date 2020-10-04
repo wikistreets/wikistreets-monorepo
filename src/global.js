@@ -164,6 +164,16 @@ const app = {
       app.browserGeolocation.coords = coords
       localStorage.setItem('coords', JSON.stringify(coords))
     },
+    flyTo: (coords, zoom) => {
+      // use default zoom level, if none present
+      if (!zoom) zoom = app.map.element.getZoom()
+
+      // call the leaflet map's panTo method
+      app.map.element.flyTo(coords, zoom)
+      // store this position
+      app.browserGeolocation.coords = coords
+      localStorage.setItem('coords', JSON.stringify(coords))
+    },
   },
   controls: {
     newIssue: {
@@ -1392,7 +1402,8 @@ const showInfoWindow = (marker) => {
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
     app.map.element.invalidateSize(true) // notify leaflet that size has changed
-    app.map.panTo(marker.getLatLng())
+    // app.map.panTo(marker.getLatLng()) // pan to this marker
+    app.map.flyTo(marker.getLatLng(), data.zoom) // pan to marker
 
     // handle click on username event
     $('.info-window .user-link').click((e) => {
@@ -1975,6 +1986,9 @@ const openIssueForm = async (point = false) => {
     // construct a FormData object from the form DOM element
     let formData = new FormData(e.target)
 
+    // add map's current zoom level to data
+    formData.append('zoom', app.map.element.getZoom())
+
     // remove the input type='file' data, since we don't need it
     formData.delete('files-excuse')
 
@@ -2054,7 +2068,8 @@ const openEditIssueForm = async (issueId) => {
   const data = marker.issueData // extract the data
   marker.dragging.enable() // make it draggable
 
-  app.map.panTo(marker.getLatLng())
+  // app.map.panTo(marker.getLatLng()) // pan to marker
+  app.map.flyTo(marker.getLatLng(), data.zoom) // pan to marker
 
   // copy the edit issue form into the infowindow
   const infoWindowHTML = $('.edit-issue-form-container').html()
@@ -2176,6 +2191,9 @@ const openEditIssueForm = async (issueId) => {
 
     // construct a FormData object from the form DOM element
     let formData = new FormData(e.target)
+
+    // add map's current zoom level to data
+    formData.append('zoom', app.map.element.getZoom())
 
     // add any existing files to delete
     if (filesToRemove.length) {
@@ -2703,6 +2721,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
       // select the target marker
       app.markers.activate(marker)
       app.map.element.panTo(marker.getLatLng())
+      // app.map.element.flyTo(marker.getLatLng(), marker.issueData.zoom)
     } catch (err) {
       // ignore mouseouts on sub-elements
     }

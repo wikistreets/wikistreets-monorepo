@@ -24,6 +24,7 @@ const user = require('../models/user')
 
 // email service
 const { EmailService } = require('../services/EmailService')
+const { database } = require('faker')
 
 // markdown support
 // const marked = require('marked')
@@ -220,6 +221,7 @@ const markerRouter = ({ config }) => {
       body('lng').not().isEmpty().trim(),
       body('title').not().isEmpty().trim().escape(),
       body('address').not().isEmpty().trim().escape(),
+      body('zoom').trim(),
       body('body').trim(),
       body('mapTitle').trim().escape(),
     ],
@@ -242,6 +244,9 @@ const markerRouter = ({ config }) => {
         photos: req.files,
         body: req.body.body,
       }
+
+      // add zoom, if present
+      data.zoom = req.body.zoom ? req.body.zoom : null
 
       // reject posts with no map
       if (!mapId) {
@@ -375,6 +380,7 @@ const markerRouter = ({ config }) => {
       body('lng').not().isEmpty().trim(),
       body('title').not().isEmpty().trim().escape(),
       body('address').not().isEmpty().trim().escape(),
+      body('zoom').trim(),
       body('body').trim(),
       body('files_to_delete').trim().escape(),
     ],
@@ -404,6 +410,9 @@ const markerRouter = ({ config }) => {
         // photos: req.files,
         body: req.body.body,
       }
+
+      // add zoom, if present
+      data.zoom = req.body.zoom ? req.body.zoom : null
 
       // reject posts with no map
       if (!mapId || !issueId) {
@@ -449,6 +458,7 @@ const markerRouter = ({ config }) => {
               'issues.$.user': data.user,
               'issues.$.position': data.position,
               'issues.$.address': data.address,
+              'issues.$.zoom': data.zoom,
               'issues.$.title': data.title,
               'issues.$.body': data.body,
             },
