@@ -325,7 +325,7 @@ const markerRouter = ({ config }) => {
         // console.log(`MAP: ${JSON.stringify(map, null, 2)}`)
 
         // tack on the current user to the issue so its sent back to client
-        issue.user = { _id: req.user._id, handle: req.user.handle }
+        issue.user = req.user
 
         // add this map to the user's list of maps
         // increment the number of posts this user has created
