@@ -14,8 +14,8 @@ import marked from 'marked'
 const app = {
   auth: {
     // get and set a JWT token for authorizing this user
-    setToken: (token) => localStorage.setItem('token', token),
-    getToken: () => localStorage.getItem('token'),
+    setToken: (token) => app.localStorage.setItem('token', token),
+    getToken: () => app.localStorage.getItem('token'),
     isContributor: (userId) => {
       const contributors = app.map.contributors
       let found = false
@@ -54,7 +54,15 @@ const app = {
     shareissuemessage: 'Link copied to clipboard.  Share anywhere!',
     sharemapmessage: 'Link copied to clipboard.  Share anywhere!',
   },
-  mode: 'default', // default, issuedetails, issuelocate
+  localStorage: {
+    getItem: (key) => {
+      return localStorage ? localStorage.getItem(key) : ''
+    },
+    setItem: (key, value) => {
+      if (localStorage) localStorage.setItem(key, value)
+    },
+  },
+  mode: 'default', // default, issuedetails, issuecreate, issueedit, signin, signup, userprofile, resetpassword, searchaddress, errorgeneric, errorgeoposition,
   browserGeolocation: {
     enabled: false,
     coords: {
@@ -139,15 +147,15 @@ const app = {
     },
     zoom: {
       default: 5,
-      issuelocate: 17,
+      issuecreate: 17,
       issueview: 15,
       getDefault: () => {
-        return localStorage.getItem('zoom')
-          ? parseInt(localStorage.getItem('zoom'))
+        return app.localStorage.getItem('zoom')
+          ? parseInt(app.localStorage.getItem('zoom'))
           : 4
       },
       setDefault: (zoomLevel = 4) => {
-        localStorage.setItem('zoom', zoomLevel)
+        app.localStorage.setItem('zoom', zoomLevel)
       },
     },
     contributors: [],
@@ -162,7 +170,7 @@ const app = {
       app.map.element.panTo(coords)
       // store this position
       app.browserGeolocation.coords = coords
-      localStorage.setItem('coords', JSON.stringify(coords))
+      app.localStorage.setItem('coords', JSON.stringify(coords))
     },
     flyTo: (coords, zoom) => {
       // use default zoom level, if none present
@@ -172,7 +180,7 @@ const app = {
       app.map.element.flyTo(coords, zoom)
       // store this position
       app.browserGeolocation.coords = coords
-      localStorage.setItem('coords', JSON.stringify(coords))
+      app.localStorage.setItem('coords', JSON.stringify(coords))
     },
   },
   controls: {
@@ -501,15 +509,21 @@ app.markers.place = async (data, cluster) => {
     // check whether this marker already exists on map
     const existingMarker = app.markers.findById(point._id)
     if (existingMarker) {
-      // marker exists already... just update it, if necessary
+      // marker exists already... just update data, if necessary
       existingMarker.issueData = point // save the data
-      existingMarker.setLatLng({
-        lat: point.position.lat,
-        lng: point.position.lng,
-      }) // reposition it
-      // update visible info, if it's currently open on the page
-      const issueEls = $(`.issue-detail[ws-issue-id="${point._id}"]`)
-      if (issueEls.length) {
+      // update the marker position unless it's currently being edited
+      const isBeingEdited = $(`.issue-form[ws-issue-id="${point._id}"]`).length > 0
+      if (!isBeingEdited) {
+        existingMarker.setLatLng({
+          lat: point.position.lat,
+          lng: point.position.lng,
+        }) // reposition it
+      }
+
+      // update visible info, if it's currently being viewed open on the page
+      const isBeingViewed = $(`.issue-detail[ws-issue-id="${point._id}"]`)
+        .length
+      if (isBeingViewed) {
         // check for comments not yet on the page
         point.comments.forEach((comment) => {
           const commentEl = $(`.comment[ws-comment-id="${comment._id}"]`)
@@ -694,8 +708,8 @@ const populateMap = async (recenter = true) => {
 async function initMap() {
   let coords = app.browserGeolocation.getCoords() // default coords
   // use last known coords, if any
-  if (localStorage.getItem('coords'))
-    coords = JSON.parse(localStorage.getItem('coords'))
+  if (app.localStorage.getItem('coords'))
+    coords = JSON.parse(app.localStorage.getItem('coords'))
 
   // set up the leaflet.js map view
   app.map.element = new L.map(app.map.htmlElementId, {
@@ -786,8 +800,9 @@ async function initMap() {
       .then((coords) => {
         // move the me marker, if available
         if (
-          (app.mode =
-            'issuelocate' && app.markers.me && app.markers.me.setLatLng)
+          app.mode == 'issuecreate' &&
+          app.markers.me &&
+          app.markers.me.setLatLng
         ) {
           // console.log('moving me');
           app.markers.me.setLatLng(coords)
@@ -1811,6 +1826,7 @@ const attachMeMarkerPopup = (marker, address) => {
   let street = address.indexOf(',')
     ? address.substr(0, address.indexOf(','))
     : address
+  street = street ? street : 'an unnamed location'
 
   $('.street-address', myPopup).html(street)
   // console.log(`address: ${address}`)
@@ -1828,17 +1844,15 @@ const attachMeMarkerPopup = (marker, address) => {
   return marker
 }
 
+/**
+ * Open the form to allow the user to create a new issue.
+ * @param {*} point The coordinates at which to associate the post. Defaults to center of map.
+ */
 const openIssueForm = async (point = false) => {
   // zoom into map
-  if (app.mode != 'issuelocate') {
-    // // zoom in nice and close, if zoomed out
-    // if (app.map.zoom.getDefault() < app.map.zoom.issuelocate) {
-    //   app.map.element.setZoom(app.map.zoom.issuelocate)
-    // }
-
+  if (app.mode != 'issuecreate') {
     // keep track
-    app.mode = 'issuelocate'
-    // console.log(`mode=${app.mode}`);
+    app.mode = 'issuecreate'
 
     //deactivate all markers
     app.markers.deactivate()
@@ -1854,9 +1868,6 @@ const openIssueForm = async (point = false) => {
     // if no point specified, use the center of map
     point = app.map.element.getCenter()
   }
-
-  // hide the map controls
-  // $('.map-control').fadeOut()
 
   //console.log('issue form panning')
   app.map.panTo(point)
@@ -1928,7 +1939,7 @@ const openIssueForm = async (point = false) => {
 
   // remove an image from an issue
   const removeIssueImage = (e) => {
-    console.log(`removing ${e.target}`)
+    // console.log(`removing ${e.target}`)
   }
 
   // create a decent file uploader for photos
@@ -2083,6 +2094,7 @@ const openEditIssueForm = async (issueId) => {
   data.address = elem.value
 
   // inject the data to the form
+  $('.info-window-content .issue-form').attr('ws-issue-id', data._id)
   $('.info-window-content .issueid').val(data._id)
   $('.info-window-content .issue-title').val(data.title)
   $('.info-window-content .issue-body').val(data.body)
@@ -2342,7 +2354,7 @@ const openSearchAddressForm = () => {
 
 const openGeopositionUnavailableForm = () => {
   // keep track
-  app.mode = 'geopositionerror'
+  app.mode = 'errorgeoposition'
   // console.log(`mode=${app.mode}`);
 
   //deactivate all markers
@@ -2402,22 +2414,10 @@ const getBrowserGeolocation = (options) => {
   })
 }
 
-const formatDate = (date) => {
-  if (!date) return 'never'
-  // format the date
-  const d = new Date(date)
-  const dtf = new Intl.DateTimeFormat('en', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-  const [{ value: mo }, , { value: da }, , { value: ye }] = dtf.formatToParts(d)
-  const formattedDate = `${da} ${mo} ${ye}`
-  return formattedDate
-}
-
 // authorize the current user
 const openSigninPanel = async (title = false, expand = true) => {
+  app.mode = 'signin'
+
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.signin-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -2474,6 +2474,8 @@ const openSigninPanel = async (title = false, expand = true) => {
 
 // create a new user account
 const openSignupPanel = async () => {
+  app.mode = 'signup'
+
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.signup-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -2531,6 +2533,8 @@ const openSignupPanel = async () => {
 
 // create a new user account
 const openResetPasswordPanel = async () => {
+  app.mode = 'resetpassword'
+
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.reset-password-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -2575,6 +2579,8 @@ const openResetPasswordPanel = async () => {
 
 // create a new user account
 const openAboutUsForm = async () => {
+  app.mode = 'aboutus'
+
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.about-us-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -2585,6 +2591,8 @@ const openAboutUsForm = async () => {
 
 // show a particular user's profile
 const openUserProfile = async (handle, userId) => {
+  app.mode = 'userprofile'
+
   // fetch data from wikistreets api
   app
     .myFetch(`${app.apis.wikistreets.getUserUrl}/${userId}`)
@@ -2654,6 +2662,8 @@ const openUserProfile = async (handle, userId) => {
 
 // show a list of markers on the map
 const openIssueList = async () => {
+  app.mode = 'default'
+
   const markers = app.markers.markers
   let contentEl = $(`
   <div class="issue-list-container">
@@ -2761,6 +2771,8 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
 
 // show a particular user's profile
 const openErrorPanel = (message) => {
+  app.mode = 'errorgeneric'
+
   // copy the user profile html into the infowindow
   const infoWindowHTML = $('.error-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -2791,6 +2803,8 @@ const activateForkButton = () => {
 
 // show a particular user's profile
 const openForkPanel = () => {
+  app.mode = 'fork'
+
   // copy the user profile html into the infowindow
   const infoWindowHTML = $('.fork-map-container').html()
   $('.info-window-content').html(infoWindowHTML)
@@ -2833,6 +2847,8 @@ const openForkPanel = () => {
 
 // show the list of this user's maps and option to rename this map
 const openMapSelectorPanel = async () => {
+  app.mode = 'selectmap'
+
   // update list of maps when user expands map selector dropdown
   // console.log('opening map selector')
 
