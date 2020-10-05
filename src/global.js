@@ -512,7 +512,8 @@ app.markers.place = async (data, cluster) => {
       // marker exists already... just update data, if necessary
       existingMarker.issueData = point // save the data
       // update the marker position unless it's currently being edited
-      const isBeingEdited = $(`.issue-form[ws-issue-id="${point._id}"]`).length > 0
+      const isBeingEdited =
+        $(`.issue-form[ws-issue-id="${point._id}"]`).length > 0
       if (!isBeingEdited) {
         existingMarker.setLatLng({
           lat: point.position.lat,
@@ -3092,9 +3093,11 @@ const openMapSelectorPanel = async () => {
   // place links to the maps into the map selector
   $('.info-window-content .more-maps').html('') // wipe out any previously-generated list
   let mapListTemporaryContainer = $('<div>')
+  let numMoreMaps = 0
   maps.map((data, i, arr) => {
     // skip the map already displaying
     if (data.publicId == app.map.id.get()) return
+    numMoreMaps++
 
     // remove any previous message that there are no maps
     $('.no-maps-message').hide()
@@ -3113,9 +3116,11 @@ const openMapSelectorPanel = async () => {
   // append entire map list to page
   mapListTemporaryContainer.appendTo('.info-window-content .more-maps')
 
-  if (!maps.length) {
+  if (!numMoreMaps) {
     // create new link
-    const el = $(`<p class="no-maps-message">You have no maps... yet.</p>`)
+    const el = $(
+      `<p class="no-maps-message">You have no other maps... yet.</p>`
+    )
     el.appendTo('.info-window-content .more-maps')
   }
 

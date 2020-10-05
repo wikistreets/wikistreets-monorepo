@@ -33,6 +33,7 @@ const mapSchema = new Schema(
     description: String,
     issues: [issueSchema],
     contributors: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    subscribers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     forks: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
     forkedFrom: { type: Schema.Types.ObjectId, ref: 'Map' },
   },

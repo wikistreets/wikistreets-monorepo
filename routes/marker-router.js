@@ -243,6 +243,7 @@ const markerRouter = ({ config }) => {
         address: req.body.address,
         photos: req.files,
         body: req.body.body,
+        subscribers: [req.user._id],
       }
 
       // add zoom, if present
@@ -291,6 +292,10 @@ const markerRouter = ({ config }) => {
             lng: req.body.lng,
           },
           $push: { issues: issue }, // add the new issue to the map
+          $addToSet: {
+            subscribers: req.user,
+            contributors: req.user,
+          },
         }
         if (mapTitle) updates.mapTitle = mapTitle // add map title if present
 
@@ -304,6 +309,12 @@ const markerRouter = ({ config }) => {
           { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         )
           .populate('contributors', ['_id', 'handle'])
+          .populate('subscribers', [
+            '_id',
+            'handle',
+            'email',
+            'notifications.email',
+          ])
           .populate('issues.user', ['_id', 'handle'])
           .populate('issues.comments.user', ['_id', 'handle'])
           .catch((err) => {
@@ -313,30 +324,57 @@ const markerRouter = ({ config }) => {
         if (!map) throw 'No map found.'
         // console.log(`MAP: ${JSON.stringify(map, null, 2)}`)
 
-        // tack on the current user to the issue
-        issue.user = req.user
-
-        // update this map's list of contributors
-        map.contributors.pull(req.user._id) // first remove from list
-        map.contributors.push(req.user) // re-append to list
-        map.save() // save changes to map
+        // tack on the current user to the issue so its sent back to client
+        issue.user = { _id: req.user._id, handle: req.user.handle }
 
         // add this map to the user's list of maps
-        req.user.maps.pull(map._id) // first remove from list
-        req.user.maps.push(map) // re-append to list
-        req.user.save()
-
         // increment the number of posts this user has created
-        req.user = await User.findOneAndUpdate(
-          { _id: req.user._id },
-          { $inc: { numPosts: 1 } },
-          { new: true }
-        )
+        await req.user.updateOne({
+          $addToSet: {
+            maps: map,
+          },
+          $inc: { numPosts: 1 },
+        })
 
-        req.user.save() // save changes to user
-
-        // support markdown
-        // issue.body = marked(issue.body)
+        // loop through all subscribers to this map and email them
+        const targetIssue = issue
+        const posterId = req.user._id.toString().trim()
+        if (map && map.subscribers) {
+          const mapTitle = decodeURI(map.title)
+          const issueTitle = decodeURI(targetIssue.title)
+          map.subscribers.forEach((subscriber) => {
+            // don't send email to the person who commented
+            if (subscriber._id != posterId) {
+              const recipient = subscriber
+              // console.log(`sending email to ${recipient.email}`)
+              // send email notification, if the recipient has not opted-out of emails
+              if (recipient.notifications.email) {
+                const mapPhrase = map.title
+                  ? `, on the map, '${mapTitle}'`
+                  : ' on an unnamed map'
+                const imagesPhrase = data.photos.length
+                  ? '[images not displayed]'
+                  : ''
+                const bodyPhrase = `\n\n"""\n${data.body.substr(
+                  0,
+                  100
+                )}... ${imagesPhrase}\n"""`
+                const emailService = new EmailService({})
+                try {
+                  emailService.send(
+                    recipient.email,
+                    `New post: '${issueTitle}' by ${req.user.handle} on '${mapTitle}'!`,
+                    `Dear ${recipient.handle},\n\n${req.user.handle} just posted '${issueTitle}'${mapPhrase}!${bodyPhrase}\n\nTo view in full, please visit https://wikistreets.io/map/${map.publicId}#${targetIssue._id}`,
+                    true,
+                    recipient._id
+                  )
+                } catch (err) {
+                  console.log(err)
+                }
+              } // if the subscriber wants to receive emails
+            } // if subscriber is not the commenter
+          }) // foreaach subscriber
+        } // if there is an issue at hand
 
         // return the response to client
         res.json({
@@ -446,7 +484,7 @@ const markerRouter = ({ config }) => {
       try {
         // find and update the Issue object
         // issueObjectId = ObjectId.fromString(issueId)
-        await Map.update(
+        await Map.updateOne(
           {
             publicId: mapId,
             $or: [{ limitContributors: false }, { contributors: req.user }],
@@ -463,7 +501,8 @@ const markerRouter = ({ config }) => {
               'issues.$.body': data.body,
             },
             $addToSet: {
-              contributors: req.user,
+              'issues.$.subscribers': req.user, // subscribe to this issue's notifications
+              contributors: req.user, // add as contributor to this map
             },
           },
           { new: true }
@@ -607,25 +646,32 @@ const markerRouter = ({ config }) => {
         // console.log(`COMMENT: ${JSON.stringify(comment, null, 2)}`)
 
         // set up changes we want to make to the map
+        let updates = {
+          $push: {
+            'issues.$.comments': comment,
+          },
+          $addToSet: {
+            'issues.$.subscribers': req.user,
+          },
+        }
+
+        // make the changes
         const map = await Map.findOneAndUpdate(
           {
             publicId: mapId,
             // $or: [{ limitContributors: false }, { contributors: req.user }], // currently allowing any users to comment... uncommemnt this to only allow listed contributors
             'issues._id': issueId,
           },
-          {
-            $push: {
-              'issues.$.comments': comment,
-            },
-            // don't make this user a contributor since we're allowing anyone to comment
-            // and becoming a contributor gives them admin rights
-            // $addToSet: {
-            //   contributors: req.user,
-            // },
-          },
+          updates,
           { new: true }
         )
-          .populate('contributors', ['_id', 'handle'])
+          .populate('contributors', ['_id', 'handle', 'email'])
+          .populate('issues.subscribers', [
+            '_id',
+            'handle',
+            'email',
+            'notifications.email',
+          ])
           .populate('issues.comments.user', ['_id', 'handle'])
           .populate('issues.user', ['_id', 'handle'])
           .catch((err) => {
@@ -635,24 +681,28 @@ const markerRouter = ({ config }) => {
 
         if (!map) throw 'No map found'
 
-        // send email to the original poster, if a different user
+        // find the issue that has just been commented on
+        let targetIssue = false
         map.issues.forEach(async (issue) => {
           // only send emails if it's not the user themselves who commented
           if (issue._id == issueId) {
-            if (
-              issue.user._id.toString().trim() != req.user._id.toString().trim()
-            ) {
-              // console.log(
-              //   `creator: ${issue.user._id.valueOf()}\nsenator: ${req.user._id.valueOf()}`
-              // )
-              // get the email of this user... it's not included in map data we got earlier for privacy reasons
-              const recipient = await User.findOne({ _id: issue.user._id })
+            targetIssue = issue
+          } // if issue ids match
+        })
+
+        // loop through all subscribers to this issue and email them
+        const commenterId = req.user._id.toString().trim()
+        if (targetIssue && targetIssue.subscribers) {
+          const mapTitle = decodeURI(map.title)
+          const issueTitle = decodeURI(targetIssue.title)
+          targetIssue.subscribers.forEach((subscriber) => {
+            // don't send email to the person who commented
+            if (subscriber._id != commenterId) {
+              const recipient = subscriber
               // console.log(`sending email to ${recipient.email}`)
               // send email notification, if the recipient has not opted-out of emails
               if (recipient.notifications.email) {
-                const mapPhrase = map.title
-                  ? `, on the map, '${map.title}'`
-                  : ''
+                const mapPhrase = map.title ? `, on the map, '${mapTitle}'` : ''
                 const imagesPhrase = data.photos.length
                   ? '[images not displayed]'
                   : ''
@@ -661,20 +711,24 @@ const markerRouter = ({ config }) => {
                   100
                 )}... ${imagesPhrase}\n"""`
                 const emailService = new EmailService({})
-                emailService.send(
-                  recipient.email,
-                  `New comment from ${req.user.handle} on '${issue.title}'!`,
-                  `Dear ${recipient.handle},\n\n${req.user.handle} commented on your post, '${issue.title}'${mapPhrase}!${bodyPhrase}\n\nTo view in full, please visit https://wikistreets.io/map/${map.publicId}#${issue._id}`,
-                  true,
-                  recipient._id
-                )
-              }
-            }
-          }
-        })
+                try {
+                  emailService.send(
+                    recipient.email,
+                    `New comment from ${req.user.handle} on '${issueTitle}'!`,
+                    `Dear ${recipient.handle},\n\n${req.user.handle} commented on your post, '${issueTitle}'${mapPhrase}!${bodyPhrase}\n\nTo view in full, please visit https://wikistreets.io/map/${map.publicId}#${targetIssue._id}`,
+                    true,
+                    recipient._id
+                  )
+                } catch (err) {
+                  console.log(err)
+                }
+              } // if the subscriber wants to receive emails
+            } // if subscriber is not the commenter
+          }) // foreaach subscriber
+        } // if there is an issue at hand
 
         // increment the number of posts this user has created
-        User.update(
+        User.updateOne(
           { _id: req.user._id },
           {
             $addToSet: { maps: map },

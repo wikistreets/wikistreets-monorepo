@@ -363,6 +363,7 @@ const mapRouter = ({ config }) => {
         newMap.isNew = true // flag it as new
         newMap.publicId = uuidv4() // generate a new random-ish public id for this map
         newMap.contributors = [req.user] // wipe out list of contributors, save for this user
+        newMap.subscribers = [req.user] // wipe out list of contributors, save for this user
         newMap.forks = [] // wipe out list of forks
         newMap.forkedFrom = map._id // track from whence this fork came
         const fork = new Map(newMap)
