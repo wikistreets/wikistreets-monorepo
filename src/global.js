@@ -17,7 +17,7 @@ const app = {
     setToken: (token) => app.localStorage.setItem('token', token),
     getToken: () => app.localStorage.getItem('token'),
     isContributor: (userId) => {
-      const contributors = app.map.contributors
+      const contributors = app.featureCollection.contributors
       let found = false
       contributors.forEach((contributor) => {
         if (contributor._id == userId) found = true
@@ -27,7 +27,7 @@ const app = {
     },
     isEditor: () => {
       const userIsLoggedIn = app.auth.getToken()
-      const mapIsPrivate = app.map.limitContributors
+      const mapIsPrivate = app.featureCollection.limitContributors
       const userIsContributor = app.auth.isContributor(app.user.id)
       // if the map is public, any user has permission to edit
       // if the map is private, only official contributors can edit
@@ -50,8 +50,8 @@ const app = {
     signuperror:
       'An account exists with that email address.  Please sign in or create a new account',
     mappermissionserror: 'You do not have permission to edit this map.',
-    anonymousmaptitle: 'unnamed map',
-    shareissuemessage: 'Link copied to clipboard.  Share anywhere!',
+    anonymousfeaturecollectiontitle: 'unnamed map',
+    sharefeaturemessage: 'Link copied to clipboard.  Share anywhere!',
     sharemapmessage: 'Link copied to clipboard.  Share anywhere!',
   },
   localStorage: {
@@ -62,7 +62,7 @@ const app = {
       if (localStorage) localStorage.setItem(key, value)
     },
   },
-  mode: 'default', // default, issuedetails, issuecreate, issueedit, signin, signup, userprofile, resetpassword, searchaddress, errorgeneric, errorgeoposition,
+  mode: 'default', // default, featuredetails, featurecreate, featureedit, signin, signup, userprofile, resetpassword, searchaddress, errorgeneric, errorgeoposition,
   browserGeolocation: {
     enabled: false,
     coords: {
@@ -89,17 +89,17 @@ const app = {
       userSecret: '/users/secret',
       userResetPassword: '/users/reset-password',
       getUserMe: '/users/me',
-      getMapUrl: '/map/data',
-      postIssueUrl: '/markers/create',
-      editIssueUrl: '/markers/edit',
-      deleteIssueUrl: '/markers/delete',
-      postCommentUrl: '/markers/comments/create',
-      deleteCommentUrl: '/markers/comments/delete',
+      getFeatureCollectionUrl: '/map/data',
+      postFeatureUrl: '/features/create',
+      editFeatureUrl: '/features/edit',
+      deleteFeatureUrl: '/features/delete',
+      postCommentUrl: '/features/comments/create',
+      deleteCommentUrl: '/features/comments/delete',
       getUserUrl: '/users',
-      mapTitleUrl: '/map/title',
+      featureCollectionTitleUrl: '/map/title',
       collaborationSettingsUrl: '/map/collaboration',
-      deleteMapUrl: '/map/remove',
-      forkMapUrl: '/map/fork',
+      deleteFeatureCollectionUrl: '/map/remove',
+      forkFeatureCollectionUrl: '/map/fork',
       staticMapUrl: '/map',
     },
     mapbox: {
@@ -114,29 +114,25 @@ const app = {
     id: '',
     maps: [],
   },
-  map: {
-    id: {
-      get: () => {
-        // get this map's ID from the URL
-        const url = window.location.pathname
-        const urlParts = url.split('/') // split by slash
-        const mapId = urlParts[urlParts.length - 1] // last part is always map ID?
-        return mapId
-      },
+  featureCollection: {
+    getPublicIdFromUrl: () => {
+      // get this map's ID from the URL
+      const url = window.location.pathname
+      const urlParts = url.split('/') // split by slash
+      const featureCollectionId = urlParts[urlParts.length - 1] // last part is always map ID?
+      return featureCollectionId
     },
-    hash: {
-      get: () => {
-        // get this map's ID from the URL
-        const hash = window.location.hash
-        if (hash.indexOf('#') == 0) {
-          return hash.substr(1)
-        } else return ''
-      },
+    getHashFromUrl: () => {
+      // get this map's ID from the URL
+      const hash = window.location.hash
+      if (hash.indexOf('#') == 0) {
+        return hash.substr(1)
+      } else return ''
     },
-    title: '',
     element: null,
     htmlElementId: 'map',
     htmlElementSelector: '#map', // the id of the map element in the html
+    title: '',
     geolocation: {
       // default geolocation at a random point
       lat: Math.random() * 140 - 70, // bewteen -70 to +70... sorry arctic and antarctic
@@ -147,8 +143,8 @@ const app = {
     },
     zoom: {
       default: 5,
-      issuecreate: 17,
-      issueview: 15,
+      featurecreate: 17,
+      featureview: 15,
       getDefault: () => {
         return app.localStorage.getItem('zoom')
           ? parseInt(app.localStorage.getItem('zoom'))
@@ -167,32 +163,47 @@ const app = {
     dateModified: '',
     panTo: (coords) => {
       // call the leaflet map's panTo method
-      app.map.element.panTo(coords)
+      app.featureCollection.element.panTo(coords)
       // store this position
       app.browserGeolocation.coords = coords
       app.localStorage.setItem('coords', JSON.stringify(coords))
     },
     flyTo: (coords, zoom) => {
       // use default zoom level, if none present
-      if (!zoom) zoom = app.map.element.getZoom()
+      if (!zoom) zoom = app.featureCollection.element.getZoom()
 
       // call the leaflet map's panTo method
-      app.map.element.flyTo(coords, zoom)
+      app.featureCollection.element.flyTo(coords, zoom)
       // store this position
+      app.browserGeolocation.coords = coords
+      app.localStorage.setItem('coords', JSON.stringify(coords))
+    },
+    fitBounds: (bbox) => {
+      if (!bbox.length == 4) return // abort
+      // convert the bbox to leaflet LatLngBounds format: [[lat,lng], [lat,lng]]
+      bbox = [
+        [bbox[1], bbox[0]],
+        [bbox[3], bbox[2]],
+      ]
+      // call the leaflet map's fitBounds method
+      app.featureCollection.element.fitBounds(bbox)
+
+      // store this position
+      const coords = app.featureCollection.element.getCenter()
       app.browserGeolocation.coords = coords
       app.localStorage.setItem('coords', JSON.stringify(coords))
     },
   },
   controls: {
-    newIssue: {
-      htmlElementSelector: '.control-add-issue img',
+    newFeature: {
+      htmlElementSelector: '.control-add-feature img',
       icons: {
         enabled:
           '/static/images/material_design_icons/add_circle_outline-24px.svg',
       },
     },
-    editIssue: {
-      htmlElementSelector: '.control-edit-issue img',
+    editFeature: {
+      htmlElementSelector: '.control-edit-feature img',
       icons: {
         active: '/static/images/material_design_icons/edit-24px.svg',
       },
@@ -215,8 +226,8 @@ const app = {
       timer: null,
     },
   },
-  issues: {
-    issues: [],
+  features: {
+    features: [],
   },
   markers: {
     cluster: null,
@@ -310,10 +321,10 @@ const app = {
 }
 // add methods
 
-// send request to the server with auth and mapId attached
+// send request to the server with auth and featureCollectionId attached
 app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
   // get the current maps' id from the URL
-  const mapId = app.map.id.get()
+  const featureCollectionId = app.featureCollection.getPublicIdFromUrl()
 
   let options = {
     method: requestType,
@@ -330,18 +341,22 @@ app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
     // deal with multipart FormData differently from simple objects
     if (multipart) {
       // using the FormData object
-      if (!data.has('mapId')) data.append('mapId', mapId)
-      if (!data.has('mapTitle')) data.append('mapTitle', app.map.title)
+      if (!data.has('featureCollectionId'))
+        data.append('featureCollectionId', featureCollectionId)
+      if (!data.has('featureCollectionTitle'))
+        data.append('featureCollectionTitle', app.featureCollection.title)
     } else {
       // using a simple object
-      if (!data.mapId) data.mapId = mapId
-      if (!data.mapTitle) data.mapTitle = app.map.title
+      if (!data.featureCollectionId)
+        data.featureCollectionId = featureCollectionId
+      if (!data.featureCollectionTitle)
+        data.featureCollectionTitle = app.featureCollection.title
     }
     options.body = data
   } else if (requestType == 'GET') {
     // convert data object to query string params
     let queryParams = []
-    queryParams.push(`mapId=${mapId}`) // add map id
+    queryParams.push(`featureCollectionId=${featureCollectionId}`) // add map id
     // loop through object fields
     const keys = Object.keys(data) // get keys
     keys.forEach((key, index) => {
@@ -351,8 +366,8 @@ app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
       // console.log(`${key}: ${courses[key]}`)
     })
     // make sure map title is sent along, just in case it has changed in client
-    if (!queryParams.includes('mapTitle'))
-      queryParams.push('mapTitle', app.map.title)
+    if (!queryParams.includes('featureCollectionTitle'))
+      queryParams.push('featureCollectionTitle', app.featureCollection.title)
     // assemble the query and tack it on the URL
     let query = queryParams.join('&')
     url = url += `?${query}`
@@ -373,17 +388,19 @@ const toTitleCase = (str) => {
 }
 
 // get the title of the map, or a generic title if none exists
-app.map.getTitle = (titlecase = false) => {
-  let title = app.map.title ? app.map.title : app.copy.anonymousmaptitle
+app.featureCollection.getTitle = (titlecase = false) => {
+  let title = app.featureCollection.title
+    ? app.featureCollection.title
+    : app.copy.anonymousfeaturecollectiontitle
   if (titlecase) title = toTitleCase(title)
   return title
 }
 
 // set the title of the map
-app.map.setTitle = (title) => {
+app.featureCollection.setTitle = (title) => {
   // store it if it's valid
-  if (title) app.map.title = title
-  else title = app.copy.anonymousmaptitle // use generic title, if none
+  if (title) app.featureCollection.title = title
+  else title = app.copy.anonymousfeaturecollectiontitle // use generic title, if none
   const newTitle = `${toTitleCase(title)} - Wikistreets`
   $('head title').html(newTitle) // window title
   $('.map-title.selected-map').text(title) // update the visible name
@@ -394,9 +411,9 @@ app.map.setTitle = (title) => {
 }
 
 // get the center point of the map
-app.map.getCenter = () => {
+app.featureCollection.getCenter = () => {
   // update current center marker street address
-  const center = app.map.element.getCenter()
+  const center = app.featureCollection.element.getCenter()
   const coords = {
     lat: center.lat,
     lng: center.lng,
@@ -471,7 +488,7 @@ app.markers.createCluster = () => {
     disableClusteringAtZoom: 18,
   })
   // add marker cluster to map
-  app.map.element.addLayer(app.markers.cluster)
+  app.featureCollection.element.addLayer(app.markers.cluster)
   // return cluster
   return app.markers.cluster
 }
@@ -489,13 +506,13 @@ app.markers.simulateClick = (marker) => {
     marker.dispatchEvent(evObj)
   }
 }
-app.markers.findById = (issueId) => {
+app.markers.findById = (featureId) => {
   // find an existing marker by its id
-  issueId = `marker-${issueId}` // markers on the map have been given this prefix
+  featureId = `marker-${featureId}` // markers on the map have been given this prefix
   let match = false
   app.markers.markers.forEach((data) => {
-    // console.log(`${data._id} && ${issueId}`)
-    if (data._id == issueId) {
+    // console.log(`${data._id} && ${featureId}`)
+    if (data._id == featureId) {
       match = data
     }
   })
@@ -510,23 +527,23 @@ app.markers.place = async (data, cluster) => {
     const existingMarker = app.markers.findById(point._id)
     if (existingMarker) {
       // marker exists already... just update data, if necessary
-      existingMarker.issueData = point // save the data
+      existingMarker.featureData = point // save the data
       // update the marker position unless it's currently being edited
       const isBeingEdited =
-        $(`.issue-form[ws-issue-id="${point._id}"]`).length > 0
+        $(`.feature-form[ws-feature-id="${point._id}"]`).length > 0
       if (!isBeingEdited) {
         existingMarker.setLatLng({
-          lat: point.position.lat,
-          lng: point.position.lng,
+          lat: point.geometry.coordinates[1], //point.position.lat,
+          lng: point.geometry.coordinates[0], //point.position.lng,
         }) // reposition it
       }
 
       // update visible info, if it's currently being viewed open on the page
-      const isBeingViewed = $(`.issue-detail[ws-issue-id="${point._id}"]`)
+      const isBeingViewed = $(`.feature-detail[ws-feature-id="${point._id}"]`)
         .length
       if (isBeingViewed) {
         // check for comments not yet on the page
-        point.comments.forEach((comment) => {
+        point.properties.comments.forEach((comment) => {
           const commentEl = $(`.comment[ws-comment-id="${comment._id}"]`)
           if (!commentEl.length) {
             // comment is not on the page... put it there
@@ -536,44 +553,48 @@ app.markers.place = async (data, cluster) => {
             $('.info-window-content .existing-comments').show()
           }
         }) // foreach comment
-      } // if issueEls.length
+      } // if featureEls.length
     } else {
       // new marker
       // add delay before dropping marker onto map
       // setTimeout(() => {
-      if (point.position != undefined && point.position != null) {
-        const coords = [point.position.lat, point.position.lng]
+      if (point.geometry != undefined && point.geometry != null) {
+        const coords = [
+          point.geometry.coordinates[1],
+          point.geometry.coordinates[0],
+        ]
+        console.log(coords)
         const marker = L.marker(coords, {
           zIndexOffset: app.markers.zIndex.default,
           riseOffset: app.markers.zIndex.default,
           riseOnHover: true,
         })
 
-        if (point.photos && point.photos.length) {
-          marker.issueType = 'unknownPhoto'
+        if (point.properties.photos && point.properties.photos.length) {
+          marker.featureType = 'unknownPhoto'
         } else {
-          marker.issueType = 'unknownText'
+          marker.featureType = 'unknownText'
         }
 
         // add a unique id to each marker for later reference
         marker._id = `marker-${point._id}`
         // console.log(marker._id)
 
-        // flag whether the marker issue isopen
+        // flag whether the marker feature isopen
         marker.isOpen = false
 
         // keep the index number of this marker to maintain order
         marker.index = app.markers.markers.length //i
 
         // attach the data to the marker
-        marker.issueData = point
+        marker.featureData = point
 
         // cluster.addLayer(marker) // add to the marker cluster
-        app.map.element.addLayer(marker) // add directly to map
+        app.featureCollection.element.addLayer(marker) // add directly to map
 
         // de-highlight the current marker
         marker.setZIndexOffset(app.markers.zIndex.default)
-        marker.setIcon(app.markers.icons[marker.issueType].default)
+        marker.setIcon(app.markers.icons[marker.featureType].default)
 
         // add to list of markers
         app.markers.markers.push(marker)
@@ -593,7 +614,7 @@ app.markers.place = async (data, cluster) => {
 app.markers.activate = (marker = app.markers.current) => {
   // make one of the markers appear 'active'
   app.markers.current = marker
-  marker.setIcon(app.markers.icons[marker.issueType].active)
+  marker.setIcon(app.markers.icons[marker.featureType].active)
   marker.setZIndexOffset(app.markers.zIndex.active)
   // mark it as open
   marker.isOpen = true
@@ -605,7 +626,7 @@ app.markers.deactivate = (marker = app.markers.current) => {
   markerList.forEach((marker) => {
     marker.isOpen = false
     marker.setZIndexOffset(app.markers.zIndex.default)
-    marker.setIcon(app.markers.icons[marker.issueType].default)
+    marker.setIcon(app.markers.icons[marker.featureType].default)
   })
   // there is now no active marker
   app.markers.current = null
@@ -624,12 +645,14 @@ app.markers.next = (marker) => {
   app.markers.simulateClick(app.markers.markers[i])
 }
 
-app.map.fetch = async (sinceDate = null) => {
+app.fetchFeatureCollection = async (sinceDate = null) => {
   // fetch data from wikistreets api
-  let apiUrl = `${app.apis.wikistreets.getMapUrl}/${app.map.id.get()}`
+  let apiUrl = `${
+    app.apis.wikistreets.getFeatureCollectionUrl
+  }/${app.featureCollection.getPublicIdFromUrl()}`
   return app.myFetch(apiUrl).then((data) => {
     // get markers
-    app.issues.issues = data.issues
+    app.features.features = data.features
 
     // console.log(`RESPONSE: ${JSON.stringify(data, null, 2)}`)
     return data
@@ -658,52 +681,58 @@ app.user.fetch = async () => {
 }
 
 const populateMap = async (recenter = true) => {
-  // get the map data from server
-  const data = await app.map.fetch()
+  // get the FeatureCollection data from server
+  const data = await app.fetchFeatureCollection()
 
-  // recenter on map centerpoint
-  if (recenter && data.centerPoint) {
+  // recenter on map bounding box
+  if (recenter && data.bbox && data.bbox.length) {
     //console.log('init map panning')
-    app.map.panTo(data.centerPoint)
+    app.featureCollection.fitBounds(data.bbox)
   }
 
   // console.log(JSON.stringify(data, null, 2))
   // scrape map metadata
   try {
-    app.map.contributors = data.contributors ? data.contributors : []
-    app.map.numContributors = data.contributors ? data.contributors.length : 0
-    app.map.limitContributors = data.limitContributors
+    app.featureCollection.contributors = data.contributors
+      ? data.contributors
+      : []
+    app.featureCollection.numContributors = data.contributors
+      ? data.contributors.length
+      : 0
+    app.featureCollection.limitContributors = data.limitContributors
       ? data.limitContributors
       : false
-    app.map.limitViewers = data.limitViewers ? data.limitViewers : false
-    app.map.forks = data.forks ? data.forks : []
-    app.map.numForks = data.forks ? data.forks.length : 0
-    app.map.forkedFrom = data.forkedFrom ? data.forkedFrom : null
+    app.featureCollection.limitViewers = data.limitViewers
+      ? data.limitViewers
+      : false
+    app.featureCollection.forks = data.forks ? data.forks : []
+    app.featureCollection.numForks = data.forks ? data.forks.length : 0
+    app.featureCollection.forkedFrom = data.forkedFrom ? data.forkedFrom : null
     // store original timestamps
-    app.map.timestamps = {
+    app.featureCollection.timestamps = {
       updatedAt: data.updatedAt,
       createdAt: data.createdAt,
     }
     // also store formatted dates
-    app.map.updatedAt = DateDiff.asAge(data.updatedAt)
-    app.map.createdAt = DateDiff.asAge(data.createdAt)
+    app.featureCollection.updatedAt = DateDiff.asAge(data.updatedAt)
+    app.featureCollection.createdAt = DateDiff.asAge(data.createdAt)
   } catch (err) {
     console.log(`Metadata error: ${err}`)
   }
 
   // set the map title, if any
-  app.map.setTitle(data.title)
+  app.featureCollection.setTitle(data.title)
 
   // create marker cluster
   const cluster = app.markers.cluster
     ? app.markers.cluster
     : app.markers.createCluster()
 
-  // extract the issues
-  const issues = data.issues
+  // extract the features
+  const features = data.features
 
   // place new markers down
-  await app.markers.place(issues, cluster)
+  await app.markers.place(features, cluster)
 }
 
 async function initMap() {
@@ -713,12 +742,15 @@ async function initMap() {
     coords = JSON.parse(app.localStorage.getItem('coords'))
 
   // set up the leaflet.js map view
-  app.map.element = new L.map(app.map.htmlElementId, {
-    // attributionControl: false,
-    zoomControl: false,
-    doubleClickZoom: false,
-  }).setView([coords.lat, coords.lng], app.map.zoom.getDefault())
-  app.map.element.attributionControl.setPrefix('')
+  app.featureCollection.element = new L.map(
+    app.featureCollection.htmlElementId,
+    {
+      // attributionControl: false,
+      zoomControl: false,
+      doubleClickZoom: false,
+    }
+  ).setView([coords.lat, coords.lng], app.featureCollection.zoom.getDefault())
+  app.featureCollection.element.attributionControl.setPrefix('')
 
   // load map tiles
   L.tileLayer(app.apis.mapbox.baseUrl, {
@@ -729,7 +761,7 @@ async function initMap() {
     tileSize: 512,
     zoomOffset: -1,
     accessToken: app.apis.mapbox.apiKey,
-  }).addTo(app.map.element)
+  }).addTo(app.featureCollection.element)
 
   // fetch this user's info, if logged-in
   if (app.auth.getToken()) await app.user.fetch()
@@ -738,12 +770,12 @@ async function initMap() {
   await populateMap()
 
   // open the map list of posts for desktop viewers
-  openIssueList()
+  openFeatureList()
 
   // load any marker in the url hash
   // need to wait till all the markers have been placed
   setTimeout(() => {
-    const hash = app.map.hash.get()
+    const hash = app.featureCollection.getHashFromUrl()
     if (hash) {
       //if there is a marker id in the url
       const marker = app.markers.findById(hash)
@@ -776,8 +808,8 @@ async function initMap() {
     openSigninPanel()
   })
 
-  // pop open issue form when control icon clicked
-  $('.control-add-issue').click(() => {
+  // pop open feature form when control icon clicked
+  $('.control-add-feature').click(() => {
     if (app.auth.getToken() && !app.auth.isEditor()) {
       // user is logged-in, but not a contributor on this private map
       const errorString = $('.error-container').html()
@@ -790,7 +822,7 @@ async function initMap() {
       })
       expandInfoWindow(30, 70)
     } else {
-      openIssueForm() // user is logged-in and allowed to contribute
+      openFeatureForm() // user is logged-in and allowed to contribute
     }
   })
 
@@ -801,7 +833,7 @@ async function initMap() {
       .then((coords) => {
         // move the me marker, if available
         if (
-          app.mode == 'issuecreate' &&
+          app.mode == 'featurecreate' &&
           app.markers.me &&
           app.markers.me.setLatLng
         ) {
@@ -813,7 +845,7 @@ async function initMap() {
       .then((coords) => {
         // if (!app.auth.getToken()) {
         //   // console.log('not logged in')
-        //   app.map.panTo(coords)
+        //   app.featureCollection.panTo(coords)
         //   openSigninPanel('Log in to create a post here')
         // } else {
         collapseInfoWindow().then(() => {
@@ -821,7 +853,7 @@ async function initMap() {
           if (app.auth.getToken() && !app.auth.isEditor()) {
             openErrorPanel(app.copy.mappermissionserror)
           } else {
-            openIssueForm(coords)
+            openFeatureForm(coords)
           }
         })
         // }
@@ -833,7 +865,7 @@ async function initMap() {
       })
   })
 
-  // pop open issue form when control icon clicked
+  // pop open feature form when control icon clicked
   $('.control-search-address').click(openSearchAddressForm)
 
   // pop open about us when logo is clicked
@@ -841,21 +873,21 @@ async function initMap() {
 
   // handle map events...
 
-  app.map.element.on('zoom', (e) => {
+  app.featureCollection.element.on('zoom', (e) => {
     if (e.target && e.target._zoom) {
       // save this zoom level as new default
-      app.map.zoom.setDefault(e.target._zoom)
+      app.featureCollection.zoom.setDefault(e.target._zoom)
     }
   })
 
-  app.map.element.on('dblclick', (e) => {
+  app.featureCollection.element.on('dblclick', (e) => {
     const point = e.latlng
-    openIssueForm(point)
+    openFeatureForm(point)
   })
 
-  app.map.element.on('click', function (event) {
+  app.featureCollection.element.on('click', function (event) {
     // console.log('map clicked');
-    // close any open infowindow except the issue form
+    // close any open infowindow except the feature form
     collapseInfoWindow()
 
     // remove me marker, if present
@@ -865,10 +897,10 @@ async function initMap() {
     $('.map-control').show()
   })
 
-  app.map.element.on('moveend', async function (e) {
+  app.featureCollection.element.on('moveend', async function (e) {
     // console.log('map moved');
     // // get the center address of the map
-    const coords = app.map.getCenter()
+    const coords = app.featureCollection.getCenter()
     app.browserGeolocation.setCoords(coords.lat, coords.lng)
 
     // if we had previous been centered on user's personal location, change icon now
@@ -876,33 +908,31 @@ async function initMap() {
   })
 
   // minimize any open infowindow while dragging
-  app.map.element.on('dragstart', (e) => {
-    // console.log('map drag start')
-
+  app.featureCollection.element.on('dragstart', (e) => {
     // deactivate any currently-selected markers
     app.markers.deactivate()
 
     // close any open infowindow for mobile users only
-    if (app.mode == 'issuedetails' && app.responsive.isMobile()) {
+    if (app.mode == 'featuredetails' && app.responsive.isMobile()) {
       // console.log('dragstart');
       collapseInfoWindow()
     }
   })
 
-  app.map.element.on('dragend', (e) => {
+  app.featureCollection.element.on('dragend', (e) => {
     // console.log('map drag end');
   })
 
   // handle browser back/forward button clicks
   window.onpopstate = (e) => {
-    const hash = app.map.hash.get()
+    const hash = app.featureCollection.getHashFromUrl()
     if (hash) {
       //if there is a marker id in the url
       const marker = app.markers.findById(hash)
       // simulate click
       if (marker && !marker.isOpen) app.markers.simulateClick(marker)
     } else {
-      // no hash means no issue, so close info window
+      // no hash means no feature, so close info window
       collapseInfoWindow()
     }
   }
@@ -919,8 +949,8 @@ const setVh = () => {
 // handle map resize
 const resizeMap = () => {
   // don't do this before map has loaded
-  if (app.map && app.map.element) {
-    // check whether an issue is showing
+  if (app.featureCollection && app.featureCollection.element) {
+    // check whether an feature is showing
     if (app.markers.current) {
       // if so, we need to re-size the map and info panel
       let infoWindowHeight = 70
@@ -931,10 +961,10 @@ const resizeMap = () => {
         mapHeight = 0
       }
       expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
-        app.map.element.invalidateSize(true)
+        app.featureCollection.element.invalidateSize(true)
       })
     }
-    // app.map.element.invalidateSize(true) // notify leaflet that size has changed
+    // app.featureCollection.element.invalidateSize(true) // notify leaflet that size has changed
   }
 }
 
@@ -1075,8 +1105,10 @@ const createMapListItem = (
   else $('h2 a', mapListing).removeClass('selected-map')
 
   // create new link to the map
-  const mapTitle = mapData.title ? mapData.title : app.copy.anonymousmaptitle
-  $('.map-title', mapListing).html(mapTitle) // inject the map title
+  const featureCollectionTitle = mapData.title
+    ? mapData.title
+    : app.copy.anonymousfeaturecollectiontitle
+  $('.map-title', mapListing).html(featureCollectionTitle) // inject the map title
   $('.map-title', mapListing).attr('href', `/map/${mapData.publicId}`) // activate link
   if (showForkedFrom && mapData.forkedFrom)
     showForkedFromInfo(mapData, mapListing) // show forked info if any
@@ -1087,7 +1119,7 @@ const createMapListItem = (
     $('.marker-map-link a', mapListing).on('click', (e) => {
       e.preventDefault()
       // app.markers.simulateClick(app.markers.markers[0])
-      openIssueList()
+      openFeatureList()
     })
   }
 
@@ -1105,7 +1137,7 @@ const createMapListItem = (
   return mapListing
 }
 
-const createIssue = (data) => {
+const createFeature = (data) => {
   // create the HTML code for a post
   let contentString = ''
 
@@ -1118,19 +1150,22 @@ Posted by
 <a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${
     data.user.handle
   }" href="#">${data.user.handle}</a> ${date}
-near ${data.address.substr(0, data.address.lastIndexOf(','))}.
+near ${data.properties.address.substr(
+    0,
+    data.properties.address.lastIndexOf(',')
+  )}.
 `
 
-  let imgString = createPhotoCarousel(data.photos, data._id)
+  let imgString = createPhotoCarousel(data.properties.photos, data._id)
   // console.log(imgString)
 
   // generate the context menu
   // only show delete link to logged-in users who have permissions to edit this map
   const deleteLinkString = app.auth.isEditor()
-    ? `<a class="delete-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Delete</a>`
+    ? `<a class="delete-feature-link dropdown-item" ws-feature-id="${data._id}" href="#">Delete</a>`
     : ''
   const editLinkString = app.auth.isEditor()
-    ? `<a class="edit-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Edit</a>`
+    ? `<a class="edit-feature-link dropdown-item" ws-feature-id="${data._id}" href="#">Edit</a>`
     : ''
   let contextMenuString = `
     <div class="context-menu dropdown">
@@ -1141,7 +1176,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
         <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-issue-link dropdown-item" ws-issue-id="${data._id}" href="#">Share link</a>
+        <a class="copy-feature-link dropdown-item" ws-feature-id="${data._id}" href="#">Share link</a>
         ${editLinkString}
         ${deleteLinkString}
       </div>
@@ -1152,24 +1187,24 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   // data.body = data.body.replace(/\n/g, '<br />')
 
   contentString += `
-<div class="issue-detail" ws-issue-id="${data._id}">
-    <div class="prevnext-issue-container row">
-      <a class="prev-issue-link btn btn-secondary col-6" href="#">Prev</a>
-      <a class="next-issue-link btn btn-secondary col-6" href="#">Next</a>
+<div class="feature-detail" ws-feature-id="${data._id}">
+    <div class="prevnext-feature-container row">
+      <a class="prev-feature-link btn btn-secondary col-6" href="#">Prev</a>
+      <a class="next-feature-link btn btn-secondary col-6" href="#">Next</a>
     </div>
     ${contextMenuString}
     <header>
-        <h2>${data.title}</h2>
+        <h2>${data.properties.title}</h2>
         <p class="instructions attribution lead">${attribution}</p>
     </header>
     <div class="feedback alert alert-success hide"></div>
     <article>
     ${imgString}
     `
-  contentString += !data.body
+  contentString += !data.properties.body
     ? ''
     : `
-        <p>${marked(data.body)}</p>
+        <p>${marked(data.properties.body)}</p>
     `
   contentString += `
     </article>
@@ -1185,7 +1220,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   return contentString
 }
 
-const createComment = (data, issueId) => {
+const createComment = (data, featureId) => {
   // create the HTML code for a comment
   let contentString = ''
 
@@ -1220,7 +1255,7 @@ Posted by
     : ''
 
   contentString += `
-<div class="issue-detail comment" ws-comment-id="${data._id}">
+<div class="feature-detail comment" ws-comment-id="${data._id}">
     ${contextMenuString}
     <header>
         <p class="instructions attribution lead">${attribution}</p>
@@ -1244,7 +1279,7 @@ Posted by
   // handle delete context menu clicks
   $('.delete-comment-link', contentEl).on('click', (e) => {
     e.preventDefault()
-    deleteComment(data._id, issueId)
+    deleteComment(data._id, featureId)
   })
   // handle click on username
   $('.user-link', contentEl).click((e) => {
@@ -1258,16 +1293,16 @@ Posted by
   return contentEl
 }
 
-const deleteComment = (commentId, issueId) => {
+const deleteComment = (commentId, featureId) => {
   // put up one small barrier
   if (!window.confirm(`Delete this comment?`)) return
 
-  // delete the given comment from the given issue
-  // console.log(`deleting comment: ${commentId} from issue ${issueId}`)
+  // delete the given comment from the given feature
+  // console.log(`deleting comment: ${commentId} from feature ${featureId}`)
   // send delete request to server
   app
     .myFetch(`${app.apis.wikistreets.deleteCommentUrl}/${commentId}`, 'GET', {
-      issueid: issueId,
+      featureId: featureId,
     })
     .then((res) => {
       // console.log(JSON.stringify(res, null, 2))
@@ -1327,7 +1362,7 @@ const createPhotoCarousel = (photos, uniqueId) => {
 }
 
 const showInfoWindow = (marker) => {
-  app.mode = 'issuedetails' // in case it was set previously
+  app.mode = 'featuredetails' // in case it was set previously
   // console.log(`mode=${app.mode}`);
 
   // remove me marker if present
@@ -1340,31 +1375,31 @@ const showInfoWindow = (marker) => {
   app.markers.activate(marker)
 
   // extract the data from the marker
-  const data = marker.issueData
+  const data = marker.featureData
 
   // create the HTML code for a post
-  const contentString = createIssue(data)
+  const contentString = createFeature(data)
 
   // update the infoWindow content
   $('.info-window-content').html(contentString)
 
   // inject any comments
-  data.comments.forEach((comment) => {
-    // console.log(`issueId: ${data._id}`)
+  data.properties.comments.forEach((comment) => {
+    // console.log(`featureId: ${data._id}`)
     const commentEl = createComment(comment, data._id)
     commentEl.appendTo($('.info-window-content .existing-comments'))
   })
-  if (!data.comments.length) {
+  if (!data.properties.comments.length) {
     // hide comments section if none there
     $('.info-window-content .existing-comments').hide()
   }
 
-  // handle previous and next issue button clicks
-  $('.info-window-content .prev-issue-link').click((e) => {
+  // handle previous and next feature button clicks
+  $('.info-window-content .prev-feature-link').click((e) => {
     e.preventDefault()
     app.markers.previous(marker)
   })
-  $('.info-window-content .next-issue-link').click((e) => {
+  $('.info-window-content .next-feature-link').click((e) => {
     e.preventDefault()
     app.markers.next(marker)
   })
@@ -1387,7 +1422,9 @@ const showInfoWindow = (marker) => {
 
   // update the page title
   $('head title').html(
-    `${data.title} - ${app.map.getTitle(true)} - Wikistreets`
+    `${data.properties.title} - ${app.featureCollection.getTitle(
+      true
+    )} - Wikistreets`
   ) // window title
 
   // update the url hash tag
@@ -1408,8 +1445,8 @@ const showInfoWindow = (marker) => {
   }
 
   // zoom in nice and close, if zoomed out
-  // if (app.map.zoom.getDefault() < app.map.zoom.issueview) {
-  //   app.map.element.setZoom(app.map.zoom.issueview)
+  // if (app.featureCollection.zoom.getDefault() < app.featureCollection.zoom.featureview) {
+  //   app.featureCollection.element.setZoom(app.featureCollection.zoom.featureview)
   // }
 
   expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
@@ -1417,9 +1454,9 @@ const showInfoWindow = (marker) => {
 
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
-    app.map.element.invalidateSize(true) // notify leaflet that size has changed
-    // app.map.panTo(marker.getLatLng()) // pan to this marker
-    app.map.flyTo(marker.getLatLng(), data.zoom) // pan to marker
+    app.featureCollection.element.invalidateSize(true) // notify leaflet that size has changed
+    // app.featureCollection.panTo(marker.getLatLng()) // pan to this marker
+    app.featureCollection.flyTo(marker.getLatLng(), data.properties.zoom) // pan to marker
 
     // handle click on username event
     $('.info-window .user-link').click((e) => {
@@ -1434,7 +1471,7 @@ const showInfoWindow = (marker) => {
   })
 
   // activate copy link button
-  $('.copy-issue-link').click((e) => {
+  $('.copy-feature-link').click((e) => {
     e.preventDefault()
     const text = window.location.href
     navigator.clipboard.writeText(text).then(
@@ -1442,7 +1479,7 @@ const showInfoWindow = (marker) => {
         // show success message
         // console.log(`Copied ${text} to the clipboard!`)
         const feedbackEl = $('.info-window-content .feedback')
-        feedbackEl.html(app.copy.shareissuemessage)
+        feedbackEl.html(app.copy.sharefeaturemessage)
         feedbackEl.show()
         setTimeout(() => {
           feedbackEl.fadeOut()
@@ -1457,28 +1494,28 @@ const showInfoWindow = (marker) => {
   })
 
   // activate delete button
-  $('.delete-issue-link').click((e) => {
+  $('.delete-feature-link').click((e) => {
     e.preventDefault()
     // put up one small barrier
     if (!window.confirm(`Delete this post?`)) return
 
-    // grab the id of the issue to delete
-    const issueId = $(e.target).attr('ws-issue-id')
+    // grab the id of the feature to delete
+    const featureId = $(e.target).attr('ws-feature-id')
     // send delete request to server
     app
-      .myFetch(`${app.apis.wikistreets.deleteIssueUrl}/${issueId}`)
+      .myFetch(`${app.apis.wikistreets.deleteFeatureUrl}/${featureId}`)
       .then((res) => {
         // console.log(JSON.stringify(res, null, 2))
         if (res.status == true) {
           // remove the marker from the map
-          const targetMarker = app.markers.findById(issueId)
-          // console.log(`issue ${issueId}'s marker id: ${targetMarker._id}`)
+          const targetMarker = app.markers.findById(featureId)
+          // console.log(`feature ${featureId}'s marker id: ${targetMarker._id}`)
           if (targetMarker) {
             // remove if present
             const index = app.markers.markers.indexOf(targetMarker)
             app.markers.markers.splice(index, 1)
             app.markers.cluster.removeLayer(targetMarker) // remove from any map cluster
-            app.map.element.removeLayer(targetMarker) // remove from map
+            app.featureCollection.element.removeLayer(targetMarker) // remove from map
           }
 
           // close any open info window
@@ -1488,11 +1525,11 @@ const showInfoWindow = (marker) => {
   }) // if delete link clicked
 
   // activate edit button
-  $('.edit-issue-link').click((e) => {
+  $('.edit-feature-link').click((e) => {
     e.preventDefault()
-    // grab the id of the issue to delete
-    const issueId = $(e.target).attr('ws-issue-id')
-    openEditIssueForm(issueId)
+    // grab the id of the feature to delete
+    const featureId = $(e.target).attr('ws-feature-id')
+    openEditFeatureForm(featureId)
   }) // if edit link clicked
 
   // handle situation where infoPanel is already expanded prior to showing this info
@@ -1525,14 +1562,14 @@ const showInfoWindow = (marker) => {
       thumbImgClassName: 'thumb-img',
       closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
       closeIconClassName: 'close-icon',
-      // closeIconCallback: removeIssueImage,
+      // closeIconCallback: removeFeatureImage,
     },
     dropContainer: {
       el: document.querySelector('.info-window-content .drop-container'),
       activeClassName: 'active',
     },
     form: {
-      el: document.querySelector('.info-window-content .issue-form'),
+      el: document.querySelector('.info-window-content .feature-form'),
       droppedFiles: [], // nothing yet
     },
   })
@@ -1546,6 +1583,10 @@ const showInfoWindow = (marker) => {
 
   // show comment form when button clicked
   $('.info-window-content .show-comment-form-button button').click((e) => {
+    // leaving comments requires login
+    if (!app.auth.getToken()) {
+      return openSigninPanel('Please log in to leave a comment')
+    }
     $('.info-window-content .comment-form-container').show() // show the form
     // scroll to textarea field
     $('.info-window').scrollTop(
@@ -1562,7 +1603,9 @@ const showInfoWindow = (marker) => {
   // })
 
   // deal with form submissions
-  $('.info-window-content form.comment-form .issueid').val(marker.issueData._id)
+  $('.info-window-content form.comment-form .featureId').val(
+    marker.featureData._id
+  )
   $('.info-window-content form.comment-form').on('submit', async (e) => {
     // prevent page reload
     e.preventDefault()
@@ -1570,7 +1613,7 @@ const showInfoWindow = (marker) => {
     // show the spinner till done
     showSpinner($('.info-window'))
 
-    // force user login before an issue can be submitted
+    // force user login before an feature can be submitted
     if (!app.auth.getToken()) {
       // open signin form
       openSigninPanel('Log in to leave a comment.')
@@ -1610,7 +1653,7 @@ const showInfoWindow = (marker) => {
         $('.map-control').show()
 
         // inject the new comment
-        const commentEl = createComment(res.data, marker.issueData._id)
+        const commentEl = createComment(res.data, marker.featureData._id)
         commentEl.appendTo($('.info-window-content .existing-comments'))
 
         // stick this new comment into the page
@@ -1700,14 +1743,14 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
           height: `${infoWindowHeightPx}px`,
         },
         () => {
-          // reposition add issue button
+          // reposition add feature button
           // const y = $('.info-window').position().top
-          // $('.control-add-issue').css('top', y - 50)
+          // $('.control-add-feature').css('top', y - 50)
         }
       )
 
     // animate the map open
-    $('.issue-map, #map')
+    $('.feature-map, #map')
       .stop()
       .animate(
         {
@@ -1716,16 +1759,16 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
         () => {
           // inform the map that it has been dynamically resized
           setTimeout(() => {
-            app.map.element.invalidateSize(true)
+            app.featureCollection.element.invalidateSize(true)
           }, 100)
         }
       )
   } else {
     // user is on a desktop-sized device... make sure it's full size
     $('.info-window').height(window.innerHeight)
-    $('.issue-map, #map').height(window.innerHeight)
+    $('.feature-map, #map').height(window.innerHeight)
     setTimeout(() => {
-      app.map.element.invalidateSize(true)
+      app.featureCollection.element.invalidateSize(true)
     }, 200)
   }
   // close any open tooltips... this is to fix bootstrap's buggy tooltips on mobile
@@ -1734,7 +1777,7 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   hideAllTooltips()
 
   // resolve the promise once the animation is complete
-  return $('.issue-map, #map, .info-window').promise()
+  return $('.feature-map, #map, .info-window').promise()
 }
 
 const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
@@ -1783,11 +1826,11 @@ const collapseInfoWindow = async (e) => {
     })
   } else {
     // desktop mode... show list of markers
-    openIssueList()
+    openFeatureList()
   }
 
   // animate the map to take up full screen
-  $('.issue-map, #map')
+  $('.feature-map, #map')
     .stop()
     .animate(
       {
@@ -1802,7 +1845,7 @@ const collapseInfoWindow = async (e) => {
           setTimeout(() => {
             const newCenter = app.markers.current.getLatLng()
             // console.log(`recentering to ${newCenter}`)
-            app.map.panTo(newCenter)
+            app.featureCollection.panTo(newCenter)
             // void the current marker
           }, 50)
         }
@@ -1810,16 +1853,16 @@ const collapseInfoWindow = async (e) => {
         setTimeout(() => {
           app.markers.deactivate()
           // inform the map that it has been dynamically resized
-          app.map.element.invalidateSize(true)
+          app.featureCollection.element.invalidateSize(true)
         }, 100)
       }
     )
-  // reposition add issue button
+  // reposition add feature button
   // const y = $('.control-map-selector').position().top
-  // $('.control-add-issue').css('top', y - 50)
+  // $('.control-add-feature').css('top', y - 50)
 
   // resolve the promise once the animation is complete
-  return $('.issue-map, #map').promise()
+  return $('.feature-map, #map').promise()
 }
 
 const attachMeMarkerPopup = (marker, address) => {
@@ -1838,7 +1881,7 @@ const attachMeMarkerPopup = (marker, address) => {
     if (!app.auth.getToken()) openSigninPanel('Log in to create a post')
     else {
       // open the info window
-      openIssueForm()
+      openFeatureForm()
       expandInfoWindow(60, 40).then(async () => {})
     }
   })
@@ -1846,14 +1889,14 @@ const attachMeMarkerPopup = (marker, address) => {
 }
 
 /**
- * Open the form to allow the user to create a new issue.
+ * Open the form to allow the user to create a new feature.
  * @param {*} point The coordinates at which to associate the post. Defaults to center of map.
  */
-const openIssueForm = async (point = false) => {
+const openFeatureForm = async (point = false) => {
   // zoom into map
-  if (app.mode != 'issuecreate') {
+  if (app.mode != 'featurecreate') {
     // keep track
-    app.mode = 'issuecreate'
+    app.mode = 'featurecreate'
 
     //deactivate all markers
     app.markers.deactivate()
@@ -1867,12 +1910,13 @@ const openIssueForm = async (point = false) => {
   // place the me marker on the map
   if (!point) {
     // if no point specified, use the center of map
-    point = app.map.element.getCenter()
+    point = app.featureCollection.element.getCenter()
   }
 
-  //console.log('issue form panning')
-  app.map.panTo(point)
+  //console.log('feature form panning')
+  app.featureCollection.panTo(point)
   let coords = [point.lat, point.lng]
+  console.log(coords)
   let marker = L.marker(coords, {
     zIndexOffset: app.markers.zIndex.me,
     riseOffset: app.markers.zIndex.me,
@@ -1880,7 +1924,7 @@ const openIssueForm = async (point = false) => {
     // make it draggable!
     draggable: true,
     autoPan: true,
-  }).addTo(app.map.element)
+  }).addTo(app.featureCollection.element)
 
   marker.setIcon(app.markers.icons.me.default)
   app.markers.me = marker
@@ -1899,8 +1943,8 @@ const openIssueForm = async (point = false) => {
 
   // show post form if user is logged in
   if (app.auth.getToken()) {
-    // copy the issue form into the infowindow
-    const infoWindowHTML = $('.new-issue-form-container').html()
+    // copy the feature form into the infowindow
+    const infoWindowHTML = $('.new-feature-form-container').html()
     $('.info-window-content').html(infoWindowHTML)
   } else {
     // show login form for other users
@@ -1927,7 +1971,7 @@ const openIssueForm = async (point = false) => {
     // center map on the me marker
     //console.log('dragend panning...')
     let coords = app.browserGeolocation.getCoords()
-    app.map.panTo(coords)
+    app.featureCollection.panTo(coords)
 
     // update street address
     const address = await updateAddress(coords)
@@ -1938,8 +1982,8 @@ const openIssueForm = async (point = false) => {
     marker.openPopup()
   })
 
-  // remove an image from an issue
-  const removeIssueImage = (e) => {
+  // remove an image from an feature
+  const removeFeatureImage = (e) => {
     // console.log(`removing ${e.target}`)
   }
 
@@ -1961,14 +2005,14 @@ const openIssueForm = async (point = false) => {
       thumbImgClassName: 'thumb-img',
       closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
       closeIconClassName: 'close-icon',
-      closeIconCallback: removeIssueImage,
+      closeIconCallback: removeFeatureImage,
     },
     dropContainer: {
       el: document.querySelector('.info-window-content .drop-container'),
       activeClassName: 'active',
     },
     form: {
-      el: document.querySelector('.info-window-content .issue-form'),
+      el: document.querySelector('.info-window-content .feature-form'),
       droppedFiles: [], // nothing yet
     },
   })
@@ -1981,14 +2025,14 @@ const openIssueForm = async (point = false) => {
   })
 
   // deal with form submissions
-  $('.info-window-content form.issue-form').on('submit', async (e) => {
+  $('.info-window-content form.feature-form').on('submit', async (e) => {
     // prevent page reload
     e.preventDefault()
 
     // show the spinner till done
     showSpinner($('.info-window'))
 
-    // force user login before an issue can be submitted
+    // force user login before an feature can be submitted
     if (!app.auth.getToken()) {
       // open signin form
       openSigninPanel('Log in to create a post')
@@ -1999,7 +2043,7 @@ const openIssueForm = async (point = false) => {
     let formData = new FormData(e.target)
 
     // add map's current zoom level to data
-    formData.append('zoom', app.map.element.getZoom())
+    formData.append('zoom', app.featureCollection.element.getZoom())
 
     // remove the input type='file' data, since we don't need it
     formData.delete('files-excuse')
@@ -2015,7 +2059,7 @@ const openIssueForm = async (point = false) => {
 
     // post to server
     app
-      .myFetch(app.apis.wikistreets.postIssueUrl, 'POST', formData)
+      .myFetch(app.apis.wikistreets.postFeatureUrl, 'POST', formData)
       .then((res) => {
         if (!res.status) {
           //          console.log(`ERROR: ${res}`)
@@ -2030,8 +2074,8 @@ const openIssueForm = async (point = false) => {
           ? app.markers.cluster
           : app.markers.createCluster()
 
-        // make a new marker for the new issue
-        // put the new issue data into an array and pass to the place method
+        // make a new marker for the new feature
+        // put the new feature data into an array and pass to the place method
         app.markers.place([res.data], cluster)
 
         // bring back the map controls
@@ -2040,13 +2084,13 @@ const openIssueForm = async (point = false) => {
         // remove me marker, if present
         app.markers.wipeMe()
 
-        // close any open infowindow except the issue form
+        // close any open infowindow except the feature form
 
-        // open the new issue
+        // open the new feature
         setTimeout(() => {
-          const issueId = res.data._id
-          // console.log(`finding marker with id marker-${issueId}`)
-          const targetMarker = app.markers.findById(issueId)
+          const featureId = res.data._id
+          // console.log(`finding marker with id marker-${featureId}`)
+          const targetMarker = app.markers.findById(featureId)
           if (targetMarker) {
             // fire click event
             app.markers.simulateClick(targetMarker)
@@ -2066,48 +2110,48 @@ const openIssueForm = async (point = false) => {
           'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
         )
       })
-  }) // issue-form submit
-} // openIssueForm()
+  }) // feature-form submit
+} // openFeatureForm()
 
-const openEditIssueForm = async (issueId) => {
+const openEditFeatureForm = async (featureId) => {
   // keep track
-  app.mode = 'issueedit'
+  app.mode = 'featureedit'
 
   // get marker from id
-  const marker = app.markers.findById(issueId)
+  const marker = app.markers.findById(featureId)
   if (!marker) return
 
-  const data = marker.issueData // extract the data
+  const data = marker.featureData // extract the data
   marker.dragging.enable() // make it draggable
 
-  // app.map.panTo(marker.getLatLng()) // pan to marker
-  app.map.flyTo(marker.getLatLng(), data.zoom) // pan to marker
+  // app.featureCollection.panTo(marker.getLatLng()) // pan to marker
+  app.featureCollection.flyTo(marker.getLatLng(), data.properties.zoom) // pan to marker
 
-  // copy the edit issue form into the infowindow
-  const infoWindowHTML = $('.edit-issue-form-container').html()
+  // copy the edit feature form into the infowindow
+  const infoWindowHTML = $('.edit-feature-form-container').html()
   $('.info-window-content').html(infoWindowHTML)
 
   // unescape html entities from title and address
   const elem = document.createElement('textarea')
-  elem.innerHTML = data.title
-  data.title = elem.value
-  elem.innerHTML = data.address
-  data.address = elem.value
+  elem.innerHTML = data.properties.title
+  data.properties.title = elem.value
+  elem.innerHTML = data.properties.address
+  data.properties.address = elem.value
 
   // inject the data to the form
-  $('.info-window-content .issue-form').attr('ws-issue-id', data._id)
-  $('.info-window-content .issueid').val(data._id)
-  $('.info-window-content .issue-title').val(data.title)
-  $('.info-window-content .issue-body').val(data.body)
-  $('.info-window-content .address').html(data.address)
-  $('.info-window-content input[name="address"]').val(data.address)
-  $('.info-window-content .lat').val(data.position.lat)
-  $('.info-window-content .lng').val(data.position.lng)
+  $('.info-window-content .feature-form').attr('ws-feature-id', data._id)
+  $('.info-window-content .featureId').val(data._id)
+  $('.info-window-content .feature-title').val(data.properties.title)
+  $('.info-window-content .feature-body').val(data.properties.body)
+  $('.info-window-content .address').html(data.properties.address)
+  $('.info-window-content input[name="address"]').val(data.properties.address)
+  $('.info-window-content .lat').val(data.geometry.coordinates[1])
+  $('.info-window-content .lng').val(data.geometry.coordinates[0])
 
   // inject images that already exist for this post
   let filesToRemove = [] // we'll fill it up later
   const existingImagesEl = $('.info-window-content .existing-thumbs-container')
-  data.photos.forEach((photo) => {
+  data.properties.photos.forEach((photo) => {
     // create a thumbnail
     const thumb = $(
       `<div class="thumb" ws-image-filename="${photo.filename}" >
@@ -2136,7 +2180,7 @@ const openEditIssueForm = async (issueId) => {
     }
 
     // center map on the me marker
-    app.map.panTo(coords)
+    app.featureCollection.panTo(coords)
 
     // update street address
     const address = await updateAddress(coords)
@@ -2169,7 +2213,7 @@ const openEditIssueForm = async (issueId) => {
       activeClassName: 'active',
     },
     form: {
-      el: document.querySelector('.info-window-content .issue-form'),
+      el: document.querySelector('.info-window-content .feature-form'),
       droppedFiles: [], // nothing yet
     },
   })
@@ -2184,18 +2228,18 @@ const openEditIssueForm = async (issueId) => {
   // activate cancel button
   $('.info-window .cancel-link').click(async (e) => {
     e.preventDefault()
-    showInfoWindow(marker) // switch to issue detail view
+    showInfoWindow(marker) // switch to feature detail view
   })
 
   // deal with form submissions
-  $('.info-window-content form.issue-form').on('submit', async (e) => {
+  $('.info-window-content form.feature-form').on('submit', async (e) => {
     // prevent page reload
     e.preventDefault()
 
     // show the spinner till done
     showSpinner($('.info-window'))
 
-    // force user login before an issue can be submitted
+    // force user login before an feature can be submitted
     if (!app.auth.getToken()) {
       // open signin form
       openSigninPanel('Log in to edit a post')
@@ -2206,7 +2250,7 @@ const openEditIssueForm = async (issueId) => {
     let formData = new FormData(e.target)
 
     // add map's current zoom level to data
-    formData.append('zoom', app.map.element.getZoom())
+    formData.append('zoom', app.featureCollection.element.getZoom())
 
     // add any existing files to delete
     if (filesToRemove.length) {
@@ -2227,30 +2271,30 @@ const openEditIssueForm = async (issueId) => {
 
     // post to server
     app
-      .myFetch(app.apis.wikistreets.editIssueUrl, 'POST', formData)
+      .myFetch(app.apis.wikistreets.editFeatureUrl, 'POST', formData)
       .then((res) => {
         if (!res.status) {
           //          console.log(`ERROR: ${res}`)
           openErrorPanel(res.message)
           return
         }
-        // close any open infowindow except the issue form
+        // close any open infowindow except the feature form
         // console.log(JSON.stringify(res, null, 2))
 
         // this api point returns the full map...
         // console.log(JSON.stringify(res, null, 2))
-        const issues = res.data.issues
+        const mapData = res.data
 
         // get a marker cluster
         const cluster = app.markers.cluster
           ? app.markers.cluster
           : app.markers.createCluster()
 
-        // make a new marker for the new issue
-        // put the new issue data into an array and pass to the place method
-        app.markers.place(issues, cluster)
+        // make a new marker for the new feature
+        // put the new feature data into an array and pass to the place method
+        app.markers.place(mapData.features, cluster)
 
-        // open the updated issue
+        // open the updated feature
         setTimeout(() => {
           // fire click event
           app.markers.simulateClick(marker)
@@ -2266,8 +2310,8 @@ const openEditIssueForm = async (issueId) => {
           'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
         )
       })
-  }) // edit-issue-form submit
-} // openEditIssueForm()
+  }) // edit-feature-form submit
+} // openEditFeatureForm()
 
 const openSearchAddressForm = () => {
   // keep track
@@ -2318,13 +2362,13 @@ const openSearchAddressForm = () => {
         item.click((e) => {
           e.preventDefault()
           // what to do after clicking this address
-          // app.map.panTo(data.coords)
+          // app.featureCollection.panTo(data.coords)
           if (app.auth.getToken() && !app.auth.isEditor()) {
             openErrorPanel(app.copy.mappermissionserror)
           } else {
             collapseInfoWindow().then(() => {
               // console.log('logged in')
-              openIssueForm(data.coords)
+              openFeatureForm(data.coords)
             })
           }
         })
@@ -2334,7 +2378,7 @@ const openSearchAddressForm = () => {
       // pan to the first search result
       // if (results.length && results[0].coords) {
       //   const resultCoords = results[0].coords
-      //   app.map.panTo(resultCoords)
+      //   app.featureCollection.panTo(resultCoords)
       //   setTimeout(() => {
       //     if (app.markers.me && app.markers.me.setLatLng) {
       //       // console.log('moving me');
@@ -2383,7 +2427,7 @@ const panToPersonalLocation = () => {
     .then((coords) => {
       // console.log(`panning to ${coords}`)
       //console.log('personal location panning...')
-      app.map.panTo(coords) // pan map to personal location
+      app.featureCollection.panTo(coords) // pan map to personal location
       app.controls.gps.setState('active')
       return coords
     })
@@ -2627,7 +2671,7 @@ const openUserProfile = async (handle, userId) => {
         // prepare some metadata about the map
         data.numForks = data.forks ? data.forks.length : 0
         data.numContributors = data.contributors ? data.contributors.length : 0
-        data.numMarkers = data.issues ? data.issues.length : 0
+        data.numMarkers = data.features ? data.features.length : 0
 
         // create and populate the map list item
         const mapListing = createMapListItem(data, true, false)
@@ -2662,57 +2706,62 @@ const openUserProfile = async (handle, userId) => {
 }
 
 // show a list of markers on the map
-const openIssueList = async () => {
+const openFeatureList = async () => {
   app.mode = 'default'
 
   const markers = app.markers.markers
   let contentEl = $(`
-  <div class="issue-list-container">
-    <div class="prevnext-issue-container row">
-      <button class="navigate-issues-link first-issue-link btn btn-secondary col-6">First post</button>
-      <button class="navigate-issues-link last-issue-link btn btn-secondary col-6">Latest post</button>
+  <div class="feature-list-container">
+    <div class="prevnext-feature-container row">
+      <button class="navigate-features-link first-feature-link btn btn-secondary col-6">First post</button>
+      <button class="navigate-features-link last-feature-link btn btn-secondary col-6">Latest post</button>
     </div>
-    <h2>Posts in ${app.map.title || app.copy.anonymousmaptitle}</h2>
+    <h2>Posts in ${
+      app.featureCollection.title || app.copy.anonymousfeaturecollectiontitle
+    }</h2>
   </div>
   `)
-  // position and activate the first/last issue links
-  $('.first-issue-link', contentEl).on('click', (e) => {
+  // position and activate the first/last feature links
+  $('.first-feature-link', contentEl).on('click', (e) => {
     e.preventDefault()
     app.markers.simulateClick(app.markers.markers[0])
   })
-  $('.last-issue-link', contentEl).on('click', (e) => {
+  $('.last-feature-link', contentEl).on('click', (e) => {
     e.preventDefault()
     app.markers.simulateClick(
       app.markers.markers[app.markers.markers.length - 1]
     )
   })
 
-  const listEl = $('<ul class="issue-list list-group"></ul>')
+  const listEl = $('<ul class="feature-list list-group"></ul>')
   markers.forEach((marker) => {
-    const data = marker.issueData
+    const data = marker.featureData
     const date = DateDiff.asAge(data.createdAt)
     const attribution = `
 Posted by
 <a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${
       data.user.handle
     }"href="#">${data.user.handle}</a> ${date}
-near ${data.address.substr(0, data.address.lastIndexOf(','))}.
+near ${data.properties.address.substr(
+      0,
+      data.properties.address.lastIndexOf(',')
+    )}.
 `
-    const commentsString = data.comments.length
-      ? `<br />${data.comments.length} comment${
-          data.comments.length > 1 ? 's' : ''
+    const commentsString = data.properties.comments.length
+      ? `<br />${data.properties.comments.length} comment${
+          data.properties.comments.length > 1 ? 's' : ''
         }`
       : ''
 
     const item = $(
-      `<li class="issue-list-item list-group-item" ws-issue-id="${data._id}">
-        <a href="#${data._id}">${data.title}</a>
+      `<li class="feature-list-item list-group-item" ws-feature-id="${data._id}">
+        <a href="#${data._id}">${data.properties.title}</a>
         <p class="instructions attribution lead">${attribution}${commentsString}</p>
         
       </li>`
     )
 
-    // handle issue list item click
+    // handle feature list item click
     item.on('click', (e) => {
       const marker = app.markers.findById(data._id)
       app.markers.simulateClick(marker)
@@ -2721,18 +2770,18 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
     item.appendTo(listEl)
   })
 
-  // handle mouseover issue in list
-  $('.issue-list-item', listEl).on('mouseenter', (e) => {
-    // pan to the relevant marker for this issue
-    const issueId = $(e.target).attr('ws-issue-id')
-    const marker = app.markers.findById(issueId)
+  // handle mouseover feature in list
+  $('.feature-list-item', listEl).on('mouseenter', (e) => {
+    // pan to the relevant marker for this feature
+    const featureId = $(e.target).attr('ws-feature-id')
+    const marker = app.markers.findById(featureId)
     try {
       // deselect all
       app.markers.deactivate()
       // select the target marker
       app.markers.activate(marker)
-      app.map.element.panTo(marker.getLatLng())
-      // app.map.element.flyTo(marker.getLatLng(), marker.issueData.zoom)
+      app.featureCollection.element.panTo(marker.getLatLng())
+      // app.featureCollection.element.flyTo(marker.getLatLng(), marker.featureData.zoom)
     } catch (err) {
       // ignore mouseouts on sub-elements
     }
@@ -2768,7 +2817,7 @@ near ${data.address.substr(0, data.address.lastIndexOf(','))}.
   $('.info-window-content').html('')
   listEl.appendTo(contentEl)
   contentEl.appendTo('.info-window-content')
-} // openIssueList
+} // openFeatureList
 
 // show a particular user's profile
 const openErrorPanel = (message) => {
@@ -2790,7 +2839,9 @@ const activateForkButton = () => {
   $('.info-window .fork-button').click(async (e) => {
     e.preventDefault()
     const mapData = await app.myFetch(
-      `${app.apis.wikistreets.forkMapUrl}/${app.map.id.get()}`
+      `${
+        app.apis.wikistreets.forkFeatureCollectionUrl
+      }/${app.featureCollection.getPublicIdFromUrl()}`
     )
     //console.log(`FORK SERVER RESPONSE: ${result}`)
     window.location.href = `${app.apis.wikistreets.staticMapUrl}/${mapData.publicId}`
@@ -2817,15 +2868,15 @@ const openForkPanel = () => {
   // prepare map data
   // populate this map's details
   // const mapData = {
-  //   title: app.map.getTitle(),
-  //   publicId: app.map.publicId,
+  //   title: app.featureCollection.getTitle(),
+  //   publicId: app.featureCollection.publicId,
   //   numMarkers: app.markers.markers.length,
-  //   forks: app.map.forks,
-  //   numForks: app.map.numForks,
-  //   forkedFrom: app.map.forkedFrom,
-  //   numContributors: app.map.numContributors,
-  //   createdAt: app.map.timestamps.createdAt,
-  //   updatedAt: app.map.timestamps.updatedAt,
+  //   forks: app.featureCollection.forks,
+  //   numForks: app.featureCollection.numForks,
+  //   forkedFrom: app.featureCollection.forkedFrom,
+  //   numContributors: app.featureCollection.numContributors,
+  //   createdAt: app.featureCollection.timestamps.createdAt,
+  //   updatedAt: app.featureCollection.timestamps.updatedAt,
   // }
 
   // create a list item for the selected map
@@ -2873,15 +2924,15 @@ const openMapSelectorPanel = async () => {
 
   // populate this map's details
   const mapData = {
-    title: app.map.getTitle(),
-    publicId: app.map.publicId,
+    title: app.featureCollection.getTitle(),
+    publicId: app.featureCollection.publicId,
     numMarkers: app.markers.markers.length,
-    forks: app.map.forks,
-    numForks: app.map.numForks,
-    forkedFrom: app.map.forkedFrom,
-    numContributors: app.map.numContributors,
-    createdAt: app.map.timestamps.createdAt,
-    updatedAt: app.map.timestamps.updatedAt,
+    forks: app.featureCollection.forks,
+    numForks: app.featureCollection.numForks,
+    forkedFrom: app.featureCollection.forkedFrom,
+    numContributors: app.featureCollection.numContributors,
+    createdAt: app.featureCollection.timestamps.createdAt,
+    updatedAt: app.featureCollection.timestamps.updatedAt,
   }
 
   // create a list item for the selected map
@@ -2892,19 +2943,19 @@ const openMapSelectorPanel = async () => {
   // if this is an unsaved app, the only way to currently infer that is through no markers
   const deleteLinkString =
     app.auth.isEditor() && app.markers.markers.length > 0
-      ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Delete</a>`
+      ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Delete</a>`
       : ''
   const forkLinkString =
     app.auth.getToken() && app.markers.markers.length > 0
-      ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Fork</a>`
+      ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Fork</a>`
       : ''
   const renameLinkString =
     app.auth.isEditor() && app.markers.markers.length > 0
-      ? `<a class="rename-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Rename</a>`
+      ? `<a class="rename-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Rename</a>`
       : ''
   const collaborateLinkString =
     app.auth.isEditor() && app.markers.markers.length > 0
-      ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Invite collaborators...</a>`
+      ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Invite collaborators...</a>`
       : ''
   let contextMenuString = `
     <div class="context-menu dropdown">
@@ -2915,7 +2966,7 @@ const openMapSelectorPanel = async () => {
         <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-map-link dropdown-item" ws-map-id="${app.map.id.get()}" href="#">Share link</a>
+        <a class="copy-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Share link</a>
         ${renameLinkString}
         ${collaborateLinkString}
         ${forkLinkString}
@@ -2932,7 +2983,7 @@ const openMapSelectorPanel = async () => {
     const port = window.location.port ? `:${window.location.port}` : ''
     const text = `${window.location.protocol}://${
       window.location.hostname
-    }${port}/map/${app.map.id.get()}`
+    }${port}/map/${app.featureCollection.getPublicIdFromUrl()}`
     navigator.clipboard.writeText(text).then(
       function () {
         // show success message
@@ -2961,7 +3012,9 @@ const openMapSelectorPanel = async () => {
     if (!window.confirm(`Delete this entire map?`)) return
     // send delete request to server
     app
-      .myFetch(`${app.apis.wikistreets.deleteMapUrl}/${app.map.id.get()}`)
+      .myFetch(
+        `${app.apis.wikistreets.deleteFeatureCollectionUrl}/${app.featureCollection.getPublicIdFromUrl}`
+      )
       // send delete request to server
       .then((res) => {
         // console.log(JSON.stringify(res, null, 2))
@@ -2980,7 +3033,7 @@ const openMapSelectorPanel = async () => {
     $('.info-window-content .settings-map-container').show()
 
     // pre-select the correct contributor settings
-    if (app.map.limitContributors) {
+    if (app.featureCollection.limitContributors) {
       $(
         '.info-window-content .settings-map-container input#limit_contributors_public'
       ).removeAttr('checked')
@@ -3034,10 +3087,12 @@ const openMapSelectorPanel = async () => {
       // show the rename map form
       $('.info-window-content .map-details-container').hide()
       $('.info-window-content .rename-map-container').show()
-      $('.info-window-content .rename-map-container #mapTitle').val(
-        app.map.title
-      )
-      $('.info-window-content .rename-map-container #mapTitle').focus()
+      $(
+        '.info-window-content .rename-map-container #featureCollectionTitle'
+      ).val(app.featureCollection.title)
+      $(
+        '.info-window-content .rename-map-container #featureCollectionTitle'
+      ).focus()
     })
     $('.rename-map-form .cancel-link', $('.info-window-content')).click((e) => {
       e.preventDefault()
@@ -3065,21 +3120,21 @@ const openMapSelectorPanel = async () => {
   // show the updated map data
   $('.info-window .map-list-item-template').replaceWith(selectedMapListItem)
 
-  // create first/last issue button links
+  // create first/last feature button links
   if (app.markers.markers.length) {
     // add links to first and last posts
     $(`
-      <div class="prevnext-issue-container row">
-        <button class="navigate-issues-link first-issue-link btn btn-secondary col-6">First post</button>
-        <button class="navigate-issues-link last-issue-link btn btn-secondary col-6">Latest post</button>
+      <div class="prevnext-feature-container row">
+        <button class="navigate-features-link first-feature-link btn btn-secondary col-6">First post</button>
+        <button class="navigate-features-link last-feature-link btn btn-secondary col-6">Latest post</button>
       </div>
     `).prependTo('.info-window-content')
-    // position and activate the first/last issue links
-    $('.first-issue-link').on('click', (e) => {
+    // position and activate the first/last feature links
+    $('.first-feature-link').on('click', (e) => {
       e.preventDefault()
       app.markers.simulateClick(app.markers.markers[0])
     })
-    $('.last-issue-link').on('click', (e) => {
+    $('.last-feature-link').on('click', (e) => {
       e.preventDefault()
       app.markers.simulateClick(
         app.markers.markers[app.markers.markers.length - 1]
@@ -3088,15 +3143,15 @@ const openMapSelectorPanel = async () => {
   }
 
   // extract the maps
-  const maps = data.maps
+  const featureCollections = data.featureCollections
 
   // place links to the maps into the map selector
   $('.info-window-content .more-maps').html('') // wipe out any previously-generated list
   let mapListTemporaryContainer = $('<div>')
   let numMoreMaps = 0
-  maps.map((data, i, arr) => {
+  featureCollections.map((data, i, arr) => {
     // skip the map already displaying
-    if (data.publicId == app.map.id.get()) return
+    if (data.publicId == app.featureCollection.getPublicIdFromUrl) return
     numMoreMaps++
 
     // remove any previous message that there are no maps
@@ -3105,7 +3160,7 @@ const openMapSelectorPanel = async () => {
     // prepare some metadata about the map
     data.numForks = data.forks ? data.forks.length : 0
     data.numContributors = data.contributors ? data.contributors.length : 0
-    data.numMarkers = data.issues ? data.issues.length : 0
+    data.numMarkers = data.features ? data.features.length : 0
 
     // create and populate the map list item
     const mapListing = createMapListItem(data, true, false)
@@ -3134,24 +3189,24 @@ const openMapSelectorPanel = async () => {
   // update visible map title when user renames it
   $('.rename-map-form').submit((e) => {
     e.preventDefault()
-    const mapTitle = $('.info-window-content .rename-map-form #mapTitle').val()
-    if (!mapTitle) return
+    const featureCollectionTitle = $(
+      '.info-window-content .rename-map-form #featureCollectionTitle'
+    ).val()
+    if (!featureCollectionTitle) return
 
-    app.map.setTitle(mapTitle)
-    $('.info-window-content .rename-map-form #mapTitle').val('') // clear the field
+    app.featureCollection.setTitle(featureCollectionTitle)
+    $('.info-window-content .rename-map-form #featureCollectionTitle').val('') // clear the field
 
     // send new title to server, if user logged in and map already has markers
     if (app.auth.getToken() && app.markers.markers.length) {
-      const apiUrl = `${app.apis.wikistreets.mapTitleUrl}/${app.map.id.get()}`
+      const apiUrl = `${
+        app.apis.wikistreets.featureCollectionTitleUrl
+      }/${app.featureCollection.getPublicIdFromUrl()}`
       // console.log(`sending data to: ${apiUrl}`)
       let formData = new FormData(e.target)
-      formData.set('mapTitle', mapTitle) // hacking it.. don't know why this is necessary
-      // console.log('CLIENT MAP TITLE: ' + formData.get('mapTitle'))
-      app.myFetch(
-        `${app.apis.wikistreets.mapTitleUrl}/${app.map.id.get()}`,
-        'POST',
-        formData
-      )
+      formData.set('featureCollectionTitle', featureCollectionTitle) // hacking it.. don't know why this is necessary
+      // console.log('CLIENT MAP TITLE: ' + formData.get('featureCollectionTitle'))
+      app.myFetch(apiUrl, 'POST', formData)
     } else {
       console.log('not sending to server')
     }

@@ -5,15 +5,18 @@ const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const passportConfig = require('../passportConfig')
 
+// map-specific stuff
+const turf = require('@turf/turf')
+
 // middleware
-const _ = require('lodash') // utility functions for arrays, numbers, objects, strings, etc.
+// const _ = require('lodash') // utility functions for arrays, numbers, objects, strings, etc.
 const multer = require('multer') // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
-const path = require('path')
+// const path = require('path')
 
 // database schemas and models
-const { Map } = require('../models/map')
-const { Issue } = require('../models/issue')
-const { File } = require('../models/file')
+const { FeatureCollection } = require('../models/feature-collection')
+const { Feature } = require('../models/feature')
+// const { File } = require('../models/file')
 const { Comment } = require('../models/comment')
 const { User } = require('../models/user')
 
@@ -26,10 +29,7 @@ const user = require('../models/user')
 const { EmailService } = require('../services/EmailService')
 const { database } = require('faker')
 
-// markdown support
-// const marked = require('marked')
-
-const markerRouter = ({ config }) => {
+const featureRouter = ({ config }) => {
   // create an express router
   const router = express.Router()
 
@@ -78,34 +78,38 @@ const markerRouter = ({ config }) => {
     },
   })
 
-  // route for HTTP GET requests to an issue's JSON data
-  router.get('/json', [query('mapId').not().isEmpty().trim()], (req, res) => {
-    let errors = validationResult(req)
-    const mapId = req.query.mapId // get mapId from query string
-    if (errors.isEmpty() && mapId) {
-      const data = Issue.find({ mapId }, (err, docs) => {
-        if (!err) {
-          //console.log(docs);
-          res.json(docs)
-        } else {
-          throw err
-        }
-      }).populate('user', 'handle') // populate each doc with the user's handle
-    } else {
-      // validation error
-      const err = JSON.stringify(errors)
-      return res.status(400).json({
-        status: false,
-        message: err,
-        err: err,
-      })
+  // route for HTTP GET requests to an feature's JSON data
+  router.get(
+    '/json',
+    [query('featureCollectionId').not().isEmpty().trim()],
+    (req, res) => {
+      let errors = validationResult(req)
+      const featureCollectionId = req.query.featureCollectionId // get featureCollectionId from query string
+      if (errors.isEmpty() && featureCollectionId) {
+        const data = Feature.find({ featureCollectionId }, (err, docs) => {
+          if (!err) {
+            //console.log(docs);
+            res.json(docs)
+          } else {
+            throw err
+          }
+        }).populate('user', 'handle') // populate each doc with the user's handle
+      } else {
+        // validation error
+        const err = JSON.stringify(errors)
+        return res.status(400).json({
+          status: false,
+          message: err,
+          err: err,
+        })
+      }
     }
-  })
+  )
 
   // route for HTTP GET requests to the map KML data
   // router.get('/kml', (req, res) => {
-  //   const mapId = req.query.mapId // get mapId from query string
-  //   const data = Issue.find({ mapId }, (err, docs) => {
+  //   const featureCollectionId = req.query.featureCollectionId // get featureCollectionId from query string
+  //   const data = Feature.find({ featureCollectionId }, (err, docs) => {
   //     if (!err) {
   //       //console.log(docs);
   //       const kmlGenerator = require('../kml-generator')
@@ -133,7 +137,7 @@ const markerRouter = ({ config }) => {
       if (!errors.isEmpty() || !userId) return
 
       // get user's markers
-      Issue.find({ user: userId }, (err, docs) => {
+      Feature.find({ user: userId }, (err, docs) => {
         if (!err) {
           // respond with docs
           res.json(docs)
@@ -146,44 +150,45 @@ const markerRouter = ({ config }) => {
 
   // // route for HTTP GET requests to the map JSON data
   // router.get('/add-user', async (req, res) => {
-  //   await Issue.updateMany({}, { $set: { user: '5e8a8ef8051e73267f7dee72' } });
+  //   await Feature.updateMany({}, { $set: { user: '5e8a8ef8051e73267f7dee72' } });
   //   res.json({ 'status': 'ok'})
   // });
 
   // route for HTTP GET requests to delete a marker
   router.get(
-    '/delete/:issueId',
+    '/delete/:featureId',
     passportJWT, // jwt authentication
     [
-      query('mapId').not().isEmpty().trim(),
-      param('issueId').not().isEmpty().trim(),
+      query('featureCollectionId').not().isEmpty().trim(),
+      param('featureId').not().isEmpty().trim(),
     ],
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map or issue identifier'
+        throw 'Invalid map or feature identifier'
       }
 
       // extract necessary info
-      const mapId = req.query.mapId // get mapId from query string
-      const issueId = req.params.issueId
-      if (mapId && issueId) {
-        // remove the issue from the map
-        const map = await Map.findOneAndUpdate(
+      const featureCollectionId = req.query.featureCollectionId // get featureCollectionId from query string
+      const featureId = req.params.featureId
+      if (featureCollectionId && featureId) {
+        // remove the feature from the map
+        const featureCollection = await FeatureCollection.findOneAndUpdate(
           {
-            publicId: mapId,
+            publicId: featureCollectionId,
             $or: [{ limitContributors: false }, { contributors: req.user }],
           },
           {
-            $pull: { issues: { _id: issueId } }, // remove the issue from the map
+            $pull: { features: { _id: featureId } }, // remove the feature from the map
           },
           { new: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         )
-          .then((map) => {
-            if (!map) throw 'You do not have permission to modify this map'
+          .then((featureCollection) => {
+            if (!featureCollection)
+              throw 'You do not have permission to modify this map'
             // console.log(JSON.stringify(map, null, 2))
             // save changes
-            // map.save()
+            // featureCollection.save()
             // return the response to client
             res.json({
               status: true,
@@ -191,7 +196,7 @@ const markerRouter = ({ config }) => {
             })
           })
           .catch((err) => {
-            // invalid map or issue id
+            // invalid map or feature id
             return res.status(400).json({
               status: false,
               message: err,
@@ -199,8 +204,8 @@ const markerRouter = ({ config }) => {
             })
           })
       } else {
-        // invalid map or issue id
-        const err = 'Invalid map or issue identifiers.'
+        // invalid map or feature id
+        const err = 'Invalid map or feature identifiers.'
         return res.status(400).json({
           status: false,
           message: err,
@@ -223,34 +228,31 @@ const markerRouter = ({ config }) => {
       body('address').not().isEmpty().trim().escape(),
       body('zoom').trim(),
       body('body').trim(),
-      body('mapTitle').trim().escape(),
+      body('featureCollectionTitle').trim().escape(),
     ],
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map or issue identifier'
+        throw 'Invalid map or feature identifier'
       }
 
-      const mapId = req.body.mapId
-      const mapTitle = req.body.mapTitle
+      const featureCollectionId = req.body.featureCollectionId
+      const featureCollectionTitle = req.body.featureCollectionTitle
       const data = {
-        user: req.user._id,
-        position: {
-          lat: req.body.lat,
-          lng: req.body.lng,
+        'geometry.coordinates': [req.body.lng, req.body.lat],
+        properties: {
+          title: req.body.title,
+          body: req.body.body,
+          address: req.body.address,
+          zoom: req.body.zoom ? req.body.zoom : null,
+          photos: req.files,
         },
-        title: req.body.title,
-        address: req.body.address,
-        photos: req.files,
-        body: req.body.body,
         subscribers: [req.user._id],
+        user: req.user._id,
       }
-
-      // add zoom, if present
-      data.zoom = req.body.zoom ? req.body.zoom : null
 
       // reject posts with no map
-      if (!mapId) {
+      if (!featureCollectionId) {
         const err = 'No map specified.'
         return res.status(400).json({
           status: false,
@@ -259,7 +261,7 @@ const markerRouter = ({ config }) => {
         })
       }
       // reject posts with no useful data
-      else if (!data.photos.length && !data.body) {
+      else if (!data.properties.photos.length && !data.properties.body) {
         const err = 'You submitted an empty post.... please be reasonable.'
         return res.status(400).json({
           status: false,
@@ -268,7 +270,10 @@ const markerRouter = ({ config }) => {
         })
       }
       // reject posts with no address or lat/lng
-      else if (!data.address || !data.position.lat || !data.position.lng) {
+      else if (
+        !data.properties.address ||
+        !(data['geometry.coordinates'][0] && data['geometry.coordinates'][1])
+      ) {
         const err = 'Please include an address with your post'
         return res.status(400).json({
           status: false,
@@ -279,83 +284,99 @@ const markerRouter = ({ config }) => {
 
       // if we've reached here, the marker is valid...
       try {
-        // create an Issue object
-        const issue = new Issue(data)
+        // create an Feature object
+        const feature = new Feature(data)
+        // await feature.save()
 
-        // console.log(`ISSUE: ${JSON.stringify(issue, null, 2)}`)
+        // console.log(`FEATURE: ${JSON.stringify(feature, null, 2)}`)
 
         // set up changes we want to make to the overall map
         let updates = {
           // save the most recently viewed center point of the map
-          centerPoint: {
-            lat: req.body.lat,
-            lng: req.body.lng,
-          },
-          $push: { issues: issue }, // add the new issue to the map
+          // centerPoint: {
+          //   lat: req.body.lat,
+          //   lng: req.body.lng,
+          // },
+          $push: { features: feature }, // add the new feature to the map
           $addToSet: {
             subscribers: req.user,
             contributors: req.user,
           },
         }
-        if (mapTitle) updates.mapTitle = mapTitle // add map title if present
+        if (featureCollectionTitle)
+          updates.featureCollection = featureCollectionTitle // add map title if present
 
         // save the updated map, if existent, or new map if not
-        const map = await Map.findOneAndUpdate(
+        const featureCollection = await FeatureCollection.findOneAndUpdate(
           {
-            publicId: mapId,
+            publicId: featureCollectionId,
             $or: [{ limitContributors: false }, { contributors: req.user }],
           },
           updates,
           { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         )
           .populate('contributors', ['_id', 'handle'])
+          .populate('features.user', ['_id', 'handle'])
+          .populate('features.properties.comments.user', ['_id', 'handle'])
           .populate('subscribers', [
             '_id',
             'handle',
             'email',
             'notifications.email',
           ])
-          .populate('issues.user', ['_id', 'handle'])
-          .populate('issues.comments.user', ['_id', 'handle'])
           .catch((err) => {
             console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
           })
 
-        if (!map) throw 'No map found.'
-        // console.log(`MAP: ${JSON.stringify(map, null, 2)}`)
+        if (!featureCollection) throw 'No map found.'
+        // console.log(`MAP: ${JSON.stringify(featureCollection, null, 2)}`)
 
-        // tack on the current user to the issue so its sent back to client
-        issue.user = req.user
+        // tack on the current user to the feature so its sent back to client
+        feature.user = req.user
+
+        // tack on the bounding box
+        // for some reason we need to make a JSON object with none of the mongoose nonsense for buffering to work
+        const simpleObject = JSON.parse(
+          JSON.stringify(featureCollection, null, 2)
+        )
+        const buffered = turf.buffer(
+          simpleObject,
+          config.map.boundingBoxBuffer,
+          {
+            units: 'kilometers',
+          }
+        ) // buffer around the points
+        featureCollection.bbox = turf.bbox(buffered)
 
         // add this map to the user's list of maps
         // increment the number of posts this user has created
         await req.user.updateOne({
           $addToSet: {
-            maps: map,
+            featureCollections: featureCollection,
           },
           $inc: { numPosts: 1 },
         })
 
         // loop through all subscribers to this map and email them
-        const targetIssue = issue
+        const targetFeature = feature
         const posterId = req.user._id.toString().trim()
-        if (map && map.subscribers) {
-          const mapTitle = decodeURI(map.title)
-          const issueTitle = decodeURI(targetIssue.title)
-          map.subscribers.forEach((subscriber) => {
+        if (featureCollection && featureCollection.subscribers) {
+          const featureCollectionTitle = decodeURI(featureCollection.title)
+          const featureTitle = decodeURI(targetFeature.properties.title)
+          featureCollection.subscribers.forEach((subscriber) => {
             // don't send email to the person who commented
             if (subscriber._id != posterId) {
               const recipient = subscriber
               // console.log(`sending email to ${recipient.email}`)
               // send email notification, if the recipient has not opted-out of emails
               if (recipient.notifications.email) {
-                const mapPhrase = map.title
-                  ? `, on the map, '${mapTitle}'`
+                const featureCollectionPhrase = featureCollection.title
+                  ? `, on the map, '${featureCollectionTitle}'`
                   : ' on an unnamed map'
-                const imagesPhrase = data.photos.length
+                const imagesPhrase = data.properties.photos.length
                   ? '[images not displayed]'
                   : ''
-                const bodyPhrase = `\n\n"""\n${data.body.substr(
+                const bodyPhrase = `\n\n"""\n${data.properties.body.substr(
                   0,
                   100
                 )}... ${imagesPhrase}\n"""`
@@ -363,8 +384,8 @@ const markerRouter = ({ config }) => {
                 try {
                   emailService.send(
                     recipient.email,
-                    `New post: '${issueTitle}' by ${req.user.handle} on '${mapTitle}'!`,
-                    `Dear ${recipient.handle},\n\n${req.user.handle} just posted '${issueTitle}'${mapPhrase}!${bodyPhrase}\n\nTo view in full, please visit https://wikistreets.io/map/${map.publicId}#${targetIssue._id}`,
+                    `New post: '${featureTitle}' by ${req.user.handle} on '${featureCollectionTitle}'!`,
+                    `Dear ${recipient.handle},\n\n${req.user.handle} just posted '${featureTitle}'${featureCollectionPhrase}!${bodyPhrase}\n\nTo view in full, please visit https://wikistreets.io/map/${featureCollection.publicId}#${targetFeature._id}`,
                     true,
                     recipient._id
                   )
@@ -374,16 +395,16 @@ const markerRouter = ({ config }) => {
               } // if the subscriber wants to receive emails
             } // if subscriber is not the commenter
           }) // foreaach subscriber
-        } // if there is an issue at hand
+        } // if there is an feature at hand
 
         // return the response to client
         res.json({
           status: true,
           message: 'success',
-          data: issue,
+          data: feature,
         })
       } catch (err) {
-        // failed to save the new issue...
+        // failed to save the new feature...
         console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
         // delete any uploaded files if the entire route fails for some reason
         if (req.files && req.files.length > 0) {
@@ -398,7 +419,7 @@ const markerRouter = ({ config }) => {
         //return failure response
         return res.status(500).json({
           status: false,
-          message: 'An error occurred trying to save this issue',
+          message: 'An error occurred trying to save this feature',
           err: err,
         })
       }
@@ -412,8 +433,8 @@ const markerRouter = ({ config }) => {
     upload.array('files', config.markers.maxFiles), // multer file upload
     handleImages(markerImageService), // sharp file editing
     [
-      body('mapId').not().isEmpty().trim(),
-      body('issueid').not().isEmpty().trim(),
+      body('featureCollectionId').not().isEmpty().trim(),
+      body('featureId').not().isEmpty().trim(),
       body('lat').not().isEmpty().trim(),
       body('lng').not().isEmpty().trim(),
       body('title').not().isEmpty().trim().escape(),
@@ -425,11 +446,11 @@ const markerRouter = ({ config }) => {
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map or issue details'
+        throw 'Invalid map or feature details'
       }
 
-      const mapId = req.body.mapId
-      const issueId = req.body.issueid // the issue at issue
+      const featureCollectionId = req.body.featureCollectionId
+      const featureId = req.body.featureId // the feature to feature
 
       // files to delete
       const filesToDelete = req.body.files_to_delete
@@ -437,23 +458,19 @@ const markerRouter = ({ config }) => {
         : []
 
       const data = {
-        _id: issueId,
-        user: req.user,
-        position: {
-          lat: req.body.lat,
-          lng: req.body.lng,
+        _id: featureId,
+        'geometry.coordinates': [req.body.lng, req.body.lat],
+        properties: {
+          title: req.body.title,
+          body: req.body.body,
+          address: req.body.address,
+          zoom: req.body.zoom ? req.body.zoom : null,
         },
-        title: req.body.title,
-        address: req.body.address,
-        // photos: req.files,
-        body: req.body.body,
+        user: req.user,
       }
 
-      // add zoom, if present
-      data.zoom = req.body.zoom ? req.body.zoom : null
-
       // reject posts with no map
-      if (!mapId || !issueId) {
+      if (!featureCollectionId || !featureId) {
         const err = 'Map or marker not specified.'
         return res.status(400).json({
           status: false,
@@ -471,7 +488,11 @@ const markerRouter = ({ config }) => {
       //   })
       // }
       // reject posts with no address or lat/lng
-      else if (!data.address || !data.position.lat || !data.position.lng) {
+      else if (
+        !data.properties.address ||
+        !data['geometry.coordinates'][0] ||
+        !data['geometry.coordinates'][1]
+      ) {
         const err = 'Please include an address with your post'
         return res.status(400).json({
           status: false,
@@ -482,68 +503,77 @@ const markerRouter = ({ config }) => {
 
       // if we've reached here, the marker is valid...
       try {
-        // find and update the Issue object
-        // issueObjectId = ObjectId.fromString(issueId)
-        await Map.updateOne(
+        // find and update the Feature object
+        // featureObjectId = ObjectId.fromString(featureId)
+        let featureCollection = await FeatureCollection.findOneAndUpdate(
           {
-            publicId: mapId,
+            publicId: featureCollectionId,
             $or: [{ limitContributors: false }, { contributors: req.user }],
-            'issues._id': issueId,
+            'features._id': featureId,
           },
           {
             $set: {
-              centerPoint: data.position, // map's center point
-              'issues.$.user': data.user,
-              'issues.$.position': data.position,
-              'issues.$.address': data.address,
-              'issues.$.zoom': data.zoom,
-              'issues.$.title': data.title,
-              'issues.$.body': data.body,
+              // centerPoint: data.position, // map's center point
+              'features.$.user': data.user,
+              'features.$.geometry.coordinates': data['geometry.coordinates'],
+              'features.$.properties.address': data.properties.address,
+              'features.$.properties.zoom': data.properties.zoom,
+              'features.$.properties.title': data.properties.title,
+              'features.$.properties.body': data.properties.body,
             },
             $addToSet: {
-              'issues.$.subscribers': req.user, // subscribe to this issue's notifications
+              'features.$.subscribers': req.user, // subscribe to this feature's notifications
               contributors: req.user, // add as contributor to this map
-            },
-          },
-          { new: true }
-        ).catch((err) => {
-          console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
-        })
-
-        // pull deleted images
-        let map = await Map.findOneAndUpdate(
-          {
-            publicId: mapId,
-            $or: [{ limitContributors: false }, { contributors: req.user }],
-            'issues._id': issueId,
-          },
-          {
-            $pull: {
-              'issues.$.photos': {
-                filename: {
-                  $in: filesToDelete,
-                },
-              },
             },
           },
           { new: true }
         )
           .populate('contributors', ['_id', 'handle'])
-          .populate('issues.comments.user', ['_id', 'handle'])
-          .populate('issues.user', ['_id', 'handle'])
+          .populate('features.user', ['_id', 'handle'])
+          .populate('features.properties.comments.user', ['_id', 'handle'])
+          .catch((err) => {
+            console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+          })
+
+        // pull deleted images
+        if (filesToDelete.length) {
+          featureCollection = await FeatureCollection.findOneAndUpdate(
+            {
+              publicId: featureCollectionId,
+              $or: [{ limitContributors: false }, { contributors: req.user }],
+              'features._id': featureId,
+            },
+            {
+              $pull: {
+                'features.$.properties.photos': {
+                  filename: {
+                    $in: filesToDelete,
+                  },
+                },
+              },
+            },
+            { new: true }
+          )
+            .populate('contributors', ['_id', 'handle'])
+            .populate('features.user', ['_id', 'handle'])
+            .populate('features.properties.comments.user', ['_id', 'handle'])
+            .catch((err) => {
+              console.log(`ERROR DELETING: ${err}`)
+            })
+        }
 
         // add new images, if any
-        if (req.files.length) {
-          const filesToAdd = req.files
-          map = await Map.findOneAndUpdate(
+        const filesToAdd = req.files
+        if (filesToAdd.length) {
+          featureCollection = await FeatureCollection.findOneAndUpdate(
             {
-              publicId: mapId,
+              publicId: featureCollectionId,
               $or: [{ limitContributors: false }, { contributors: req.user }],
-              'issues._id': issueId,
+              'features._id': featureId,
             },
             {
               $push: {
-                'issues.$.photos': {
+                'features.$.properties.photos': {
                   $each: filesToAdd,
                 },
               },
@@ -551,13 +581,30 @@ const markerRouter = ({ config }) => {
             { new: true }
           )
             .populate('contributors', ['_id', 'handle'])
-            .populate('issues.comments.user', ['_id', 'handle'])
-            .populate('issues.user', ['_id', 'handle'])
+            .populate('features.user', ['_id', 'handle'])
+            .populate('features.properties.comments.user', ['_id', 'handle'])
+            .catch((err) => {
+              console.log(`ERROR ADDING: ${err}`)
+            })
         }
 
+        // tack on the bounding box
+        // for some reason we need to make a JSON object with none of the mongoose nonsense for buffering to work
+        const simpleObject = JSON.parse(
+          JSON.stringify(featureCollection, null, 2)
+        )
+        const buffered = turf.buffer(
+          simpleObject,
+          config.map.boundingBoxBuffer,
+          {
+            units: 'kilometers',
+          }
+        ) // buffer around the points
+        featureCollection.bbox = turf.bbox(buffered)
+
         // // add this map to the user's list of maps
-        req.user.maps.pull(map._id) // first remove from list
-        req.user.maps.push(map) // re-append to list
+        req.user.featureCollections.pull(featureCollection._id) // first remove from list
+        req.user.featureCollections.push(featureCollection) // re-append to list
         req.user.save()
 
         // // increment the number of posts this user has created
@@ -567,19 +614,14 @@ const markerRouter = ({ config }) => {
         //   { new: true }
         // )
 
-        // req.user.save() // save changes to user
-
-        // support markdown
-        // issue.body = marked(issue.body)
-
         // return the response to client
         res.json({
           status: true,
           message: 'success',
-          data: map, // return full map for now, rather than just the updated issue because it's easier
+          data: featureCollection, // return full map for now, rather than just the updated feature because it's easier
         })
       } catch (err) {
-        // failed to save the new issue...
+        // failed to save the new feature...
         console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
         // delete any uploaded files if the entire route fails for some reason
         if (req.files && req.files.length > 0) {
@@ -594,7 +636,7 @@ const markerRouter = ({ config }) => {
         //return failure response
         return res.status(500).json({
           status: false,
-          message: 'An error occurred trying to save this issue',
+          message: 'An error occurred trying to save this feature',
           err: err,
         })
       }
@@ -609,24 +651,24 @@ const markerRouter = ({ config }) => {
     handleImages(markerImageService), // sharp file editing
     [
       body('body').trim(),
-      body('mapId').not().isEmpty().trim(),
-      body('issueid').not().isEmpty().trim(),
+      body('featureCollectionId').not().isEmpty().trim(),
+      body('featureId').not().isEmpty().trim(),
     ],
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map or issue identifier'
+        throw 'Invalid map or feature identifier'
       }
 
-      const mapId = req.body.mapId
-      const issueId = req.body.issueid
+      const featureCollectionId = req.body.featureCollectionId
+      const featureId = req.body.featureId
       const data = {
-        user: req.user._id,
         photos: req.files,
         body: req.body.body,
+        user: req.user._id,
       }
 
-      // reject posts with no map or no issue
+      // reject posts with no map or no feature
       if (!data.photos.length && !data.body) {
         console.log(`ERRORS: ${JSON.stringify(errors, null, 2)}`)
         const err = 'Invalid map data.... please be reconsider your choices.'
@@ -645,64 +687,65 @@ const markerRouter = ({ config }) => {
 
         // console.log(`COMMENT: ${JSON.stringify(comment, null, 2)}`)
 
-        // set up changes we want to make to the map
-        let updates = {
-          $push: {
-            'issues.$.comments': comment,
-          },
-          $addToSet: {
-            'issues.$.subscribers': req.user,
-          },
-        }
-
         // make the changes
-        const map = await Map.findOneAndUpdate(
+        const featureCollection = await FeatureCollection.findOneAndUpdate(
           {
-            publicId: mapId,
+            publicId: featureCollectionId,
             // $or: [{ limitContributors: false }, { contributors: req.user }], // currently allowing any users to comment... uncommemnt this to only allow listed contributors
-            'issues._id': issueId,
+            'features._id': featureId,
           },
-          updates,
+          {
+            // add the comment
+            $push: {
+              'features.$.properties.comments': comment,
+            },
+            // add this user as a subscriber to this feature
+            $addToSet: {
+              'features.$.subscribers': req.user,
+            },
+          },
           { new: true }
         )
           .populate('contributors', ['_id', 'handle', 'email'])
-          .populate('issues.subscribers', [
+          .populate('features.subscribers', [
             '_id',
             'handle',
             'email',
             'notifications.email',
           ])
-          .populate('issues.comments.user', ['_id', 'handle'])
-          .populate('issues.user', ['_id', 'handle'])
+          .populate('features.properties.comments.user', ['_id', 'handle'])
+          .populate('features.user', ['_id', 'handle'])
           .catch((err) => {
             errors = err
             console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
           })
 
-        if (!map) throw 'No map found'
+        if (!featureCollection) throw 'No map found'
 
-        // find the issue that has just been commented on
-        let targetIssue = false
-        map.issues.forEach(async (issue) => {
+        // find the feature that has just been commented on
+        let targetFeature = false
+        featureCollection.features.forEach(async (feature) => {
           // only send emails if it's not the user themselves who commented
-          if (issue._id == issueId) {
-            targetIssue = issue
-          } // if issue ids match
+          if (feature._id == featureId) {
+            targetFeature = feature
+          } // if feature ids match
         })
 
-        // loop through all subscribers to this issue and email them
+        // loop through all subscribers to this feature and email them
         const commenterId = req.user._id.toString().trim()
-        if (targetIssue && targetIssue.subscribers) {
-          const mapTitle = decodeURI(map.title)
-          const issueTitle = decodeURI(targetIssue.title)
-          targetIssue.subscribers.forEach((subscriber) => {
+        if (targetFeature && targetFeature.subscribers) {
+          const featureCollectionTitle = decodeURI(featureCollection.title)
+          const featureTitle = decodeURI(targetFeature.properties.title)
+          targetFeature.subscribers.forEach((subscriber) => {
             // don't send email to the person who commented
             if (subscriber._id != commenterId) {
               const recipient = subscriber
               // console.log(`sending email to ${recipient.email}`)
               // send email notification, if the recipient has not opted-out of emails
               if (recipient.notifications.email) {
-                const mapPhrase = map.title ? `, on the map, '${mapTitle}'` : ''
+                const mapPhrase = featureCollection.title
+                  ? `, on the map, '${featureCollectionTitle}'`
+                  : ''
                 const imagesPhrase = data.photos.length
                   ? '[images not displayed]'
                   : ''
@@ -714,8 +757,8 @@ const markerRouter = ({ config }) => {
                 try {
                   emailService.send(
                     recipient.email,
-                    `New comment from ${req.user.handle} on '${issueTitle}'!`,
-                    `Dear ${recipient.handle},\n\n${req.user.handle} commented on your post, '${issueTitle}'${mapPhrase}!${bodyPhrase}\n\nTo view in full, please visit https://wikistreets.io/map/${map.publicId}#${targetIssue._id}`,
+                    `New comment from ${req.user.handle} on '${featureTitle}'!`,
+                    `Dear ${recipient.handle},\n\n${req.user.handle} commented on the post, '${featureTitle}'${mapPhrase}!${bodyPhrase}\n\nTo view in full, please visit https://wikistreets.io/map/${featureCollection.publicId}#${targetFeature._id}`,
                     true,
                     recipient._id
                   )
@@ -725,13 +768,13 @@ const markerRouter = ({ config }) => {
               } // if the subscriber wants to receive emails
             } // if subscriber is not the commenter
           }) // foreaach subscriber
-        } // if there is an issue at hand
+        } // if there is an feature at hand
 
         // increment the number of posts this user has created
         User.updateOne(
           { _id: req.user._id },
           {
-            $addToSet: { maps: map },
+            $addToSet: { featureCollections: featureCollection },
             $inc: { numComments: 1 },
           },
           { new: true }
@@ -742,12 +785,13 @@ const markerRouter = ({ config }) => {
 
         // return the comment data to client
         let foundIt = false
-        map.issues.forEach((issue) => {
-          // find the issue at hand
-          if (issue._id == issueId) {
+        featureCollection.features.forEach((feature) => {
+          // find the feature at hand
+          if (feature._id == featureId) {
+            const targetFeature = feature
             foundIt = true // match!
-            const lastCommentIndex = issue.comments.length - 1
-            const commentData = issue.comments[lastCommentIndex]
+            const lastCommentIndex = feature.properties.comments.length - 1
+            const commentData = feature.properties.comments[lastCommentIndex]
             return res.json({
               status: true,
               message: 'success',
@@ -755,10 +799,10 @@ const markerRouter = ({ config }) => {
             })
           }
         })
-        // make sure we found the issue
+        // make sure we found the feature
         if (!foundIt) throw `Can't comment on a non-existent post.`
       } catch (err) {
-        // failed to save the new issue...
+        // failed to save the new feature...
         console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
         // delete any uploaded files if the entire route fails for some reason
         if (req.files && req.files.length > 0) {
@@ -773,7 +817,7 @@ const markerRouter = ({ config }) => {
         //return failure response
         return res.status(500).json({
           status: false,
-          message: 'An error occurred trying to save this issue',
+          message: 'An error occurred trying to save this feature',
           err: err,
         })
       }
@@ -786,36 +830,36 @@ const markerRouter = ({ config }) => {
     passportJWT, // jwt authentication
     [
       param('commentId').not().isEmpty().trim(),
-      query('mapId').not().isEmpty().trim(),
-      query('issueid').not().isEmpty().trim(),
+      query('featureCollectionId').not().isEmpty().trim(),
+      query('featureId').not().isEmpty().trim(),
     ],
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map, issue, or comment identifier'
+        throw 'Invalid map, feature, or comment identifier'
       }
 
       // extract necessary info
-      const mapId = req.query.mapId
-      const issueId = req.query.issueid
+      const featureCollectionId = req.query.featureCollectionId
+      const featureId = req.query.featureId
       const commentId = req.params.commentId
 
-      // console.log(`all data: ${mapId} / ${issueId} / ${commentId}`)
+      // console.log(`all data: ${featureCollectionId} / ${featureId} / ${commentId}`)
 
-      if (mapId && issueId && commentId) {
-        // remove the comment from the issue on the map
-        const map = await Map.findOneAndUpdate(
+      if (featureCollectionId && featureId && commentId) {
+        // remove the comment from the feature on the map
+        const featureCollection = await FeatureCollection.findOneAndUpdate(
           {
-            publicId: mapId,
+            publicId: featureCollectionId,
             $or: [{ limitContributors: false }, { contributors: req.user }],
-            'issues._id': issueId,
+            'features._id': featureId,
           },
           {
-            $pull: { 'issues.$.comments': { _id: commentId } }, // remove the comment from the issue
+            $pull: { 'features.$.properties.comments': { _id: commentId } }, // remove the comment from the feature
           },
           { new: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         )
-          .then((map) => {
+          .then((featureCollection) => {
             // return the response to client
             res.json({
               status: true,
@@ -823,7 +867,7 @@ const markerRouter = ({ config }) => {
             })
           })
           .catch((err) => {
-            // invalid map or issue id
+            // invalid map or feature id
             return res.status(400).json({
               status: false,
               message: err,
@@ -831,8 +875,8 @@ const markerRouter = ({ config }) => {
             })
           })
       } else {
-        // invalid map or issue id
-        const err = 'Invalid map, issue, or comment identifiers.'
+        // invalid map or feature id
+        const err = 'Invalid map, feature, or comment identifiers.'
         return res.status(400).json({
           status: false,
           message: err,
@@ -845,4 +889,4 @@ const markerRouter = ({ config }) => {
   return router
 }
 
-module.exports = markerRouter
+module.exports = featureRouter

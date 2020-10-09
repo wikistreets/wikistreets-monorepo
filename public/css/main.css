@@ -90,7 +90,7 @@ ul {
 }
 
 /* the map! */
-.issue-map {
+.feature-map {
   /* position: relative; */
 }
 
@@ -145,14 +145,14 @@ ul {
   z-index: 101;
 }
 
-.control-add-issue {
+.control-add-feature {
   width: 40px;
   top: 144px;
   left: auto;
   right: 30px;
   margin: 0;
 }
-.control-add-issue img {
+.control-add-feature img {
   margin-left: 0;
   width: 100%;
 }
@@ -298,12 +298,12 @@ button.dropdown-toggle img {
   padding-top: 20px;
 }
 
-/* issue details */
-.info-window-content .issue-detail header,
+/* feature details */
+.info-window-content .feature-detail header,
 .info-window-content .map-details-container {
   padding-top: 20px;
 }
-.info-window-content .map-details-container .prevnext-issue-container {
+.info-window-content .map-details-container .prevnext-feature-container {
   /* margin-top: -60px; */
 }
 .info-window-content .map-details-container .context-menu {
@@ -397,8 +397,8 @@ button.dropdown-toggle img {
   width: 75px;
 }
 
-/* previous and next issue links */
-.prevnext-issue-container {
+/* previous and next feature links */
+.prevnext-feature-container {
   /* margin-top: -20px;
   margin-bottom: 10px; */
   /* width: 100%;
@@ -409,21 +409,21 @@ button.dropdown-toggle img {
   top: 2px;
   z-index: 101;
 }
-.info-window .prev-issue-link,
-.info-window .next-issue-link,
-.info-window .navigate-issues-link {
+.info-window .prev-feature-link,
+.info-window .next-feature-link,
+.info-window .navigate-features-link {
   border-radius: 0;
   color: black;
 }
 
-.issue-form {
+.feature-form {
   margin-top: 25px;
 }
-.issue-form .nearby-address {
+.feature-form .nearby-address {
   font-size: 0.75em;
 }
 
-.issue-form span.address {
+.feature-form span.address {
   font-weight: bold;
 }
 
@@ -449,7 +449,7 @@ button.dropdown-toggle img {
   padding-bottom: 15px;
 }
 .thumbs-container,
-.issue-form .existing-thumbs-container {
+.feature-form .existing-thumbs-container {
   margin-top: 10px;
 }
 .existing-thumbs-container {
@@ -463,7 +463,7 @@ button.dropdown-toggle img {
   border: 1px solid white;
 }
 .thumbs-container .thumb img.thumb-img,
-.issue-form .existing-thumbs-container .thumb img.thumb-img {
+.feature-form .existing-thumbs-container .thumb img.thumb-img {
   height: 100px;
 }
 .thumbs-container .thumb .close-icon,
@@ -493,12 +493,12 @@ button.dropdown-toggle img {
   border-top: 1px dotted #555;
   padding-top: 20px;
 }
-.issue-detail.comment header {
-  /** override default for issue-detail **/
+.feature-detail.comment header {
+  /** override default for feature-detail **/
   padding-top: 15px;
 }
-.issue-detail.comment div.context-menu {
-  /** override default for issue-detail **/
+.feature-detail.comment div.context-menu {
+  /** override default for feature-detail **/
   margin-top: 0px;
 }
 
@@ -510,7 +510,7 @@ button.dropdown-toggle img {
 }
 
 /* move content away from the top of info-panel */
-.issue-list-container h2,
+.feature-list-container h2,
 .rename-map-container,
 .about-forks,
 .settings-map-container,
@@ -538,13 +538,13 @@ button.dropdown-toggle img {
     border-top-left-radius: 0;
     border-bottom-right-radius: 0;
   }
-  .issue-map,
+  .feature-map,
   .info-window-container {
     /* no space between columns */
     margin: 0 !important;
     padding: 0 !important;
   }
-  .issue-map .control-map-selector {
+  .feature-map .control-map-selector {
     /* hide the map selector that appears on mobile at bottom of map */
     display: none;
   }
@@ -576,16 +576,16 @@ button.dropdown-toggle img {
   .info-window .info-window-content {
     padding-bottom: 100px;
   }
-  .prevnext-issue-container {
+  .prevnext-feature-container {
     top: 0;
   }
-  .prevnext-issue-container a {
+  .prevnext-feature-container a {
     /* margin: 0 !important; */
   }
   .expand-contract-button {
     display: none;
   }
-  .issue-list-item * {
+  .feature-list-item * {
     /* pointer-events: none; */
   }
 } /* // desktop version */

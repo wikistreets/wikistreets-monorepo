@@ -5,7 +5,7 @@ const morgan = require('morgan') // middleware for logging HTTP requests.
 const cors = require('cors') // middleware for enabling CORS (Cross-Origin Resource Sharing) requests.
 
 // load routes
-const markerRouter = require('./routes/marker-router')
+const featureRouter = require('./routes/feature-router')
 const userRouter = require('./routes/user-router')
 const mapRouter = require('./routes/map-router')
 
@@ -36,7 +36,7 @@ const server = ({ config }) => {
 
   // load routes, passing relevant configuration settings as necessary
   app.use(['/', '/map'], mapRouter({ config })) // requests for a map
-  app.use('/markers', markerRouter({ config })) // requests for just marker data
+  app.use('/features', featureRouter({ config })) // requests for just marker data
   app.use('/users', userRouter({ config })) // requests for just acccount actions
 
   return app

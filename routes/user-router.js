@@ -17,8 +17,8 @@ const { EmailService } = require('../services/EmailService')
 
 // mongoose schemas and models
 const { User, userSchema } = require('../models/user')
-// const { Issue } = require('../models/issue')
-const { Map } = require('../models/map')
+// const { Feature } = require('../models/feature')
+const { FeatureCollection } = require('../models/feature-collection')
 const { Invitation } = require('../models/invitation')
 
 /**
@@ -108,19 +108,19 @@ const userRouter = ({ config }) => {
       )
 
       // if this signup is from an email invitation, let this user edit the map they were invited to
-      console.log(`map id: ${req.body.mapId}`)
-      if (req.body.mapId) {
-        console.log(`map id received`)
-        Map.findOne({
-          publicId: req.body.mapId,
-        }).then((map) => {
-          if (map) {
-            console.log(`map found`)
+      // console.log(`featureCollection id: ${req.body.featureCollectionId}`)
+      if (req.body.featureCollectionId) {
+        // console.log(`map id received`)
+        FeatureCollection.findOne({
+          publicId: req.body.featureCollectionId,
+        }).then((featureCollection) => {
+          if (featureCollection) {
+            // console.log(`map found`)
             // find the invitation to edit this map
             Invitation.findOneAndUpdate(
               {
                 invitee: req.body.email,
-                map: map,
+                featureCollection: featureCollection,
               },
               {
                 accepted: true,
@@ -130,8 +130,8 @@ const userRouter = ({ config }) => {
               if (invitation) {
                 console.log(`invitation found`)
                 // add the invited user to the map's contributors
-                map.contributors.push(user)
-                map.save((err, doc) => {
+                featureCollection.contributors.push(user)
+                featureCollection.save((err, doc) => {
                   if (err) console.log(`${err}`)
                   else if (doc) console.log(`${doc}`)
                 })
@@ -264,16 +264,17 @@ const userRouter = ({ config }) => {
         email: false,
       }
     )
-      .populate('maps', [
+      .populate('featureCollections', [
         'title',
         'publicId',
         'createdAt',
         'updatedAt',
         'forkedFrom.publicId',
         'forkedFrom.title',
-        'issues',
+        'features',
         'contributors',
         'forks',
+        'numForks',
       ])
       .catch((err) => {
         return res.status(500).json({
@@ -300,14 +301,14 @@ const userRouter = ({ config }) => {
         email: false,
       }
     )
-      .populate('maps', [
+      .populate('featureCollections', [
         'title',
         'publicId',
         'createdAt',
         'updatedAt',
         'forkedFrom.publicId',
         'forkedFrom.title',
-        'issues',
+        'features',
         'contributors',
         'forks',
       ])

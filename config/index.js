@@ -27,6 +27,9 @@ const config = {
     maxImageHeight: 1200,
     maxImageFileSize: 50 * 1024 * 1024, // 50MB
   },
+  map: {
+    boundingBoxBuffer: 1, // 1 km
+  },
   jwt: {
     jwtIssuer: process.env.JWT_ISSUER,
     jwtSecret: process.env.JWT_SECRET,

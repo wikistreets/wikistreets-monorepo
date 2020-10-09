@@ -107,7 +107,7 @@
 
     <div class="row">
 
-      <section class="issue-map col-12  col-md-6 col-lg-7">
+      <section class="feature-map col-12  col-md-6 col-lg-7">
           <header>
             <h1 class="logo display-4">Wikistreets</h1>
           </header>
@@ -124,7 +124,7 @@
         </div>
 
         <div class="map-controls">
-          <div class="map-control control-add-issue">
+          <div class="map-control control-add-feature">
             <img
               alt="Place a new marker"
               title="Place a new marker"
@@ -153,7 +153,7 @@
         <!-- //.map-controls -->
         <!-- <div class="clear"></div> -->
       </section>
-      <!-- //.issue-map -->
+      <!-- //.feature-map -->
 
       <!-- info window -->
       <div class="info-window-container col-12 col-md-6 col-lg-5">
@@ -356,10 +356,10 @@
     </div>
     <!-- // reset password form-->
 
-    <!-- new issue form -->
-    <div class="new-issue-form-container hide">
+    <!-- new feature form -->
+    <div class="new-feature-form-container hide">
       <form
-        class="issue-form"
+        class="feature-form"
         action="/markers/create"
         method="POST"
         enctype="multipart/form-data"
@@ -424,17 +424,17 @@
         </div>
       </form>
     </div>
-    <!-- // new issue form -->
+    <!-- // new feature form -->
 
-    <!-- edit issue form -->
-    <div class="edit-issue-form-container hide">
+    <!-- edit feature form -->
+    <div class="edit-feature-form-container hide">
       <form
-        class="issue-form"
+        class="feature-form"
         action="/markers/edit"
         method="POST"
         enctype="multipart/form-data"
       >
-        <input type="hidden" name="issueid" class="issueid" />
+        <input type="hidden" name="featureId" class="featureId" />
         <input type="hidden" name="address" class="address" />
         <input type="hidden" name="lat" class="lat" />
         <input type="hidden" name="lng" class="lng" />
@@ -448,15 +448,15 @@
             </p>
             <input
               type="text"
-              class="form-control issue-title"
+              class="form-control feature-title"
               name="title"
-              id="issue-title"
+              id="feature-title"
               placeholder="Title*"
               required="required"
             />
             <br />
             <textarea
-              class="form-control col-12 issue-body"
+              class="form-control col-12 feature-body"
               name="body"
               rows="4"
               placeholder="Description (markdown supported)"
@@ -506,7 +506,7 @@
         </div>
       </form>
     </div>
-    <!-- // edit issue form -->
+    <!-- // edit feature form -->
 
     <!-- about us -->
     <div class="about-us-container hide">
@@ -672,8 +672,8 @@
             <input
               class="form-control"
               type="text"
-              name="mapTitle"
-              id="mapTitle"
+              name="featureCollectionTitle"
+              id="featureCollectionTitle"
               maxlength="50"
               placeholder="Map name"
             />
@@ -841,7 +841,7 @@
         <div class="comment-form-container hide">
           <h2>Leave a comment</h3>
           <form class="comment-form" action="/markers/comment" method="POST">
-            <input type="hidden" name="issueid" class="issueid" />
+            <input type="hidden" name="featureId" class="featureId" />
             <textarea
               name="body"
               class="form-control"

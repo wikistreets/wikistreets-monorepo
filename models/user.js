@@ -1,7 +1,10 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 const bcrypt = require('bcryptjs')
-const { Map, mapSchema } = require('./map')
+const {
+  FeatureCollection,
+  featureCollectionSchema,
+} = require('./feature-collection')
 
 // a user
 const userSchema = new Schema(
@@ -22,7 +25,9 @@ const userSchema = new Schema(
     },
     numPosts: { type: Number, default: 0 },
     numComments: { type: Number, default: 0 },
-    maps: [{ type: Schema.Types.ObjectId, ref: 'Map' }],
+    featureCollections: [
+      { type: Schema.Types.ObjectId, ref: 'FeatureCollection' },
+    ],
     notifications: {
       email: { type: Boolean, default: true },
     },
