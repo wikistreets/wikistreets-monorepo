@@ -2653,17 +2653,17 @@ const openUserProfile = async (handle, userId) => {
       )
       $('.info-window-content .num-posts').text(data.numPosts)
       $('.info-window-content .num-comments').text(data.numComments)
-      $('.info-window-content .num-maps').text(data.maps.length)
+      $('.info-window-content .num-maps').text(data.featureCollections.length)
 
       // fill out the user profile's list of maps
       // extract the maps
-      const maps = data.maps
-      maps.reverse() // reverse order with most recent first
+      const featureCollections = data.featureCollections
+      featureCollections.reverse() // reverse order with most recent first
 
       // place links to the maps into the map selector
       $('.info-window-content .more-maps').html('') // wipe out any previously-generated list
       let mapListTemporaryContainer = $('<div>')
-      maps.map((data, i, arr) => {
+      featureCollections.map((data, i, arr) => {
         // remove any previous message that there are no maps
         $('.no-maps-message').hide()
         // console.log(JSON.stringify(data, null, 2))
@@ -2682,13 +2682,13 @@ const openUserProfile = async (handle, userId) => {
       // append entire map list to page
       mapListTemporaryContainer.appendTo('.info-window-content .more-maps')
 
-      if (!maps.length) {
-        // create new link
-        const el = $(`<p class="no-maps-message">You have no maps... yet.</p>`)
-        el.appendTo('.info-window-content .more-maps')
-      }
+      // if (!featureCollections.length) {
+      //   // create new link
+      //   const el = $(`<p class="no-maps-message">You have no maps... yet.</p>`)
+      //   el.appendTo('.info-window-content .more-maps')
+      // }
 
-      if (!maps.length) {
+      if (!featureCollections.length) {
         // create new link
         const el = $(
           `<li class="list-group-item no-maps-message">${handle} has no saved maps... yet.</li>`
