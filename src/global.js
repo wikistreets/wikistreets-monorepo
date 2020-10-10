@@ -669,8 +669,8 @@ app.user.fetch = async () => {
       app.user.id = data._id
       app.user.handle = data.handle
       // save list of this user's maps
-      app.user.maps = data.maps
-      app.user.maps.reverse() // put most recent map first
+      app.user.featureCollections = data.featureCollections
+      app.user.featureCollections.reverse() // put most recent map first
 
       // console.log(`RESPONSE: ${JSON.stringify(data, null, 2)}`)
       return data
@@ -2915,8 +2915,6 @@ const openMapSelectorPanel = async () => {
 
   // get this user's data from server
   const data = await app.user.fetch()
-
-  // console.log(JSON.stringify(data, null, 2))
 
   // copy the user map selector html into the infowindow
   const infoWindowHTML = $('.select-map-container').html()
