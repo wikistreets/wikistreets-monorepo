@@ -1156,6 +1156,11 @@ near ${data.properties.address.substr(
   )}.
 `
 
+  // show how many comments this post has
+  const commentsLink = data.properties.comments
+    ? `<br /><a class="comments-link" href="#">${data.properties.comments.length} comments</a>`
+    : ''
+
   let imgString = createPhotoCarousel(data.properties.photos, data._id)
   // console.log(imgString)
 
@@ -1195,7 +1200,7 @@ near ${data.properties.address.substr(
     ${contextMenuString}
     <header>
         <h2>${data.properties.title}</h2>
-        <p class="instructions attribution lead">${attribution}</p>
+        <p class="instructions attribution lead">${attribution}${commentsLink}</p>
     </header>
     <div class="feedback alert alert-success hide"></div>
     <article>
@@ -1393,6 +1398,14 @@ const showInfoWindow = (marker) => {
     // hide comments section if none there
     $('.info-window-content .existing-comments').hide()
   }
+
+  // activate link to view comments
+  $('.info-window-content .comments-link').on('click', (e) => {
+    e.preventDefault()
+    const scrollValue = $('.info-window-content .existing-comments').offset()
+      .top
+    $('.info-window').scrollTop(scrollValue)
+  })
 
   // handle previous and next feature button clicks
   $('.info-window-content .prev-feature-link').click((e) => {

@@ -6,8 +6,8 @@ const cors = require('cors') // middleware for enabling CORS (Cross-Origin Resou
 
 // load routes
 const featureRouter = require('./routes/feature-router')
+const featureCollectionRouter = require('./routes/feature-collection-router')
 const userRouter = require('./routes/user-router')
-const mapRouter = require('./routes/map-router')
 
 // set up server
 const server = ({ config }) => {
@@ -35,7 +35,7 @@ const server = ({ config }) => {
   app.use('/favicon.ico', express.static('public/favicon.ico'))
 
   // load routes, passing relevant configuration settings as necessary
-  app.use(['/', '/map'], mapRouter({ config })) // requests for a map
+  app.use(['/', '/map'], featureCollectionRouter({ config })) // requests for a map
   app.use('/features', featureRouter({ config })) // requests for just marker data
   app.use('/users', userRouter({ config })) // requests for just acccount actions
 
