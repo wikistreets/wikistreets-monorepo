@@ -101,6 +101,7 @@ const app = {
       deleteFeatureCollectionUrl: '/map/remove',
       forkFeatureCollectionUrl: '/map/fork',
       staticMapUrl: '/map',
+      exportFeatureCollection: '/map/export',
     },
     mapbox: {
       // settings for the Mapbox API
@@ -1157,9 +1158,10 @@ near ${data.properties.address.substr(
 `
 
   // show how many comments this post has
-  const commentsLink = data.properties.comments
-    ? `<br /><a class="comments-link" href="#">${data.properties.comments.length} comments</a>`
-    : ''
+  const commentsLink =
+    data.properties.comments && data.properties.comments.length
+      ? `<br /><a class="comments-link" href="#">${data.properties.comments.length} comments</a>`
+      : ''
 
   let imgString = createPhotoCarousel(data.properties.photos, data._id)
   // console.log(imgString)
@@ -2968,6 +2970,10 @@ const openMapSelectorPanel = async () => {
     app.auth.isEditor() && app.markers.markers.length > 0
       ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Invite collaborators...</a>`
       : ''
+  const exportLinkString =
+    app.markers.markers.length > 0
+      ? `<a class="export-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Export data...</a>`
+      : ''
   let contextMenuString = `
     <div class="context-menu dropdown">
       <a href="#" class="expand-contract-button">
@@ -2982,6 +2988,7 @@ const openMapSelectorPanel = async () => {
         ${collaborateLinkString}
         ${forkLinkString}
         ${deleteLinkString}
+        ${exportLinkString}
       </div>
     </div>
   `
@@ -3122,6 +3129,14 @@ const openMapSelectorPanel = async () => {
   $('.fork-map-link', selectedMapListItem).click((e) => {
     e.preventDefault()
     app.auth.getToken() ? openForkPanel() : openSigninPanel()
+  })
+
+  // enable export map link
+  $('.export-map-link', selectedMapListItem).on('click', (e) => {
+    e.preventDefault()
+    window.location.href = `${
+      app.apis.wikistreets.exportFeatureCollection
+    }/${app.featureCollection.getPublicIdFromUrl()}`
   })
 
   // populate this user's maps content

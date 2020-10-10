@@ -461,6 +461,43 @@ const mapRouter = ({ config }) => {
     }
   )
 
+  // route for HTTP GET requests to the map JSON data
+  router.get(
+    '/map/export/:featureCollectionId',
+    [param('featureCollectionId').not().isEmpty()],
+    async (req, res) => {
+      const featureCollectionId = req.params.featureCollectionId
+      const sinceDate = req.query.since // optional param to retrieve only features since a given date
+      const featureCollection = await FeatureCollection.findOne({
+        publicId: featureCollectionId,
+        sinceDate: sinceDate,
+      })
+        .lean()
+        .exec((err, data) => {
+          // handle errors
+          if (err) {
+            throw err
+          }
+          // send back data as geojson file
+          res.setHeader(
+            'Content-disposition',
+            'attachment; filename=' + `${data._id}.geojson`
+          )
+          res.setHeader('Content-type', 'application/geo+json')
+          res.send(data)
+        })
+        .catch((err) => {
+          // catch errors
+          return res.status(500).json({
+            status: false,
+            message:
+              'Sorry... something bad happened on our end!  Please try again.',
+            error: 'Sorry... something bad happened on our end!  ',
+          })
+        })
+    }
+  )
+
   // route for HTTP GET requests for a specific map
   router.get(
     '/map/:featureCollectionId',
