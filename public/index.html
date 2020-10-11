@@ -200,19 +200,6 @@
     </div>
     <!-- // search address -->
 
-    <!-- geolocation error -->
-    <div class="geoposition-error-container hide">
-      <h2 class="gps-error">Could not locate you</h2>
-      <p>We were not able to locate you using your device's GPS.</p>
-      <p>
-        You are welcome to try again or manually drag the map.
-        <br />
-        You may also want to make sure Location tracking is enabled in your
-        device's settings.
-      </p>
-      <button class="ok-button btn btn-primary">Ok</button>
-    </div>
-    <!-- // geolocation error -->
 
     <!-- signin form -->
     <div class="signin-form-container hide">
@@ -593,26 +580,6 @@
 
     <!-- fork map -->
     <div class="fork-map-container hide">
-      <!-- <div class="row"> -->
-      <!-- <header class="map-list-container">
-          <h2 class="map-title selected-map">Map Name</h2>
-          <p class="forked-from-container hide">
-            Forked from <span class="forked-from-link"></span>
-          </p>
-          <ul class="list-group">
-            <li class="list-group-item">
-              <span class="num-markers">0</span> posts
-            </li>
-            <li class="list-group-item">
-              <span class="num-contributors">0</span> contributors
-            </li>
-            <li class="list-group-item">
-              <span class="num-forks">0</span> forks
-            </li>
-          </ul>
-          <button class="btn btn-primary fork-button">Fork it</button>
-          <a class="cancel-link" href="#">Cancel</a>
-        </header> -->
       <article class="about-forks">
         <h2>About forks</h2>
         <p>
@@ -649,7 +616,7 @@
             <br />
             <span class="num-markers">0</span>
             <span class="marker-map-link">posts</span> |
-            <span class="num-contributors">0</span> contributors |
+            <span class="num-contributors">0</span> <span class="contributor-map-link">contributors</span> |
             <span class="num-forks">0</span>
             <a href="#" class="fork-map-link">forks</a>
           </p>
@@ -665,6 +632,24 @@
       </article>
     </div>
     <!-- // select map -->
+
+    <!-- contributor-list-container -->
+    <div class="contributor-list-container">
+
+      <div class="prevnext-feature-container row">
+        <button class="navigate-features-link first-feature-link btn btn-secondary col-6">First post</button>
+        <button class="navigate-features-link last-feature-link btn btn-secondary col-6">Latest post</button>
+      </div>
+
+      <div class="map-summary-stats"></div>
+
+      <div class="map-contributors">
+        <h2>Contributors to this map</h2>
+        <ul class="contributors-list list-group"></ul>
+      </div>
+
+    </div>
+    <!-- // contributor-list-container -->
 
     <!-- .rename-map-container-->
     <header class="rename-map-container hide">
@@ -814,15 +799,29 @@
     </div>
     <!-- // .photo-carousel-container -->
 
-    <!-- error message -->
+    <!-- geolocation error -->
+    <div class="geoposition-error-container hide">
+      <h2 class="gps-error">Could not locate you</h2>
+      <p>We were not able to locate you using your device's GPS.</p>
+      <p>
+        You are welcome to try again or manually drag the map.
+        <br />
+        You may also want to make sure Location tracking is enabled in your
+        device's settings.
+      </p>
+      <button class="ok-button btn btn-primary">Ok</button>
+    </div>
+    <!-- // geolocation error -->
+
+    <!-- generic error message -->
     <div class="error-container hide">
-        <header>
+        <header class="error-message-container">
           <h2>Sorry...</h2>
           <p class="error-message"></p>
           <button class="ok-button btn btn-primary">Ok</button>
         </header>
     </div>
-    <!-- // error-container -->
+    <!-- // generic error-container -->
 
     <!-- no posts message -->
     <div class="no-posts-container hide">

@@ -62,7 +62,7 @@ const app = {
       if (localStorage) localStorage.setItem(key, value)
     },
   },
-  mode: 'default', // default, featuredetails, featurecreate, featureedit, signin, signup, userprofile, resetpassword, searchaddress, errorgeneric, errorgeoposition,
+  mode: 'default', // default, featuredetails, featurecreate, featureedit, signin, signup, userprofile, resetpassword, searchaddress, errorgeneric, errorgeoposition, showcontributors
   browserGeolocation: {
     enabled: false,
     coords: {
@@ -1292,6 +1292,15 @@ const createMapListItem = (
       e.preventDefault()
       // app.markers.simulateClick(app.markers.markers[0])
       openFeatureList()
+    })
+  }
+  // show link to view contributors, if relevant
+  if (isSelectedMap && app.featureCollection.contributors.length) {
+    $('.contributor-map-link', mapListing).html(`<a href="#">contributors</a>`)
+    $('.contributor-map-link a', mapListing).on('click', (e) => {
+      e.preventDefault()
+      // app.markers.simulateClick(app.markers.markers[0])
+      openContributorsList()
     })
   }
 
@@ -3170,7 +3179,115 @@ near ${data.properties.address.substr(
   contentEl.appendTo('.info-window-content')
 } // openFeatureList
 
-// show a particular user's profile
+// show a list of markers on the map
+const openContributorsList = async () => {
+  app.mode = 'showcontributors'
+  const contributors = app.featureCollection.contributors
+
+  // populate this map's details
+  const mapData = {
+    title: app.featureCollection.getTitle(),
+    publicId: app.featureCollection.getPublicIdFromUrl(),
+    numMarkers: app.markers.markers.length,
+    forks: app.featureCollection.forks,
+    numForks: app.featureCollection.numForks,
+    forkedFrom: app.featureCollection.forkedFrom,
+    numContributors: app.featureCollection.numContributors,
+    createdAt: app.featureCollection.timestamps.createdAt,
+    updatedAt: app.featureCollection.timestamps.updatedAt,
+  }
+
+  const contentEl = $('.contributor-list-container').clone()
+
+  // add map summary stats to this
+  const selectedMapListItem = createMapListItem(mapData, true, true, true, true)
+  const summary = $('.map-summary-stats', contentEl)
+  selectedMapListItem.appendTo(summary)
+
+  // position and activate the first/last feature links
+  $('.first-feature-link', contentEl).on('click', (e) => {
+    e.preventDefault()
+    app.markers.simulateClick(app.markers.markers[0])
+  })
+  $('.last-feature-link', contentEl).on('click', (e) => {
+    e.preventDefault()
+    app.markers.simulateClick(
+      app.markers.markers[app.markers.markers.length - 1]
+    )
+  })
+
+  // assemble the list
+  const listEl = $('.contributors-list', contentEl)
+  contributors.forEach((contributor) => {
+    const item = $(`
+<li class="feature-list-item list-group-item">
+  <a class="user-link"
+    ws-user-id="${contributor._id}" 
+    ws-user-handle="${contributor.handle}" href="#">
+    ${contributor.handle}
+  </a>
+</li>.
+`)
+
+    // handle contributor list item click
+    item.on('click', (e) => {
+      e.preventDefault()
+      openUserProfile(contributor.handle, contributor._id)
+    })
+
+    item.appendTo(listEl)
+  })
+
+  // handle mouseover feature in list
+  $('.feature-list-item', listEl).on('mouseenter', (e) => {
+    // pan to the relevant marker for this feature
+    const featureId = $(e.target).attr('ws-feature-id')
+    const marker = app.markers.findById(featureId)
+    try {
+      // deselect all
+      app.markers.deactivate()
+      // select the target marker
+      app.markers.activate(marker)
+      app.featureCollection.element.panTo(marker.getLatLng())
+      // app.featureCollection.element.flyTo(marker.getLatLng(), marker.featureData.zoom)
+    } catch (err) {
+      // ignore mouseouts on sub-elements
+    }
+  })
+
+  // handle click on username
+  $('.user-link', listEl).click((e) => {
+    e.preventDefault()
+    e.stopPropagation() // prevent list item click event from being triggered
+    // open user profile for this user
+    const userId = $(e.target).attr('ws-user-id')
+    const userHandle = $(e.target).attr('ws-user-handle')
+    openUserProfile(userHandle, userId)
+  })
+
+  // handle mouseout from entire list
+  listEl.on('mouseleave', (e) => {
+    // deselect all
+    app.markers.deactivate()
+  })
+
+  // special message if no markers exist on this map
+  if (!app.markers.markers.length) {
+    contentEl = $('.no-posts-container.hide').clone().removeClass('hide')
+    $('.map-select-link', contentEl).on('click', (e) => {
+      e.preventDefault()
+      if (app.auth.getToken()) openMapSelectorPanel()
+      else openSigninPanel('Log in to view your maps')
+    })
+  }
+
+  // add to page
+  $('.info-window-content').html('')
+  listEl.appendTo(contentEl)
+  contentEl.appendTo('.info-window-content')
+} // openContributorsList
+
+// show a generic error message
 const openErrorPanel = (message) => {
   app.mode = 'errorgeneric'
 

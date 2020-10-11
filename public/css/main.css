@@ -300,7 +300,9 @@ button.dropdown-toggle img {
 
 /* feature details */
 .info-window-content .feature-detail header,
-.info-window-content .map-details-container {
+.info-window-content .map-details-container,
+.info-window-content .error-message-container,
+.info-window-content .contributor-list-container .map-summary-stats {
   padding-top: 20px;
 }
 .info-window-content .map-details-container .prevnext-feature-container {
