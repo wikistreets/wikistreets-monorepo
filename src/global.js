@@ -564,7 +564,6 @@ app.markers.place = async (data, cluster) => {
           point.geometry.coordinates[1],
           point.geometry.coordinates[0],
         ]
-        console.log(coords)
         const marker = L.marker(coords, {
           zIndexOffset: app.markers.zIndex.default,
           riseOffset: app.markers.zIndex.default,
@@ -1084,15 +1083,154 @@ async function updateAddress(coords) {
 // show details of the map from which this map was forked
 const showForkedFromInfo = (mapData, mapListing) => {}
 
+const addMapContextMenu = (selectedMapListItem) => {
+  // generate the context menu
+  // only show delete link to logged-in users who have permissions to edit this map
+  // if this is an unsaved app, the only way to currently infer that is through no markers
+  const deleteLinkString = app.auth.isEditor()
+    ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Delete</a>`
+    : ''
+  const forkLinkString =
+    app.auth.getToken() && app.markers.markers.length > 0
+      ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Fork</a>`
+      : ''
+  const renameLinkString =
+    app.auth.isEditor() && app.markers.markers.length > 0
+      ? `<a class="rename-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Rename</a>`
+      : ''
+  const collaborateLinkString =
+    app.auth.isEditor() && app.markers.markers.length > 0
+      ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Invite collaborators...</a>`
+      : ''
+  const exportLinkString =
+    app.markers.markers.length > 0
+      ? `<a class="export-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Export data...</a>`
+      : ''
+  let contextMenuString = `
+    <div class="context-menu dropdown">
+      <a href="#" class="expand-contract-button">
+        <img src="/static/images/material_design_icons/open_in_full_white-24px.svg" title="expand / contract" />
+      </a>
+      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
+      </button>
+      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+        <a class="copy-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Copy link</a>
+        ${renameLinkString}
+        ${collaborateLinkString}
+        ${forkLinkString}
+        ${deleteLinkString}
+        ${exportLinkString}
+      </div>
+    </div>
+  `
+  // add context menu to map list item
+  $(contextMenuString).prependTo(selectedMapListItem)
+
+  // enable context menu links
+  $('.copy-map-link', selectedMapListItem).on('click', (e) => {
+    e.preventDefault()
+    const port = window.location.port ? `:${window.location.port}` : ''
+    const text = `${window.location.protocol}://${
+      window.location.hostname
+    }${port}/map/${app.featureCollection.getPublicIdFromUrl()}`
+    navigator.clipboard.writeText(text).then(
+      function () {
+        // show success message
+        // console.log(`Copied ${text} to the clipboard!`)
+        const feedbackEl = $(
+          `<div class="feedback alert alert-success hide"></div>`
+        )
+        feedbackEl.html(app.copy.sharemapmessage)
+        feedbackEl.appendTo(selectedMapListItem)
+        feedbackEl.show()
+        setTimeout(() => {
+          feedbackEl.fadeOut()
+        }, 3000)
+      },
+      function (err) {
+        console.error(
+          'Could not copy to clipboard.  Please use a different browser.'
+        )
+      }
+    )
+  })
+
+  $('.delete-map-link', selectedMapListItem).on('click', (e) => {
+    e.preventDefault()
+    // put up one small barrier
+    if (!window.confirm(`Delete this entire map?`)) return
+    // send delete request to server
+    app
+      .myFetch(
+        `${
+          app.apis.wikistreets.deleteFeatureCollectionUrl
+        }/${app.featureCollection.getPublicIdFromUrl()}`
+      )
+      // send delete request to server
+      .then((res) => {
+        // console.log(JSON.stringify(res, null, 2))
+        if (res.status == true) {
+          // take user to home page
+          window.location.href = `/`
+        }
+      })
+  })
+
+  $('.collaborate-map-link', selectedMapListItem).on('click', (e) => {
+    e.preventDefault()
+    openCollaborationSettings()
+  }) // collaborate-map-link click
+
+  // enable rename map link, if authorized
+  if (app.auth.isEditor()) {
+    $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
+    $('.rename-map-link', selectedMapListItem).on('click', (e) => {
+      e.preventDefault()
+      openRenameMapForm()
+    })
+  } else {
+    // disable rename map link
+    $('.rename-map-link', selectedMapListItem).on('click', (e) => {
+      e.preventDefault()
+    })
+  }
+
+  // enable fork map link
+  $('.fork-map-link', selectedMapListItem).on('click', (e) => {
+    e.preventDefault()
+    app.auth.getToken() ? openForkPanel() : openSigninPanel()
+  })
+
+  // enable export map link
+  $('.export-map-link', selectedMapListItem).on('click', (e) => {
+    e.preventDefault()
+    window.location.href = `${
+      app.apis.wikistreets.exportFeatureCollection
+    }/${app.featureCollection.getPublicIdFromUrl()}`
+  })
+
+  return selectedMapListItem
+}
+
+/**
+ * Create a map summary data element
+ * @param {*} mapData
+ * @param {*} showForkedFrom
+ * @param {*} showForkLink
+ * @param {*} isSelectedMap
+ * @param {*} showContextMenu
+ */
 const createMapListItem = (
   mapData,
   showForkedFrom = false,
   showForkLink = true,
-  isSelectedMap = false
+  isSelectedMap = false,
+  showContextMenu = false
 ) => {
   // console.log(JSON.stringify(mapData, null, 2))
   // start by cloning the template
-  const mapListing = $(
+  let mapListing = $(
     '.map-list-item-template',
     $('.select-map-container')
   ).clone()
@@ -1134,6 +1272,12 @@ const createMapListItem = (
   }
   $('.createdat', mapListing).html(DateDiff.asAge(mapData.createdAt))
   $('.updatedat', mapListing).html(DateDiff.asAge(mapData.updatedAt))
+
+  if (showContextMenu) mapListing = addMapContextMenu(mapListing)
+
+  // populate this user's maps content
+  // show the user's name
+  $('.user-handle', mapListing).html(`${mapData.handle}'s`)
 
   return mapListing
 }
@@ -1903,6 +2047,132 @@ const attachMeMarkerPopup = (marker, address) => {
   return marker
 }
 
+const openRenameMapForm = () => {
+  // remove anything currently in the info window
+  $('.info-window-content').html('')
+
+  // inject a copy of the rename map form into info window
+  const renameMapEl = $('.rename-map-container').clone()
+  renameMapEl.appendTo('.info-window-content')
+  renameMapEl.removeClass('hide')
+  renameMapEl.show()
+
+  // populate title field with current title
+  $('#featureCollectionTitle', renameMapEl).val(app.featureCollection.title)
+  $('#featureCollectionTitle', renameMapEl).focus()
+
+  // handle cancel button
+  $('.cancel-link', renameMapEl).on('click', (e) => {
+    e.preventDefault()
+    collapseInfoWindow()
+  })
+
+  // populate rename map content
+  // update visible map title when user renames it
+  $('.rename-map-form', renameMapEl).on('submit', (e) => {
+    e.preventDefault()
+    const featureCollectionTitle = $(
+      '#featureCollectionTitle',
+      renameMapEl
+    ).val()
+    if (!featureCollectionTitle) return
+
+    app.featureCollection.setTitle(featureCollectionTitle)
+    $('#featureCollectionTitle', renameMapEl).val('') // clear the field
+
+    // send new title to server, if user logged in and map already has markers
+    if (app.auth.getToken() && app.markers.markers.length) {
+      const apiUrl = `${
+        app.apis.wikistreets.featureCollectionTitleUrl
+      }/${app.featureCollection.getPublicIdFromUrl()}`
+      // console.log(`sending data to: ${apiUrl}`)
+      let formData = new FormData(e.target)
+      formData.set('featureCollectionTitle', featureCollectionTitle) // hacking it.. don't know why this is necessary
+      // console.log('CLIENT MAP TITLE: ' + formData.get('featureCollectionTitle'))
+      app.myFetch(apiUrl, 'POST', formData)
+    } else {
+      console.log('not sending to server')
+    }
+
+    // close the infowindow
+    collapseInfoWindow()
+  })
+} // openRenameMapForm
+
+const openCollaborationSettings = () => {
+  // remove anything currently in the info window
+  $('.info-window-content').html('')
+
+  // inject a copy of the collaboration settings into info window
+  const settingsEl = $('.settings-map-container').clone()
+  settingsEl.appendTo('.info-window-content')
+  settingsEl.removeClass('hide')
+  settingsEl.show()
+
+  // pre-select the correct contributor settings
+  if (app.featureCollection.limitContributors) {
+    $('input#limit_contributors_public', settingsEl).removeAttr('checked')
+    $('input#limit_contributors_private', settingsEl).attr('checked', 'checked')
+  } else {
+    $('input#limit_contributors_public', settingsEl).attr('checked', 'checked')
+    $('input#limit_contributors_private', settingsEl).removeAttr('checked')
+  }
+
+  // add collaborators behavior
+  $('.add-collaborator-button', settingsEl).on('click', (e) => {
+    e.preventDefault()
+    const email = $('.collaborator-email', settingsEl).val()
+    const listItem = $(`<li class="list-group-item">${email}</li>`)
+    // add to visible collaborators list
+    listItem.appendTo('.info-window-content .collaborators-list')
+    // add to hidden collaborators list field
+    let addedCollaborators = $('form #add_collaborators', settingsEl).val()
+    addedCollaborators =
+      addedCollaborators == '' ? email : addedCollaborators + `,${email}`
+    $('form #add_collaborators', settingsEl).val(addedCollaborators)
+
+    $('.collaborator-email', settingsEl).val('')
+  })
+
+  // add cancel collaborate settings link behavior
+  $('.cancel-link', settingsEl).on('click', (e) => {
+    e.preventDefault()
+    // revert to the map list view
+    collapseInfoWindow()
+  }) // cancel link click
+
+  // handle form submission
+  $('.settings-map-form').on('submit', (e) => {
+    e.preventDefault()
+
+    // send settings changes to server
+    if (app.auth.getToken()) {
+      // console.log(`sending data to: ${apiUrl}`)
+      let formData = new FormData(e.target)
+      app.myFetch(
+        app.apis.wikistreets.collaborationSettingsUrl,
+        'POST',
+        formData
+      )
+    } else {
+      console.log('not sending to server')
+    }
+
+    // wipe the form for next time
+    $('.settings-map-form', settingsEl).get(0).reset()
+    $('.collaborators-list', settingsEl).html('') // wipe out visual list
+
+    // close the infowindow
+    collapseInfoWindow()
+    const feedbackEl = $('.info-window-content .feedback-message')
+    feedbackEl.html('Collaboration settings saved.')
+    feedbackEl.show()
+    setTimeout(() => {
+      feedbackEl.fadeOut()
+    }, 3000)
+  }) // settings-map-form submit
+} // openCollaborationSettings
+
 /**
  * Open the form to allow the user to create a new feature.
  * @param {*} point The coordinates at which to associate the post. Defaults to center of map.
@@ -1957,17 +2227,20 @@ const openFeatureForm = async (point = false) => {
   marker.openPopup()
 
   // show post form if user is logged in
-  if (app.auth.getToken()) {
-    // copy the feature form into the infowindow
-    const infoWindowHTML = $('.new-feature-form-container').html()
-    $('.info-window-content').html(infoWindowHTML)
-  } else {
+  if (!app.auth.getToken()) {
     // show login form for other users
-    openSigninPanel('Log in to create a post', false, false)
+    return openSigninPanel('Log in to create a post', false, false)
   }
 
+  // copy the feature form into the infowindow
+  $('.info-window-content').html('') // remove anything from the info window
+  const formEl = $('.new-feature-form-container').clone() // get the form
+  formEl.removeClass('hide')
+  formEl.show()
+  formEl.appendTo($('.info-window-content'))
+
   // insert address
-  $('.info-window-content .address').html(address)
+  $('.address', formEl).html(address)
 
   // detect dragstart events on me marker
   app.markers.me.on('dragstart', async () => {
@@ -2034,13 +2307,19 @@ const openFeatureForm = async (point = false) => {
   fuploader.init() // initalize settings
 
   // activate add image link
-  $('.info-window-content .add-photos-link').click((e) => {
+  $('.add-photos-link', formEl).click((e) => {
     e.preventDefault()
-    $('.info-window-content input[type="file"]').trigger('click')
+    $('input[type="file"]', formEl).trigger('click')
+  })
+
+  // handle cancel button click
+  $('.cancel-link', formEl).on('click', (e) => {
+    e.preventDefault()
+    collapseInfoWindow()
   })
 
   // deal with form submissions
-  $('.info-window-content form.feature-form').on('submit', async (e) => {
+  $('form.feature-form', formEl).on('submit', async (e) => {
     // prevent page reload
     e.preventDefault()
 
@@ -2723,19 +3002,37 @@ const openUserProfile = async (handle, userId) => {
 // show a list of markers on the map
 const openFeatureList = async () => {
   app.mode = 'default'
-
   const markers = app.markers.markers
+
+  // create stats of this map
+  // populate this map's details
+  const mapData = {
+    title: app.featureCollection.getTitle(),
+    publicId: app.featureCollection.getPublicIdFromUrl(),
+    numMarkers: app.markers.markers.length,
+    forks: app.featureCollection.forks,
+    numForks: app.featureCollection.numForks,
+    forkedFrom: app.featureCollection.forkedFrom,
+    numContributors: app.featureCollection.numContributors,
+    createdAt: app.featureCollection.timestamps.createdAt,
+    updatedAt: app.featureCollection.timestamps.updatedAt,
+  }
+
   let contentEl = $(`
   <div class="feature-list-container">
     <div class="prevnext-feature-container row">
       <button class="navigate-features-link first-feature-link btn btn-secondary col-6">First post</button>
       <button class="navigate-features-link last-feature-link btn btn-secondary col-6">Latest post</button>
     </div>
-    <h2>Posts in ${
-      app.featureCollection.title || app.copy.anonymousfeaturecollectiontitle
-    }</h2>
+    <div class="map-summary-stats"></div>
   </div>
   `)
+
+  // add map summary stats to this
+  const selectedMapListItem = createMapListItem(mapData, true, true, true, true)
+  const summary = $('.map-summary-stats', contentEl)
+  selectedMapListItem.appendTo(summary)
+
   // position and activate the first/last feature links
   $('.first-feature-link', contentEl).on('click', (e) => {
     e.preventDefault()
@@ -2851,7 +3148,7 @@ const openErrorPanel = (message) => {
 }
 
 const activateForkButton = () => {
-  $('.info-window .fork-button').click(async (e) => {
+  $('.info-window .fork-button').on('click', async (e) => {
     e.preventDefault()
     const mapData = await app.myFetch(
       `${
@@ -2864,7 +3161,7 @@ const activateForkButton = () => {
 
   $('.info-window .cancel-link').click(async (e) => {
     e.preventDefault()
-    openMapSelectorPanel() // switch to map list view
+    collapseInfoWindow()
   })
 }
 
@@ -2949,199 +3246,7 @@ const openMapSelectorPanel = async () => {
   }
 
   // create a list item for the selected map
-  const selectedMapListItem = createMapListItem(mapData, true, true, true)
-
-  // generate the context menu
-  // only show delete link to logged-in users who have permissions to edit this map
-  // if this is an unsaved app, the only way to currently infer that is through no markers
-  const deleteLinkString =
-    app.auth.isEditor() && app.markers.markers.length > 0
-      ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Delete</a>`
-      : ''
-  const forkLinkString =
-    app.auth.getToken() && app.markers.markers.length > 0
-      ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Fork</a>`
-      : ''
-  const renameLinkString =
-    app.auth.isEditor() && app.markers.markers.length > 0
-      ? `<a class="rename-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Rename</a>`
-      : ''
-  const collaborateLinkString =
-    app.auth.isEditor() && app.markers.markers.length > 0
-      ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Invite collaborators...</a>`
-      : ''
-  const exportLinkString =
-    app.markers.markers.length > 0
-      ? `<a class="export-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Export data...</a>`
-      : ''
-  let contextMenuString = `
-    <div class="context-menu dropdown">
-      <a href="#" class="expand-contract-button">
-        <img src="/static/images/material_design_icons/open_in_full_white-24px.svg" title="expand / contract" />
-      </a>
-      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
-      </button>
-      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Share link</a>
-        ${renameLinkString}
-        ${collaborateLinkString}
-        ${forkLinkString}
-        ${deleteLinkString}
-        ${exportLinkString}
-      </div>
-    </div>
-  `
-  // add context menu to map list item
-  $(contextMenuString).prependTo(selectedMapListItem)
-
-  // enable context menu links
-  $('.copy-map-link', selectedMapListItem).click((e) => {
-    e.preventDefault()
-    const port = window.location.port ? `:${window.location.port}` : ''
-    const text = `${window.location.protocol}://${
-      window.location.hostname
-    }${port}/map/${app.featureCollection.getPublicIdFromUrl()}`
-    navigator.clipboard.writeText(text).then(
-      function () {
-        // show success message
-        // console.log(`Copied ${text} to the clipboard!`)
-        const feedbackEl = $(
-          `<div class="feedback alert alert-success hide"></div>`
-        )
-        feedbackEl.html(app.copy.sharemapmessage)
-        feedbackEl.appendTo(selectedMapListItem)
-        feedbackEl.show()
-        setTimeout(() => {
-          feedbackEl.fadeOut()
-        }, 3000)
-      },
-      function (err) {
-        console.error(
-          'Could not copy to clipboard.  Please use a different browser.'
-        )
-      }
-    )
-  })
-
-  $('.delete-map-link', selectedMapListItem).click((e) => {
-    e.preventDefault()
-    // put up one small barrier
-    if (!window.confirm(`Delete this entire map?`)) return
-    // send delete request to server
-    app
-      .myFetch(
-        `${app.apis.wikistreets.deleteFeatureCollectionUrl}/${app.featureCollection.getPublicIdFromUrl}`
-      )
-      // send delete request to server
-      .then((res) => {
-        // console.log(JSON.stringify(res, null, 2))
-        if (res.status == true) {
-          // take user to home page
-          window.location.href = `/`
-        }
-      })
-  })
-
-  $('.collaborate-map-link', selectedMapListItem).click((e) => {
-    e.preventDefault()
-    // show the settings map form
-    $('.info-window-content .map-details-container').hide()
-    $('.info-window-content .more-maps-container').hide()
-    $('.info-window-content .settings-map-container').show()
-
-    // pre-select the correct contributor settings
-    if (app.featureCollection.limitContributors) {
-      $(
-        '.info-window-content .settings-map-container input#limit_contributors_public'
-      ).removeAttr('checked')
-      $(
-        '.info-window-content .settings-map-container input#limit_contributors_private'
-      ).attr('checked', 'checked')
-    } else {
-      $(
-        '.info-window-content .settings-map-container input#limit_contributors_public'
-      ).attr('checked', 'checked')
-      $(
-        '.info-window-content .settings-map-container input#limit_contributors_private'
-      ).removeAttr('checked')
-    }
-
-    // add collaborators behavior
-    $('.info-window-content .add-collaborator-button').click((e) => {
-      e.preventDefault()
-      const email = $('.info-window-content .collaborator-email').val()
-      const listItem = $(`<li class="list-group-item">${email}</li>`)
-      // add to visible collaborators list
-      listItem.appendTo('.info-window-content .collaborators-list')
-      // add to hidden collaborators list field
-      let addedCollaborators = $(
-        '.info-window-content form #add_collaborators'
-      ).val()
-      addedCollaborators =
-        addedCollaborators == '' ? email : addedCollaborators + `,${email}`
-      $('.info-window-content form #add_collaborators').val(addedCollaborators)
-
-      $('.info-window-content .collaborator-email').val('')
-    })
-  })
-  // add cancel link behavior
-  $(
-    '.info-window-content .settings-map-form .cancel-link',
-    $('.info-window-content')
-  ).click((e) => {
-    e.preventDefault()
-    // revert to the map list view
-    $('.info-window-content .map-details-container').show()
-    $('.info-window-content .more-maps-container').show()
-    $('.info-window-content .settings-map-container').hide()
-  })
-
-  // enable rename map link, if authorized
-  if (app.auth.isEditor()) {
-    $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
-    $('.rename-map-link', selectedMapListItem).click((e) => {
-      e.preventDefault()
-      // show the rename map form
-      $('.info-window-content .map-details-container').hide()
-      $('.info-window-content .rename-map-container').show()
-      $(
-        '.info-window-content .rename-map-container #featureCollectionTitle'
-      ).val(app.featureCollection.title)
-      $(
-        '.info-window-content .rename-map-container #featureCollectionTitle'
-      ).focus()
-    })
-    $('.rename-map-form .cancel-link', $('.info-window-content')).click((e) => {
-      e.preventDefault()
-      // revert to the map list view
-      $('.info-window-content .map-details-container').show()
-      $('.info-window-content .rename-map-container').hide()
-    })
-  } else {
-    // disable rename map link
-    $('.rename-map-link', selectedMapListItem).click((e) => {
-      e.preventDefault()
-    })
-  }
-
-  // enable fork map link
-  $('.fork-map-link', selectedMapListItem).click((e) => {
-    e.preventDefault()
-    app.auth.getToken() ? openForkPanel() : openSigninPanel()
-  })
-
-  // enable export map link
-  $('.export-map-link', selectedMapListItem).on('click', (e) => {
-    e.preventDefault()
-    window.location.href = `${
-      app.apis.wikistreets.exportFeatureCollection
-    }/${app.featureCollection.getPublicIdFromUrl()}`
-  })
-
-  // populate this user's maps content
-  // show the user's name
-  $('.user-handle').html(`${data.handle}'s`)
+  const selectedMapListItem = createMapListItem(mapData, true, true, true, true)
 
   // show the updated map data
   $('.info-window .map-list-item-template').replaceWith(selectedMapListItem)
@@ -3177,7 +3282,7 @@ const openMapSelectorPanel = async () => {
   let numMoreMaps = 0
   featureCollections.map((data, i, arr) => {
     // skip the map already displaying
-    if (data.publicId == app.featureCollection.getPublicIdFromUrl) return
+    if (data.publicId == app.featureCollection.getPublicIdFromUrl()) return
     numMoreMaps++
 
     // remove any previous message that there are no maps
@@ -3210,72 +3315,6 @@ const openMapSelectorPanel = async () => {
     // enable expand/contract button
     enableExpandContractButtons(50, 50)
   })
-
-  // populate rename map content
-  // update visible map title when user renames it
-  $('.rename-map-form').submit((e) => {
-    e.preventDefault()
-    const featureCollectionTitle = $(
-      '.info-window-content .rename-map-form #featureCollectionTitle'
-    ).val()
-    if (!featureCollectionTitle) return
-
-    app.featureCollection.setTitle(featureCollectionTitle)
-    $('.info-window-content .rename-map-form #featureCollectionTitle').val('') // clear the field
-
-    // send new title to server, if user logged in and map already has markers
-    if (app.auth.getToken() && app.markers.markers.length) {
-      const apiUrl = `${
-        app.apis.wikistreets.featureCollectionTitleUrl
-      }/${app.featureCollection.getPublicIdFromUrl()}`
-      // console.log(`sending data to: ${apiUrl}`)
-      let formData = new FormData(e.target)
-      formData.set('featureCollectionTitle', featureCollectionTitle) // hacking it.. don't know why this is necessary
-      // console.log('CLIENT MAP TITLE: ' + formData.get('featureCollectionTitle'))
-      app.myFetch(apiUrl, 'POST', formData)
-    } else {
-      console.log('not sending to server')
-    }
-
-    // close the infowindow
-    collapseInfoWindow()
-  })
-
-  $('.settings-map-form').submit((e) => {
-    e.preventDefault()
-
-    // send settings changes to server
-    if (app.auth.getToken()) {
-      // console.log(`sending data to: ${apiUrl}`)
-      let formData = new FormData(e.target)
-      app.myFetch(
-        app.apis.wikistreets.collaborationSettingsUrl,
-        'POST',
-        formData
-      )
-    } else {
-      console.log('not sending to server')
-    }
-
-    // wipe the form for next time
-    $('.info-window-content .settings-map-form').get(0).reset()
-    $('.info-window-content .collaborators-list').html('') // wipe out visual list
-
-    // close the infowindow
-    // collapseInfoWindow()
-    // show the settings map form
-    $('.info-window-content .map-details-container').show()
-    $('.info-window-content .more-maps-container').show()
-    $('.info-window-content .settings-map-container').hide()
-    const feedbackEl = $(
-      '.info-window-content .map-details-container .feedback-message'
-    )
-    feedbackEl.html('Collaboration settings saved.')
-    feedbackEl.show()
-    setTimeout(() => {
-      feedbackEl.fadeOut()
-    }, 3000)
-  }) // settings-map-form submit
 } // openMapSelectorPanel
 
 // enable bootstrap tooltips

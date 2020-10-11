@@ -307,7 +307,10 @@ button.dropdown-toggle img {
   /* margin-top: -60px; */
 }
 .info-window-content .map-details-container .context-menu {
-  margin-top: -5px;
+  margin-top: -15px;
+}
+.info-window-content .map-summary-stats .context-menu {
+  margin-top: 5px;
 }
 
 /* info panel styles */
@@ -587,5 +590,12 @@ button.dropdown-toggle img {
   }
   .feature-list-item * {
     /* pointer-events: none; */
+  }
+  .map-summary-stats,
+  .user-stats {
+    border-bottom: 1px solid white;
+    margin-bottom: 20px;
+  }
+  .user-stats {
   }
 } /* // desktop version */

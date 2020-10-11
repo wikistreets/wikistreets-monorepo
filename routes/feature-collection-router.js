@@ -123,9 +123,9 @@ const mapRouter = ({ config }) => {
   )
 
   router.get(
-    '/map/remove/:featureCollectionId',
+    '/map/remove/:publicId',
     passportJWT,
-    [param('featureCollectionId').not().isEmpty().trim()],
+    [param('publicId').not().isEmpty().trim()],
     async (req, res) => {
       try {
         // check for validation errors
@@ -134,7 +134,12 @@ const mapRouter = ({ config }) => {
           throw 'No map specified'
         }
 
-        const featureCollectionId = req.params.featureCollectionId
+        // find the map in question
+        const publicId = req.params.publicId
+        let featureCollection = await FeatureCollection.findOne({
+          publicId: publicId,
+          // contributors: req.user, // user must be a contributor in order to match
+        })
 
         // remove this map from this user's list of maps
         await User.updateOne(
@@ -146,26 +151,26 @@ const mapRouter = ({ config }) => {
           }
         )
 
-        // console.log(`finding map ${featureCollectionId}...`)
-        // find the map in question, assuming the user is in-fact a contributor
-        let featureCollection = await FeatureCollection.findOne({
-          publicId: featureCollectionId,
-          contributors: req.user, // user must be a contributor in order to match
-        })
-        // console.log(`found map ${featureCollection._id}`)
-
         // remove this user from the map's list of contributors and subscribers
         featureCollection.contributors.pull(req.user)
         featureCollection.subscribers.pull(req.user)
-        if (featureCollection.contributors.length == 0) {
-          // console.log(`no more contributors`)
-          // if there are no more contributors to the map, delete it completely
+
+        // check whether this user is an official contributor to this map
+        const isContributor = featureCollection.contributors.some(
+          (contributor) => {
+            return contributor.equals(req.user)
+          }
+        )
+
+        // if there are no more contributors to the map, delete it completely
+        if (isContributor && featureCollection.contributors.length == 0) {
+          console.log(`no more contributors`)
           await FeatureCollection.deleteOne({
             _id: featureCollection._id,
           })
         } else {
-          // console.log(`other contributors exist`)
-          // remove this user from the map, but keep the map for other users
+          // remove this user from the map, but keep the map for other contributors
+          console.log(`other contributors exist`)
           featureCollection = await featureCollection.save()
           // console.log('saved map without this user')
         }
