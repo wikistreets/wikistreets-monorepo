@@ -234,6 +234,7 @@ const app = {
     cluster: null,
     current: null,
     markers: [],
+    shapes: [],
     me: null,
     icons: {
       sidewalk: {
@@ -609,9 +610,14 @@ app.markers.place = async (data, cluster) => {
             showInfoWindow(marker)
           })
         } else {
-          // console.log(JSON.stringify(point, null, 2))
-
           // deal with non-Point geojson types
+          // check whether this shape is already on the map
+          let exists = false
+          app.markers.shapes.forEach((shape) => {
+            if (shape._id == point._id) exists = true
+          })
+          if (exists) return // don't re-draw an existing shape
+
           // use the specified style, or a default style
           const myStyle = point.properties.style || {
             color: '#ff7800',
@@ -621,6 +627,7 @@ app.markers.place = async (data, cluster) => {
           L.geoJSON(point, { style: myStyle }).addTo(
             app.featureCollection.element
           )
+          app.markers.shapes.push(point) // add to list
         }
       } // if
       // }, i * latency) // setTimeout
