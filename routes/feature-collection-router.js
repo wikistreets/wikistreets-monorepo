@@ -141,6 +141,14 @@ const mapRouter = ({ config }) => {
           // contributors: req.user, // user must be a contributor in order to match
         })
 
+        // if no such map exists, just ignore it and make the client happy
+        if (!featureCollection) {
+          res.json({
+            status: true,
+            message: 'success',
+          })
+        }
+
         // remove this map from this user's list of maps
         await User.updateOne(
           {
