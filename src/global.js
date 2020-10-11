@@ -607,6 +607,9 @@ app.markers.place = async (data, cluster) => {
       } // if
       // }, i * latency) // setTimeout
     } // else if marker doesn't yet exist
+
+    // if the feature list is currently being viewed, refresh it
+    if (app.mode == 'default') collapseInfoWindow()
   }) // data.map
   return true
 }
@@ -1967,6 +1970,8 @@ const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
 }
 
 const collapseInfoWindow = async (e) => {
+  app.mode = 'default'
+
   // console.log(`mode=${app.mode}`);
   // remember it's collapsed
   app.infoPanel.isExpanded = false
