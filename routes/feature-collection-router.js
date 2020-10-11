@@ -151,26 +151,26 @@ const mapRouter = ({ config }) => {
           }
         )
 
+        // check whether this user is an official contributor to this map
+        const isContributor = featureCollection.contributors.some(
+          (contributor) => {
+            return contributor.equals(req.user._id)
+          }
+        )
+
         // remove this user from the map's list of contributors and subscribers
         featureCollection.contributors.pull(req.user)
         featureCollection.subscribers.pull(req.user)
 
-        // check whether this user is an official contributor to this map
-        const isContributor = featureCollection.contributors.some(
-          (contributor) => {
-            return contributor.equals(req.user)
-          }
-        )
-
         // if there are no more contributors to the map, delete it completely
         if (isContributor && featureCollection.contributors.length == 0) {
-          console.log(`no more contributors`)
+          // console.log(`no more contributors`)
           await FeatureCollection.deleteOne({
             _id: featureCollection._id,
           })
         } else {
           // remove this user from the map, but keep the map for other contributors
-          console.log(`other contributors exist`)
+          // console.log(`other contributors exist`)
           featureCollection = await featureCollection.save()
           // console.log('saved map without this user')
         }
