@@ -419,13 +419,13 @@ const mapRouter = ({ config }) => {
 
   // route for HTTP GET requests to the map JSON data
   router.get(
-    '/map/data/:featureCollectionId',
-    [param('featureCollectionId').not().isEmpty()],
+    '/map/data/:publicId',
+    [param('publicId').not().isEmpty()],
     async (req, res) => {
-      const featureCollectionId = req.params.featureCollectionId
+      const publicId = req.params.publicId
       const sinceDate = req.query.since // optional param to retrieve only features since a given date
       let featureCollection = await FeatureCollection.findOne({
-        publicId: featureCollectionId,
+        publicId: publicId,
         sinceDate: sinceDate,
       })
         .populate('contributors', ['_id', 'handle'])
@@ -449,19 +449,24 @@ const mapRouter = ({ config }) => {
           const simpleObject = JSON.parse(
             JSON.stringify(featureCollection, null, 2)
           )
-          const buffered = turf.buffer(
-            simpleObject,
-            config.map.boundingBoxBuffer,
-            {
-              units: 'kilometers',
-            }
-          ) // buffer around the points
-          featureCollection.bbox = turf.bbox(buffered)
+          try {
+            // console.log(JSON.stringify(featureCollection, null, 2))
+            const buffered = turf.buffer(
+              simpleObject,
+              config.map.boundingBoxBuffer,
+              {
+                units: 'kilometers',
+              }
+            ) // buffer around the points
+            featureCollection.bbox = turf.bbox(buffered)
+          } catch (err) {
+            console.log(`ERROR BUFFERING: ${err}`)
+          }
         }
       } else {
         // there is no featureCollection... make a starter object
         featureCollection = {
-          publicId: featureCollectionId,
+          publicId: publicId,
           description: 'A blank starter map',
           features: [],
           bbox: [],

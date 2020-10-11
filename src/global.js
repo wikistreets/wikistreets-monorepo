@@ -560,50 +560,68 @@ app.markers.place = async (data, cluster) => {
       // add delay before dropping marker onto map
       // setTimeout(() => {
       if (point.geometry != undefined && point.geometry != null) {
-        const coords = [
-          point.geometry.coordinates[1],
-          point.geometry.coordinates[0],
-        ]
-        const marker = L.marker(coords, {
-          zIndexOffset: app.markers.zIndex.default,
-          riseOffset: app.markers.zIndex.default,
-          riseOnHover: true,
-        })
+        let coords = null
+        let marker = null
+        // deal with Point features first
+        if (point.geometry.type == 'Point') {
+          // points in leaflet have [lat,lng] format, whereas geojson has [lng,lat]
+          coords = [
+            point.geometry.coordinates[1],
+            point.geometry.coordinates[0],
+          ]
+          marker = L.marker(coords, {
+            zIndexOffset: app.markers.zIndex.default,
+            riseOffset: app.markers.zIndex.default,
+            riseOnHover: true,
+          })
+          // cluster.addLayer(marker) // add to the marker cluster
+          app.featureCollection.element.addLayer(marker) // add directly to map
 
-        if (point.properties.photos && point.properties.photos.length) {
-          marker.featureType = 'unknownPhoto'
+          if (point.properties.photos && point.properties.photos.length) {
+            marker.featureType = 'unknownPhoto'
+          } else {
+            marker.featureType = 'unknownText'
+          }
+
+          // add a unique id to each marker for later reference
+          marker._id = `marker-${point._id}`
+          // console.log(marker._id)
+
+          // flag whether the marker feature isopen
+          marker.isOpen = false
+
+          // keep the index number of this marker to maintain order
+          marker.index = app.markers.markers.length //i
+
+          // attach the data to the marker
+          marker.featureData = point
+
+          // de-highlight the current marker
+          marker.setZIndexOffset(app.markers.zIndex.default)
+          marker.setIcon(app.markers.icons[marker.featureType].default)
+
+          // add to list of markers
+          app.markers.markers.push(marker)
+
+          // // detect click events
+          marker.on('click', (e) => {
+            // prevent this even from firing twice in a row... which seems to be a problem
+            showInfoWindow(marker)
+          })
         } else {
-          marker.featureType = 'unknownText'
+          // console.log(JSON.stringify(point, null, 2))
+
+          // deal with non-Point geojson types
+          // use the specified style, or a default style
+          const myStyle = point.properties.style || {
+            color: '#ff7800',
+            weight: 5,
+            opacity: 0.65,
+          }
+          L.geoJSON(point, { style: myStyle }).addTo(
+            app.featureCollection.element
+          )
         }
-
-        // add a unique id to each marker for later reference
-        marker._id = `marker-${point._id}`
-        // console.log(marker._id)
-
-        // flag whether the marker feature isopen
-        marker.isOpen = false
-
-        // keep the index number of this marker to maintain order
-        marker.index = app.markers.markers.length //i
-
-        // attach the data to the marker
-        marker.featureData = point
-
-        // cluster.addLayer(marker) // add to the marker cluster
-        app.featureCollection.element.addLayer(marker) // add directly to map
-
-        // de-highlight the current marker
-        marker.setZIndexOffset(app.markers.zIndex.default)
-        marker.setIcon(app.markers.icons[marker.featureType].default)
-
-        // add to list of markers
-        app.markers.markers.push(marker)
-
-        // // detect click events
-        marker.on('click', (e) => {
-          // prevent this even from firing twice in a row... which seems to be a problem
-          showInfoWindow(marker)
-        })
       } // if
       // }, i * latency) // setTimeout
     } // else if marker doesn't yet exist
@@ -2206,7 +2224,6 @@ const openFeatureForm = async (point = false) => {
   //console.log('feature form panning')
   app.featureCollection.panTo(point)
   let coords = [point.lat, point.lng]
-  console.log(coords)
   let marker = L.marker(coords, {
     zIndexOffset: app.markers.zIndex.me,
     riseOffset: app.markers.zIndex.me,

@@ -16,7 +16,7 @@ const featureSchema = new Schema(
     geometry: {
       // set to null for unlocated features
       type: { type: String, required: true, default: 'Point' },
-      coordinates: [{ type: Number, required: true }], // long, lat
+      coordinates: [], // long, lat for Points, or other formats for other types
     },
     properties: {
       address: { type: String, required: true },

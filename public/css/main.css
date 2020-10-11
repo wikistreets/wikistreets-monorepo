@@ -539,6 +539,7 @@ button.dropdown-toggle img {
     margin-left: 0;
     padding-top: 0;
     border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
   }
   .feature-map,
