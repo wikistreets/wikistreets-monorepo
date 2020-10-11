@@ -1212,7 +1212,7 @@ const addMapContextMenu = (selectedMapListItem) => {
 
   // enable rename map link, if authorized
   if (app.auth.isEditor()) {
-    $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
+    // $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
     $('.rename-map-link', selectedMapListItem).on('click', (e) => {
       e.preventDefault()
       openRenameMapForm()
@@ -1243,43 +1243,48 @@ const addMapContextMenu = (selectedMapListItem) => {
 
 /**
  * Create a map summary data element
- * @param {*} mapData
+ * @param {*} data
  * @param {*} showForkedFrom
  * @param {*} showForkLink
  * @param {*} isSelectedMap
  * @param {*} showContextMenu
  */
 const createMapListItem = (
-  mapData,
+  data,
   showForkedFrom = false,
   showForkLink = true,
   isSelectedMap = false,
   showContextMenu = false
 ) => {
-  // console.log(JSON.stringify(mapData, null, 2))
+  // console.log(JSON.stringify(data, null, 2))
   // start by cloning the template
   let mapListing = $(
     '.map-list-item-template',
     $('.select-map-container')
   ).clone()
-  mapListing.removeClass('.map-list-item-template')
+  mapListing.removeClass('map-list-item-template')
   if (isSelectedMap) {
     mapListing.addClass('selected')
   }
 
   // give selected class, if necessary
-  if (isSelectedMap) $('h2 a', mapListing).addClass('selected-map')
-  else $('h2 a', mapListing).removeClass('selected-map')
+  if (isSelectedMap) {
+    $('h2 a', mapListing).addClass('selected-map')
+    // show feature list when clicked
+    $('h2 a', mapListing).on('click', (e) => {
+      e.preventDefault()
+      openFeatureList()
+    })
+  } else $('h2 a', mapListing).removeClass('selected-map')
 
   // create new link to the map
-  const featureCollectionTitle = mapData.title
-    ? mapData.title
+  const featureCollectionTitle = data.title
+    ? data.title
     : app.copy.anonymousfeaturecollectiontitle
   $('.map-title', mapListing).html(featureCollectionTitle) // inject the map title
-  $('.map-title', mapListing).attr('href', `/map/${mapData.publicId}`) // activate link
-  if (showForkedFrom && mapData.forkedFrom)
-    showForkedFromInfo(mapData, mapListing) // show forked info if any
-  $('.num-markers', mapListing).html(mapData.numMarkers)
+  $('.map-title', mapListing).attr('href', `/map/${data.publicId}`) // activate link
+  if (showForkedFrom && data.forkedFrom) showForkedFromInfo(data, mapListing) // show forked info if any
+  $('.num-markers', mapListing).html(data.numMarkers)
   // show link to view markers, if relevant
   if (isSelectedMap && app.markers.markers.length) {
     $('.marker-map-link', mapListing).html(`<a href="#">posts</a>`)
@@ -1290,22 +1295,22 @@ const createMapListItem = (
     })
   }
 
-  $('.num-contributors', mapListing).html(mapData.numContributors)
-  $('.num-forks', mapListing).html(mapData.numForks)
+  $('.num-contributors', mapListing).html(data.numContributors)
+  $('.num-forks', mapListing).html(data.numForks)
   if (!showForkLink) {
     // disable the fork link
     $('.fork-map-link', mapListing).replaceWith('forks') // get rid of link
   } else {
     // enable the fork link
   }
-  $('.createdat', mapListing).html(DateDiff.asAge(mapData.createdAt))
-  $('.updatedat', mapListing).html(DateDiff.asAge(mapData.updatedAt))
+  $('.createdat', mapListing).html(DateDiff.asAge(data.createdAt))
+  $('.updatedat', mapListing).html(DateDiff.asAge(data.updatedAt))
 
   if (showContextMenu) mapListing = addMapContextMenu(mapListing)
 
   // populate this user's maps content
   // show the user's name
-  $('.user-handle', mapListing).html(`${mapData.handle}'s`)
+  $('.user-handle', mapListing).html(`${data.handle}'s`)
 
   return mapListing
 }
@@ -3005,12 +3010,7 @@ const openUserProfile = async (handle, userId) => {
       // append entire map list to page
       mapListTemporaryContainer.appendTo('.info-window-content .more-maps')
 
-      // if (!featureCollections.length) {
-      //   // create new link
-      //   const el = $(`<p class="no-maps-message">You have no maps... yet.</p>`)
-      //   el.appendTo('.info-window-content .more-maps')
-      // }
-
+      // if there are no maps
       if (!featureCollections.length) {
         // create new link
         const el = $(
@@ -3061,6 +3061,16 @@ const openFeatureList = async () => {
   const selectedMapListItem = createMapListItem(mapData, true, true, true, true)
   const summary = $('.map-summary-stats', contentEl)
   selectedMapListItem.appendTo(summary)
+
+  // rename map when title clicked
+  $('h2 a', selectedMapListItem).addClass('rename-map-link')
+  $('h2 a', selectedMapListItem).attr('alt', 'Rename map')
+  $('h2 a', selectedMapListItem).attr('title', 'Rename map')
+  $('h2 a', selectedMapListItem).css('cursor', 'text')
+  $('h2 a', selectedMapListItem).on('click', (e) => {
+    e.preventDefault()
+    openRenameMapForm()
+  })
 
   // position and activate the first/last feature links
   $('.first-feature-link', contentEl).on('click', (e) => {
@@ -3201,35 +3211,6 @@ const openForkPanel = () => {
   // copy the user profile html into the infowindow
   const infoWindowHTML = $('.fork-map-container').html()
   $('.info-window-content').html(infoWindowHTML)
-
-  // grab fork button for later
-  // const forkItButton = $('.btn-primary', $('.info-window-content'))
-  // const cancelForkButton = $('.cancel-link', $('.info-window-content'))
-
-  // prepare map data
-  // populate this map's details
-  // const mapData = {
-  //   title: app.featureCollection.getTitle(),
-  //   publicId: app.featureCollection.publicId,
-  //   numMarkers: app.markers.markers.length,
-  //   forks: app.featureCollection.forks,
-  //   numForks: app.featureCollection.numForks,
-  //   forkedFrom: app.featureCollection.forkedFrom,
-  //   numContributors: app.featureCollection.numContributors,
-  //   createdAt: app.featureCollection.timestamps.createdAt,
-  //   updatedAt: app.featureCollection.timestamps.updatedAt,
-  // }
-
-  // create a list item for the selected map
-  // const selectedMapListItem = createMapListItem(mapData, true, false, true)
-
-  // add the fork button to it, if the map has markers
-  // if (mapData.numMarkers > 0) {
-  //   forkItButton.appendTo(selectedMapListItem)
-  //   cancelForkButton.appendTo(selectedMapListItem)
-  // }
-  // show the updated map data
-  // $('.info-window .map-list-container').html(selectedMapListItem)
 
   // activate fork links
   activateForkButton()
