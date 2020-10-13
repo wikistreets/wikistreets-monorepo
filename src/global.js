@@ -2550,6 +2550,11 @@ const openEditFeatureForm = async (featureId) => {
   )
   $('.info-window-content input[name="address"]').val(data.properties.address)
 
+  // don't say to drag around the marker for geojson shapes that can't currently be repositioned
+  if (data.geometry.type != 'Point') {
+    $('.info-window-content .drag-message').hide()
+  }
+
   // inject images that already exist for this post
   let filesToRemove = [] // we'll fill it up later
   const existingImagesEl = $('.info-window-content .existing-thumbs-container')
