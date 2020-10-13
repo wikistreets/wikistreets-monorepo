@@ -1382,16 +1382,19 @@ const createFeature = (data) => {
   // format the date the marker was created
   // console.log(JSON.stringify(data, null, 2))
   const date = DateDiff.asAge(data.createdAt)
+  const addressTruncated =
+    data.properties.address.indexOf(',') >= 0
+      ? data.properties.address.substr(
+          0,
+          data.properties.address.lastIndexOf(',')
+        )
+      : data.properties.address
+
   // give attribution to author
   const attribution = `
 Posted by
-<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${
-    data.user.handle
-  }" href="#">${data.user.handle}</a> ${date}
-near ${data.properties.address.substr(
-    0,
-    data.properties.address.lastIndexOf(',')
-  )}.
+<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${data.user.handle}" href="#">${data.user.handle}</a> ${date}
+near ${addressTruncated}.
 `
 
   // show how many comments this post has
@@ -3159,15 +3162,17 @@ const openFeatureList = async () => {
   markers.forEach((marker) => {
     const data = marker.featureData
     const date = DateDiff.asAge(data.createdAt)
+    const addressTruncated =
+      data.properties.address.indexOf(',') >= 0
+        ? data.properties.address.substr(
+            0,
+            data.properties.address.lastIndexOf(',')
+          )
+        : data.properties.address
     const attribution = `
 Posted by
-<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${
-      data.user.handle
-    }"href="#">${data.user.handle}</a> ${date}
-near ${data.properties.address.substr(
-      0,
-      data.properties.address.lastIndexOf(',')
-    )}.
+<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${data.user.handle}"href="#">${data.user.handle}</a> ${date}
+near ${addressTruncated}.
 `
     const commentsString = data.properties.comments.length
       ? `<br />${data.properties.comments.length} comment${
