@@ -16,7 +16,8 @@ const featureSchema = new Schema(
     geometry: {
       // set to null for unlocated features
       type: { type: String, required: true, default: 'Point' },
-      coordinates: [], // long, lat for Points, or other formats for other types
+      coordinates: [], // [lng,lat] for Points, or other formats for other types
+      geometries: [], // used by GeometryCollection only
     },
     properties: {
       address: { type: String, required: true },
@@ -25,6 +26,8 @@ const featureSchema = new Schema(
       body: String,
       photos: [fileSchema],
       comments: [commentSchema],
+      bbox: [{ type: Number }], // used for leaflet to center on geojson features
+      center: [{ type: Number }], // used for leaflet to center on geojson features
     },
     // now cutstom properties (foreign fields, in geojson terms)
     user: {

@@ -302,7 +302,8 @@ button.dropdown-toggle img {
 .info-window-content .feature-detail header,
 .info-window-content .map-details-container,
 .info-window-content .error-message-container,
-.info-window-content .contributor-list-container .map-summary-stats {
+.info-window-content .contributor-list-container .map-summary-stats,
+.import-data-container {
   padding-top: 20px;
 }
 .info-window-content .map-details-container .prevnext-feature-container {

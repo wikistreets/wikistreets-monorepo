@@ -435,8 +435,8 @@ const featureRouter = ({ config }) => {
     [
       body('featureCollectionId').not().isEmpty().trim(),
       body('featureId').not().isEmpty().trim(),
-      body('lat').not().isEmpty().trim(),
-      body('lng').not().isEmpty().trim(),
+      body('geometryType').not().isEmpty().trim(),
+      body('geometryCoordinates').not().isEmpty().trim(),
       body('title').not().isEmpty().trim().escape(),
       body('address').not().isEmpty().trim().escape(),
       body('zoom').trim(),
@@ -459,7 +459,10 @@ const featureRouter = ({ config }) => {
 
       const data = {
         _id: featureId,
-        'geometry.coordinates': [req.body.lng, req.body.lat],
+        geometry: {
+          type: req.body.geometryType,
+          coordinates: req.body.geometryCoordinates,
+        },
         properties: {
           title: req.body.title,
           body: req.body.body,
@@ -472,28 +475,6 @@ const featureRouter = ({ config }) => {
       // reject posts with no map
       if (!featureCollectionId || !featureId) {
         const err = 'Map or marker not specified.'
-        return res.status(400).json({
-          status: false,
-          message: err,
-          err: err,
-        })
-      }
-      // // reject posts with no useful data
-      // else if (!data.photos.length && !data.body) {
-      //   const err = 'You submitted an empty post.... please be reasonable.'
-      //   return res.status(400).json({
-      //     status: false,
-      //     message: err,
-      //     err: err,
-      //   })
-      // }
-      // reject posts with no address or lat/lng
-      else if (
-        !data.properties.address ||
-        !data['geometry.coordinates'][0] ||
-        !data['geometry.coordinates'][1]
-      ) {
-        const err = 'Please include an address with your post'
         return res.status(400).json({
           status: false,
           message: err,
@@ -515,7 +496,10 @@ const featureRouter = ({ config }) => {
             $set: {
               // centerPoint: data.position, // map's center point
               'features.$.user': data.user,
-              'features.$.geometry.coordinates': data['geometry.coordinates'],
+              'features.$.geometry.type': data.geometry.type,
+              'features.$.geometry.coordinates': JSON.parse(
+                data.geometry.coordinates
+              ),
               'features.$.properties.address': data.properties.address,
               'features.$.properties.zoom': data.properties.zoom,
               'features.$.properties.title': data.properties.title,
@@ -587,7 +571,7 @@ const featureRouter = ({ config }) => {
               console.log(`ERROR ADDING: ${err}`)
             })
         }
-
+        console.log('got here 2')
         // tack on the bounding box
         // for some reason we need to make a JSON object with none of the mongoose nonsense for buffering to work
         const simpleObject = JSON.parse(
@@ -601,6 +585,7 @@ const featureRouter = ({ config }) => {
           }
         ) // buffer around the points
         featureCollection.bbox = turf.bbox(buffered)
+        console.log('got here 3')
 
         // // add this map to the user's list of maps
         req.user.featureCollections.pull(featureCollection._id) // first remove from list

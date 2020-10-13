@@ -20,6 +20,7 @@ function FUploader(config) {
       closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
       closeIconClassName: 'close-icon',
       closeIconCallback: removeIssueImage,
+      defaultThumbImg: '/static/images/material_design_icons/map-24px.svg'
     },
     dropContainer: {
       el: an element that will appear once users drag files over the container,
@@ -117,7 +118,7 @@ function FUploader(config) {
     config.thumbsContainer.el.innerHTML = ''
     ;[].forEach.call(files, (file) => {
       // Make sure `file.name` matches our extensions criteria
-      if (/\.(jpe?g|png|gif|svg)$/i.test(file.name)) {
+      if (/\.(jpe?g|png|gif|svg|json|geojson)$/i.test(file.name)) {
         const reader = new FileReader()
         reader.addEventListener(
           'load',
@@ -125,7 +126,12 @@ function FUploader(config) {
             // create an image element
             const image = new Image()
             image.title = file.name
-            image.src = this.result
+            image.alt = file.name
+            if (/\.(jpe?g|png|gif|svg)$/i.test(file.name)) {
+              image.src = this.result
+            } else {
+              image.src = config.thumbsContainer.defaultThumbImg
+            }
             image.classList.add(config.thumbsContainer.thumbImgClassName)
             // create a close icon for removing this imagee
             const closeIcon = document.createElement('IMG')

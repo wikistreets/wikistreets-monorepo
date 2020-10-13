@@ -4,6 +4,7 @@ const { body, param, query, validationResult } = require('express-validator')
 const uuidv4 = require('uuid/v4')
 const path = require('path')
 const multer = require('multer') // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
+const fs = require('fs') // for reading imported json files
 
 // authentication
 const jwt = require('jsonwebtoken')
@@ -17,35 +18,15 @@ const turf = require('@turf/turf')
 const mongoose = require('mongoose')
 const ObjectId = require('mongoose').Types.ObjectId
 const { FeatureCollection } = require('../models/feature-collection')
-// const { Feature } = require('../models/feature')
+const { Feature } = require('../models/feature')
 const { User } = require('../models/user')
 
 // emailer
 const { EmailService } = require('../services/EmailService')
 const { Invitation } = require('../models/invitation')
+const { geojsonType } = require('@turf/turf')
 
-// markdown support
-// const marked = require('marked')
-
-// Set options
-// `highlight` example uses `highlight.js`
-// marked.setOptions({
-//   renderer: new marked.Renderer(),
-//   // highlight: function(code, language) {
-//   //   const hljs = require('highlight.js');
-//   //   const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
-//   //   return hljs.highlight(validLanguage, code).value;
-//   // },
-//   pedantic: false,
-//   gfm: true,
-//   breaks: false,
-//   sanitize: false,
-//   smartLists: true,
-//   smartypants: false,
-//   xhtml: false,
-// })
-
-const mapRouter = ({ config }) => {
+const featureCollectionRouter = ({ config }) => {
   // create an express router
   const router = express.Router()
 
@@ -60,11 +41,12 @@ const mapRouter = ({ config }) => {
 
   // filter out non-images
   const multerFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image')) {
-      cb(null, true)
-    } else {
-      cb('Please upload only images.', false)
-    }
+    cb(null, true)
+    // if (file.mimetype.startsWith('image')) {
+    //   cb(null, true)
+    // } else {
+    //   cb('Please upload only images.', false)
+    // }
   }
 
   const upload = multer({
@@ -479,7 +461,128 @@ const mapRouter = ({ config }) => {
     }
   )
 
-  // route for HTTP GET requests to the map JSON data
+  // route for importing a geojson file
+  router.post(
+    '/map/import',
+    passportJWT, // jwt authentication
+    upload.array('files', config.markers.maxFiles), // multer file upload
+    [body('featureCollectionId').trim().escape()],
+    async (req, res, next) => {
+      // check for validation errors
+      let errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw 'Invalid map or feature identifier'
+      }
+
+      const featureCollectionId = req.body.featureCollectionId
+      // reject posts with no map
+      if (!featureCollectionId) {
+        const err = 'No map specified.'
+        return res.status(400).json({
+          status: false,
+          message: err,
+          err: err,
+        })
+      }
+
+      // loop through each file
+      let newFeatures = [] // new features to add to the map
+      req.files.forEach((file) => {
+        // get the data from this file
+        req.files.map((file) => {
+          const data = file.buffer.toString()
+          const geojsonObj = JSON.parse(data)
+
+          // check to see what kind of geojson obj we have
+          if (geojsonObj.type == 'FeatureCollection') {
+            // it's a collection of features
+            // add the features in this file to the list of new features
+            newFeatures = newFeatures.concat(geojsonObj.features)
+          } else if (geojsonOjb == 'Feature') {
+            // it's a feature, add it to the list
+            newFeatures.concat(geojsonObj)
+          }
+        })
+      })
+
+      // create these objects into proper Feature objects
+      let featureObjs = []
+      newFeatures.forEach((feature) => {
+        // do a bit of cleanup
+        if (!feature.properties) feature.properties = {}
+        // add a centerpoint property
+        if (!feature.properties.center) {
+          let point
+          let shape
+          // leaflet needs to know the center point... calculate and store it
+          console.log(feature.geometry.type)
+          switch (feature.geometry.type) {
+            case 'LineString':
+              point = turf.center(feature)
+              break
+            case 'Polygon':
+              shape = turf.polygon(feature.geometry.coordinates)
+              point = turf.centerOfMass(shape)
+              break
+            case 'MultiPoint':
+              shape = turf.multiPoint(feature.geometry.coordinates)
+              point = turf.centerOfMass(shape)
+              break
+            case 'MultiPolygon':
+              shape = turf.multiPolygon(feature.geometry.coordinates)
+              point = turf.centerOfMass(shape)
+              break
+            case 'MultiLineString':
+              shape = turf.multiLineString(feature.geometry.coordinates)
+              point = turf.centerOfMass(shape)
+              break
+            case 'GeometryCollection':
+              // console.log(JSON.stringify(feature, null, 2))
+              shape = turf.geometryCollection(feature.geometry.geometries)
+              point = turf.centerOfMass(shape)
+              break
+          }
+          // if we have calculated the center point, store it, otherwise ignore
+          if (point) {
+            feature.properties.center = point.geometry.coordinates
+          }
+        }
+        // add a bounding box property
+        feature.properties.bbox = turf.bbox(feature)
+        if (!feature.subscribers) feature.subscribers = [req.user._id]
+        if (!feature.user) feature.user = req.user._id
+        if (!feature.properties.address) feature.properties.address = 'here'
+        if (!feature.properties.title)
+          feature.properties.title = `${feature.geometry.type} around ${feature.properties.center}`
+        // console.log(JSON.stringify(feature, null, 2))
+        featureObjs.push(new Feature(feature))
+      })
+
+      // try to find the map and update it
+      // save the updated map, if existent, or new map if not
+      const featureCollection = await FeatureCollection.findOneAndUpdate(
+        {
+          publicId: featureCollectionId,
+          $or: [{ limitContributors: false }, { contributors: req.user }],
+        },
+        {
+          $push: {
+            features: {
+              $each: featureObjs,
+            },
+          },
+        },
+        { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
+      )
+      res.json({
+        status: 'success',
+        success: true,
+        data: featureCollection,
+      })
+    }
+  )
+
+  // route for exporting a geojson file
   router.get(
     '/map/export/:featureCollectionId',
     [param('featureCollectionId').not().isEmpty()],
@@ -535,4 +638,4 @@ const mapRouter = ({ config }) => {
   return router
 }
 
-module.exports = mapRouter
+module.exports = featureCollectionRouter

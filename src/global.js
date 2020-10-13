@@ -101,7 +101,8 @@ const app = {
       deleteFeatureCollectionUrl: '/map/remove',
       forkFeatureCollectionUrl: '/map/fork',
       staticMapUrl: '/map',
-      exportFeatureCollection: '/map/export',
+      importFeatureCollectionUrl: '/map/import',
+      exportFeatureCollectionUrl: '/map/export',
     },
     mapbox: {
       // settings for the Mapbox API
@@ -163,18 +164,26 @@ const app = {
     numForks: 0,
     dateModified: '',
     panTo: (coords) => {
-      // call the leaflet map's panTo method
       app.featureCollection.element.panTo(coords)
       // store this position
       app.browserGeolocation.coords = coords
       app.localStorage.setItem('coords', JSON.stringify(coords))
     },
-    flyTo: (coords, zoom) => {
-      // use default zoom level, if none present
-      if (!zoom) zoom = app.featureCollection.element.getZoom()
+    flyTo: (marker) => {
+      const coords = marker.getLatLng()
+      if (marker.featureData.geometry.type == 'Point') {
+        // this marker is a regular leaflet point marker
+        let zoom = marker.featureData.properties.zoom
+        // use default zoom level, if none present
+        if (!zoom) zoom = app.featureCollection.element.getZoom()
+        // call the leaflet map's panTo method
+        app.featureCollection.element.flyTo(coords, zoom)
+      } else {
+        // this marker is a different geojson type... use bounding box
+        const bounds = marker.getBbox()
+        app.featureCollection.element.flyToBounds(bounds)
+      }
 
-      // call the leaflet map's panTo method
-      app.featureCollection.element.flyTo(coords, zoom)
       // store this position
       app.browserGeolocation.coords = coords
       app.localStorage.setItem('coords', JSON.stringify(coords))
@@ -523,7 +532,6 @@ app.markers.findById = (featureId) => {
 app.markers.place = async (data, cluster) => {
   if (!data) return // ignore no data!
   // make a marker from each data point
-  const latency = 15 // latency between marker animation drops
   data.map((point, i, arr) => {
     // check whether this marker already exists on map
     const existingMarker = app.markers.findById(point._id)
@@ -534,10 +542,15 @@ app.markers.place = async (data, cluster) => {
       const isBeingEdited =
         $(`.feature-form[ws-feature-id="${point._id}"]`).length > 0
       if (!isBeingEdited) {
-        existingMarker.setLatLng({
-          lat: point.geometry.coordinates[1], //point.position.lat,
-          lng: point.geometry.coordinates[0], //point.position.lng,
-        }) // reposition it
+        try {
+          // this only works for points
+          existingMarker.setLatLng({
+            lat: point.geometry.coordinates[1], //point.position.lat,
+            lng: point.geometry.coordinates[0], //point.position.lng,
+          }) // reposition it
+        } catch (err) {
+          // this marker is not a point
+        }
       }
 
       // update visible info, if it's currently being viewed open on the page
@@ -558,13 +571,12 @@ app.markers.place = async (data, cluster) => {
       } // if featureEls.length
     } else {
       // new marker
-      // add delay before dropping marker onto map
-      // setTimeout(() => {
       if (point.geometry != undefined && point.geometry != null) {
         let coords = null
         let marker = null
         // deal with Point features first
         if (point.geometry.type == 'Point') {
+          console.log(point.geometry.coordinates)
           // points in leaflet have [lat,lng] format, whereas geojson has [lng,lat]
           coords = [
             point.geometry.coordinates[1],
@@ -575,62 +587,83 @@ app.markers.place = async (data, cluster) => {
             riseOffset: app.markers.zIndex.default,
             riseOnHover: true,
           })
-          // cluster.addLayer(marker) // add to the marker cluster
-          app.featureCollection.element.addLayer(marker) // add directly to map
 
+          // determine whether this marker has a photo or only text
           if (point.properties.photos && point.properties.photos.length) {
             marker.featureType = 'unknownPhoto'
           } else {
             marker.featureType = 'unknownText'
           }
 
-          // add a unique id to each marker for later reference
-          marker._id = `marker-${point._id}`
-          // console.log(marker._id)
-
-          // flag whether the marker feature isopen
-          marker.isOpen = false
-
-          // keep the index number of this marker to maintain order
-          marker.index = app.markers.markers.length //i
-
-          // attach the data to the marker
-          marker.featureData = point
-
           // de-highlight the current marker
           marker.setZIndexOffset(app.markers.zIndex.default)
           marker.setIcon(app.markers.icons[marker.featureType].default)
-
-          // add to list of markers
-          app.markers.markers.push(marker)
-
-          // // detect click events
-          marker.on('click', (e) => {
-            // prevent this even from firing twice in a row... which seems to be a problem
-            showInfoWindow(marker)
-          })
         } else {
-          // deal with non-Point geojson types
-          // check whether this shape is already on the map
-          let exists = false
-          app.markers.shapes.forEach((shape) => {
-            if (shape._id == point._id) exists = true
-          })
-          if (exists) return // don't re-draw an existing shape
-
-          // use the specified style, or a default style
-          const myStyle = point.properties.style || {
-            color: '#ff7800',
-            weight: 5,
-            opacity: 0.65,
+          // this is a non-point geojson shape
+          marker = L.geoJSON(point)
+          // attach a few userful functions for leaflet so these geojson markers behave more like point markers
+          marker.getBbox = () => {
+            const bbox = [
+              [point.properties.bbox[1], point.properties.bbox[0]],
+              [point.properties.bbox[3], point.properties.bbox[2]],
+            ]
+            return bbox
           }
-          L.geoJSON(point, { style: myStyle }).addTo(
-            app.featureCollection.element
-          )
-          app.markers.shapes.push(point) // add to list
+          marker.getLatLng = () => {
+            return {
+              lat: marker.featureData.properties.center[1],
+              lng: marker.featureData.properties.center[0],
+            }
+          }
         }
+
+        // cluster.addLayer(marker) // add to the marker cluster
+        app.featureCollection.element.addLayer(marker) // add directly to map
+
+        // add a unique id to each marker for later reference
+        marker._id = `marker-${point._id}`
+        // console.log(marker._id)
+
+        // flag whether the marker feature isopen
+        marker.isOpen = false
+
+        // keep the index number of this marker to maintain order
+        marker.index = app.markers.markers.length //i
+
+        // attach the data to the marker
+        marker.featureData = point
+
+        // add to list of markers
+        app.markers.markers.push(marker)
+
+        // // detect click events
+        marker.on('click', (e) => {
+          showInfoWindow(marker)
+          // hack to allow clicking on geojson leaflet layers to open up info window
+          throw `geojson click - stay calm` // this triggers an error which somehow makes it work
+        })
+        // } else {
+        //   // deal with non-Point geojson types
+        //   // check whether this shape is already on the map
+        //   let exists = false
+        //   app.markers.shapes.forEach((shape) => {
+        //     if (shape._id == point._id) exists = true
+        //   })
+        //   if (exists) return // don't re-draw an existing shape
+
+        //   // use the specified style, or a default style
+        //   const myStyle = point.properties.style || {
+        //     color: '#ff7800',
+        //     fillColor: '#00ff78',
+        //     weight: 5,
+        //     opacity: 0.65,
+        //   }
+        //   L.geoJSON(point, { style: myStyle }).addTo(
+        //     app.featureCollection.element
+        //   )
+        //   app.markers.shapes.push(point) // add to list
+        // }
       } // if
-      // }, i * latency) // setTimeout
     } // else if marker doesn't yet exist
 
     // if the feature list is currently being viewed, refresh it
@@ -642,8 +675,6 @@ app.markers.place = async (data, cluster) => {
 app.markers.activate = (marker = app.markers.current) => {
   // make one of the markers appear 'active'
   app.markers.current = marker
-  marker.setIcon(app.markers.icons[marker.featureType].active)
-  marker.setZIndexOffset(app.markers.zIndex.active)
   // mark it as open
   marker.isOpen = true
 }
@@ -653,8 +684,10 @@ app.markers.deactivate = (marker = app.markers.current) => {
   // loop through and mark all as closed
   markerList.forEach((marker) => {
     marker.isOpen = false
-    marker.setZIndexOffset(app.markers.zIndex.default)
-    marker.setIcon(app.markers.icons[marker.featureType].default)
+    if (marker.featureData.geometry.point == 'Point') {
+      marker.setZIndexOffset(app.markers.zIndex.default)
+      marker.setIcon(app.markers.icons[marker.featureType].default)
+    }
   })
   // there is now no active marker
   app.markers.current = null
@@ -1130,6 +1163,10 @@ const addMapContextMenu = (selectedMapListItem) => {
     app.auth.isEditor() && app.markers.markers.length > 0
       ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Invite collaborators...</a>`
       : ''
+  const importLinkString =
+    app.auth.isEditor() > 0
+      ? `<a class="import-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Import data...</a>`
+      : ''
   const exportLinkString =
     app.markers.markers.length > 0
       ? `<a class="export-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Export data...</a>`
@@ -1148,6 +1185,7 @@ const addMapContextMenu = (selectedMapListItem) => {
         ${collaborateLinkString}
         ${forkLinkString}
         ${deleteLinkString}
+        ${importLinkString}
         ${exportLinkString}
       </div>
     </div>
@@ -1230,11 +1268,21 @@ const addMapContextMenu = (selectedMapListItem) => {
     app.auth.getToken() ? openForkPanel() : openSigninPanel()
   })
 
+  // enable import data link
+  $('.import-map-link', selectedMapListItem).on('click', (e) => {
+    e.preventDefault()
+    app.auth.isEditor()
+      ? openImportDataPanel()
+      : openErrorPanel(
+          'You do not have permission to import data into this map.'
+        )
+  })
+
   // enable export map link
   $('.export-map-link', selectedMapListItem).on('click', (e) => {
     e.preventDefault()
     window.location.href = `${
-      app.apis.wikistreets.exportFeatureCollection
+      app.apis.wikistreets.exportFeatureCollectionUrl
     }/${app.featureCollection.getPublicIdFromUrl()}`
   })
 
@@ -1656,8 +1704,14 @@ const showInfoWindow = (marker) => {
     // center the map on the selected marker after panel has opened
     //console.log('marker panning')
     app.featureCollection.element.invalidateSize(true) // notify leaflet that size has changed
-    // app.featureCollection.panTo(marker.getLatLng()) // pan to this marker
-    app.featureCollection.flyTo(marker.getLatLng(), data.properties.zoom) // pan to marker
+
+    if (marker.featureData.geometry.type == 'Point') {
+      // it's a point marker... use leaflet to get its center point
+      app.featureCollection.flyTo(marker) // pan to marker
+    } else {
+      // it's some other geojson type... need to fit it on screen
+      app.featureCollection.flyTo(marker) // pan to marker
+    }
 
     // handle click on username event
     $('.info-window .user-link').click((e) => {
@@ -1777,7 +1831,7 @@ const showInfoWindow = (marker) => {
   fuploader.init() // initalize settings
 
   // activate add image link
-  $('.info-window-content .add-photos-link').click((e) => {
+  $('.info-window-content .add-photos-link').on('click', (e) => {
     e.preventDefault()
     $('.info-window-content input[type="file"]').trigger('click')
   })
@@ -2459,10 +2513,13 @@ const openEditFeatureForm = async (featureId) => {
   if (!marker) return
 
   const data = marker.featureData // extract the data
-  marker.dragging.enable() // make it draggable
+  // allow dragging of point markers
+  if (marker.featureData.geometry.type == 'Point') {
+    marker.dragging.enable() // make it draggable
+  }
 
   // app.featureCollection.panTo(marker.getLatLng()) // pan to marker
-  app.featureCollection.flyTo(marker.getLatLng(), data.properties.zoom) // pan to marker
+  app.featureCollection.flyTo(marker) // pan to marker
 
   // copy the edit feature form into the infowindow
   const infoWindowHTML = $('.edit-feature-form-container').html()
@@ -2481,9 +2538,11 @@ const openEditFeatureForm = async (featureId) => {
   $('.info-window-content .feature-title').val(data.properties.title)
   $('.info-window-content .feature-body').val(data.properties.body)
   $('.info-window-content .address').html(data.properties.address)
+  $('.info-window-content .geometryType').val(data.geometry.type)
+  $('.info-window-content .geometryCoordinates').val(
+    JSON.stringify(data.geometry.coordinates)
+  )
   $('.info-window-content input[name="address"]').val(data.properties.address)
-  $('.info-window-content .lat').val(data.geometry.coordinates[1])
-  $('.info-window-content .lng').val(data.geometry.coordinates[0])
 
   // inject images that already exist for this post
   let filesToRemove = [] // we'll fill it up later
@@ -3140,8 +3199,12 @@ near ${data.properties.address.substr(
       app.markers.deactivate()
       // select the target marker
       app.markers.activate(marker)
-      app.featureCollection.element.panTo(marker.getLatLng())
-      // app.featureCollection.element.flyTo(marker.getLatLng(), marker.featureData.zoom)
+      if (marker.featureData.geometry.type == 'Point') {
+        app.featureCollection.element.panTo(marker.getLatLng())
+      } else {
+        app.featureCollection.element.fitBounds(marker.getBbox())
+      }
+      // app.featureCollection.element.flyTo(marker)
     } catch (err) {
       // ignore mouseouts on sub-elements
     }
@@ -3248,8 +3311,12 @@ const openContributorsList = async () => {
       app.markers.deactivate()
       // select the target marker
       app.markers.activate(marker)
-      app.featureCollection.element.panTo(marker.getLatLng())
-      // app.featureCollection.element.flyTo(marker.getLatLng(), marker.featureData.zoom)
+      if (marker.featureData.geometry.type == 'Point') {
+        app.featureCollection.element.panTo(marker.getLatLng())
+      } else {
+        app.featureCollection.element.fitBounds(marker.getBbox())
+      }
+      // app.featureCollection.element.flyTo(marker)
     } catch (err) {
       // ignore mouseouts on sub-elements
     }
@@ -3336,6 +3403,134 @@ const openForkPanel = () => {
   expandInfoWindow(50, 50)
 }
 
+// show import data form
+const openImportDataPanel = () => {
+  app.mode = 'importdata'
+
+  // copy the user profile html into the infowindow
+  const contentEl = $('.import-data-container').clone()
+  contentEl.removeClass('hide')
+  contentEl.show()
+  $('.info-window-content').html('')
+  contentEl.appendTo('.info-window-content')
+
+  // create a decent file uploader for data files
+  const fuploader = new FUploader({
+    container: {
+      el: document.querySelector('.info-window-content .file-upload-container'),
+      activeClassName: 'active',
+    },
+    fileSelector: {
+      el: document.querySelector('.info-window-content input[type="file"]'),
+    },
+    buttonContainer: {
+      el: document.querySelector('.info-window-content .button-container'),
+    },
+    thumbsContainer: {
+      el: document.querySelector('.info-window-content .thumbs-container'),
+      thumbClassName: 'thumb',
+      thumbImgClassName: 'thumb-img',
+      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
+      closeIconClassName: 'close-icon',
+      defaultThumbImg: '/static/images/material_design_icons/map_white-24.svg',
+      // closeIconCallback: removeFeatureImage,
+    },
+    dropContainer: {
+      el: document.querySelector('.info-window-content .drop-container'),
+      activeClassName: 'active',
+    },
+    form: {
+      el: document.querySelector('.info-window-content .feature-form'),
+      droppedFiles: [], // nothing yet
+    },
+  })
+  fuploader.init() // initalize settings
+
+  //handle cancel button
+  $('.cancel-link', contentEl).on('click', (e) => {
+    e.preventDefault()
+    collapseInfoWindow()
+  })
+
+  // handle form submission
+  $('form.import-data-form', contentEl).on('submit', async (e) => {
+    // prevent page reload
+    e.preventDefault()
+
+    // show the spinner till done
+    showSpinner($('.info-window'))
+
+    // force user login before anything can be submitted
+    if (!app.auth.getToken()) {
+      // open signin form
+      openSigninPanel('Log in to import data.')
+      return // exit function
+    }
+
+    // construct a FormData object from the form DOM element
+    let formData = new FormData(e.target)
+
+    // remove the input type='file' data, since we don't need it
+    formData.delete('files-excuse')
+
+    // add any drag-and-dropped files to this
+    const files = fuploader.getDroppedFiles()
+    // console.log(files)
+
+    // add files from array to formdata
+    $.each(files, function (i, file) {
+      formData.append('files', file)
+    })
+
+    // post to server
+    app
+      .myFetch(
+        app.apis.wikistreets.importFeatureCollectionUrl,
+        'POST',
+        formData
+      )
+      .then((res) => {
+        if (!res.status) {
+          openErrorPanel(res.message)
+          return
+        }
+
+        // get a marker cluster
+        const cluster = app.markers.cluster
+          ? app.markers.cluster
+          : app.markers.createCluster()
+
+        // place the new data on the map
+        // console.log(JSON.stringify(res.data.features, null, 2))
+        try {
+          app.markers.place(res.data.features)
+          console.log('placed')
+        } catch (err) {
+          console.log(err)
+        }
+        collapseInfoWindow()
+
+        // hide spinner when done
+        hideSpinner($('.info-window'))
+      })
+      .catch((err) => {
+        console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        // open error panel
+        openErrorPanel(
+          'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
+        )
+      })
+  }) // import-data-form submit
+
+  // activate add image link
+  $('.info-window-content .add-photos-link').on('click', (e) => {
+    e.preventDefault()
+    $('.info-window-content input[type="file"]').trigger('click')
+  })
+
+  // open the info window
+  expandInfoWindow(50, 50)
+}
 // show the list of this user's maps and option to rename this map
 const openMapSelectorPanel = async () => {
   app.mode = 'selectmap'

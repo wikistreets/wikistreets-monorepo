@@ -423,9 +423,9 @@
         enctype="multipart/form-data"
       >
         <input type="hidden" name="featureId" class="featureId" />
+        <input type="hidden" name="geometryType" class="geometryType" />
+        <input type="hidden" name="geometryCoordinates" class="geometryCoordinates" />
         <input type="hidden" name="address" class="address" />
-        <input type="hidden" name="lat" class="lat" />
-        <input type="hidden" name="lng" class="lng" />
 
           <section class="submit-container">
             <h2 class="panel-title">Edit post</h2>
@@ -507,6 +507,7 @@
             <li>Share if you want</li>
             <li>Don't share if you don't want</li>
             <li>Fork (i.e. copy) any map</li>
+            <li>Import & export all your data at any time</li>
           </ul>
         </header>
         <article>
@@ -880,6 +881,39 @@
     </div>
     <!-- // comments-container -->
 
+    <!-- .import-data-container -->
+    <div class="import-data-container hide">
+          <h2>Import a GeoJSON data file</h3>
+          <form class="import-data-form" action="/map/import-geojson" method="POST">
+            <div class="file-upload-container">
+              <div class="button-container">
+                <input
+                  class="form-control-file hide"
+                  id="files"
+                  name="files-excuse"
+                  type="file"
+                  multiple
+                />
+                <a class="add-photos-link" href="#">Add files</a>
+                <span class="display-none d-md-inline"
+                  >(drag-and-drop or
+                  <a href="#" class="add-photos-link">click here</a>)</span
+                >
+              </div>
+              <div class="drop-container hide">
+                <p>Drop your files here</p>
+              </div>
+              <div class="thumbs-container row">
+                <!-- file thumbnails will go here -->
+              </div>
+            </div>
+            <button type="submit" class="form-control btn btn-primary col-4 col-sm-3 col-md-6 col-lg-5 col-xl-4">
+              Submit
+            </button>
+            <a class="cancel-link" href="#">Cancel</a>
+          </form>
+    </div>
+    <!-- // .import-data-container -->
     <!-- spinner icon -->
     <div class="spinner-container hide">
       <div class="spinner-overlay">
