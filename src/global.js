@@ -640,7 +640,10 @@ app.markers.place = async (data, cluster) => {
         marker.on('click', (e) => {
           showInfoWindow(marker)
           // hack to allow clicking on geojson leaflet layers to open up info window
-          throw `geojson click - stay calm` // this triggers an error which somehow makes it work
+          if (marker.featureData.geometry.type != 'Point') {
+            // this triggers an error which somehow makes it work
+            throw `geojson click - stay calm`
+          }
         })
         // } else {
         //   // deal with non-Point geojson types
