@@ -239,7 +239,10 @@ const featureRouter = ({ config }) => {
       const featureCollectionId = req.body.featureCollectionId
       const featureCollectionTitle = req.body.featureCollectionTitle
       const data = {
-        'geometry.coordinates': [req.body.lng, req.body.lat],
+        'geometry.coordinates': [
+          parseFloat(req.body.lng),
+          parseFloat(req.body.lat),
+        ],
         properties: {
           title: req.body.title,
           body: req.body.body,

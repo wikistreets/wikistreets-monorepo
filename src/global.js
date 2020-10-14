@@ -750,7 +750,7 @@ const populateMap = async (recenter = true) => {
 
   // recenter on map bounding box
   if (recenter && data.bbox && data.bbox.length) {
-    //console.log('init map panning')
+    // console.log('init map panning')
     app.featureCollection.fitBounds(data.bbox)
   }
 
