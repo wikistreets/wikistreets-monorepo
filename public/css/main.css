@@ -326,6 +326,10 @@ button.dropdown-toggle img {
   font-size: 14pt;
 }
 
+.info-window-content h3 {
+  font-size: 12pt;
+}
+
 .alert.instructions {
   border-radius: 0;
   position: absolute;
