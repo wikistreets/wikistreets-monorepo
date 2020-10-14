@@ -512,6 +512,10 @@ const featureCollectionRouter = ({ config }) => {
 
         function toLowerCaseKeys(obj) {
           return Object.keys(obj).reduce(function (accum, key) {
+            if (typeof obj[key] === 'object' && obj[key] !== null) {
+              // it's a sub-object!
+              obj[key] = toLowerCaseKeys(obj[key])
+            }
             accum[key.toLowerCase()] = obj[key]
             return accum
           }, {})
@@ -519,6 +523,7 @@ const featureCollectionRouter = ({ config }) => {
 
         // convert all keys to lowercase
         feature = toLowerCaseKeys(feature)
+        // console.log(JSON.stringify(feature, null, 2))
 
         if (!feature.properties) feature.properties = {} // allows us to add properties later
 
@@ -610,6 +615,10 @@ const featureCollectionRouter = ({ config }) => {
           $or: [{ limitContributors: false }, { contributors: req.user }],
         },
         {
+          $addToSet: {
+            contributors: req.user,
+            subscribers: req.user,
+          },
           $push: {
             features: {
               $each: featureObjs,
@@ -618,6 +627,10 @@ const featureCollectionRouter = ({ config }) => {
         },
         { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
       )
+        .populate('contributors', ['_id', 'handle'])
+        .populate('features.user', ['_id', 'handle'])
+        .populate('features.properties.comments.user', ['_id', 'handle'])
+
       res.json({
         status: 'success',
         success: true,
