@@ -509,46 +509,90 @@ const featureCollectionRouter = ({ config }) => {
       let featureObjs = []
       newFeatures.forEach((feature) => {
         // do a bit of cleanup
-        if (!feature.properties) feature.properties = {}
+
+        function toLowerCaseKeys(obj) {
+          return Object.keys(obj).reduce(function (accum, key) {
+            accum[key.toLowerCase()] = obj[key]
+            return accum
+          }, {})
+        }
+
+        // convert all keys to lowercase
+        feature = toLowerCaseKeys(feature)
+
+        if (!feature.properties) feature.properties = {} // allows us to add properties later
+
+        // try to find a title
+        if (!feature.properties.title) {
+          if (feature.title) feature.properties.title = feature.title
+          else if (feature.properties.name)
+            feature.properties.title = feature.properties.name
+          else if (feature.name) feature.properties.title = feature.name
+          else if (feature.properties.subject)
+            feature.properties.title = feature.properties.subject
+          else if (feature.subject) feature.properties.title = feature.subject
+        }
+
+        // try to find a body
+        if (!feature.properties.body) {
+          if (feature.body) feature.properties.body = feature.body
+          else if (feature.properties.description)
+            feature.properties.title = feature.properties.description
+          else if (feature.description)
+            feature.properties.title = feature.description
+          else if (feature.properties.content)
+            feature.properties.title = feature.properties.content
+          else if (feature.content) feature.properties.title = feature.content
+        }
+
         // add a centerpoint property
         if (!feature.properties.center) {
-          let point
-          let shape
-          // leaflet needs to know the center point... calculate and store it
-          console.log(feature.geometry.type)
-          switch (feature.geometry.type) {
-            case 'LineString':
-              point = turf.center(feature)
-              break
-            case 'Polygon':
-              shape = turf.polygon(feature.geometry.coordinates)
-              point = turf.centerOfMass(shape)
-              break
-            case 'MultiPoint':
-              shape = turf.multiPoint(feature.geometry.coordinates)
-              point = turf.centerOfMass(shape)
-              break
-            case 'MultiPolygon':
-              shape = turf.multiPolygon(feature.geometry.coordinates)
-              point = turf.centerOfMass(shape)
-              break
-            case 'MultiLineString':
-              shape = turf.multiLineString(feature.geometry.coordinates)
-              point = turf.centerOfMass(shape)
-              break
-            case 'GeometryCollection':
-              // console.log(JSON.stringify(feature, null, 2))
-              shape = turf.geometryCollection(feature.geometry.geometries)
-              point = turf.centerOfMass(shape)
-              break
-          }
-          // if we have calculated the center point, store it, otherwise ignore
-          if (point) {
-            feature.properties.center = point.geometry.coordinates
+          try {
+            let point
+            let shape
+            // leaflet needs to know the center point... calculate and store it
+            // console.log(feature.geometry.type)
+            switch (feature.geometry.type) {
+              case 'LineString':
+                point = turf.center(feature)
+                break
+              case 'Polygon':
+                shape = turf.polygon(feature.geometry.coordinates)
+                point = turf.centerOfMass(shape)
+                break
+              case 'MultiPoint':
+                shape = turf.multiPoint(feature.geometry.coordinates)
+                point = turf.centerOfMass(shape)
+                break
+              case 'MultiPolygon':
+                shape = turf.multiPolygon(feature.geometry.coordinates)
+                point = turf.centerOfMass(shape)
+                break
+              case 'MultiLineString':
+                shape = turf.multiLineString(feature.geometry.coordinates)
+                point = turf.centerOfMass(shape)
+                break
+              case 'GeometryCollection':
+                // console.log(JSON.stringify(feature, null, 2))
+                shape = turf.geometryCollection(feature.geometry.geometries)
+                point = turf.centerOfMass(shape)
+                break
+            }
+            // if we have calculated the center point, store it, otherwise ignore
+            if (point) {
+              feature.properties.center = point.geometry.coordinates
+            }
+          } catch (err) {
+            console.log(`CENTERING ERROR: ${err}`)
           }
         }
         // add a bounding box property
-        feature.properties.bbox = turf.bbox(feature)
+        try {
+          feature.properties.bbox = turf.bbox(feature)
+        } catch (err) {
+          console.log(`BBOX ERROR: ${err}`)
+        }
+
         if (!feature.subscribers) feature.subscribers = [req.user._id]
         if (!feature.user) feature.user = req.user._id
         if (!feature.properties.address) feature.properties.address = 'here'
