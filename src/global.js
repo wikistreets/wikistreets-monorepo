@@ -576,7 +576,7 @@ app.markers.place = async (data, cluster) => {
         let marker = null
         // deal with Point features first
         if (point.geometry.type == 'Point') {
-          console.log(point.geometry.coordinates)
+          // console.log(point.geometry.coordinates)
           // points in leaflet have [lat,lng] format, whereas geojson has [lng,lat]
           coords = [
             point.geometry.coordinates[1],
@@ -2567,7 +2567,7 @@ const openEditFeatureForm = async (featureId) => {
       </div>`
     )
     // handle removing it
-    $('.close-icon', thumb).click((e) => {
+    $('.close-icon', thumb).on('click', (e) => {
       const filename = $(e.target).attr('ws-image-filename') // get the image title, which contains the filename
       $(`.info-window-content .thumb[ws-image-filename="${filename}"]`).remove() // remove it from screen
       filesToRemove.push(filename) // add it to list of those to remove
