@@ -857,23 +857,23 @@ async function initMap() {
   /**** SET UP EVENT HANDLERS ****/
 
   // allow infoWindow to close when icon clicked
-  // $('.info-window .close-icon').click(collapseInfoWindow)
+  // $('.info-window .close-icon').on('click', collapseInfoWindow)
 
   // check that user is logged in when they try to expand the map selector
-  $('.control-map-selector').click(() => {
+  $('.control-map-selector').on('click', () => {
     app.auth.getToken()
       ? openMapSelectorPanel()
       : openSigninPanel('Log in to view your maps')
   })
 
-  $('.signin-link').click((e) => {
+  $('.signin-link').on('click', (e) => {
     e.preventDefault()
     //$('.control-map-selector').dropdown('hide') // hide the dropdown
     openSigninPanel()
   })
 
   // pop open feature form when control icon clicked
-  $('.control-add-feature').click(() => {
+  $('.control-add-feature').on('click', () => {
     if (app.auth.getToken() && !app.auth.isEditor()) {
       // user is logged-in, but not a contributor on this private map
       const errorString = $('.error-container').html()
@@ -881,7 +881,7 @@ async function initMap() {
       $('.info-window-content .error-message').html(
         'You do not have permission to modify this map.'
       )
-      $('.info-window-content .ok-button').click((e) => {
+      $('.info-window-content .ok-button').on('click', (e) => {
         collapseInfoWindow()
       })
       expandInfoWindow(30, 70)
@@ -891,7 +891,7 @@ async function initMap() {
   })
 
   // geolocate when icon clicked
-  $('.control-find-location').click(async () => {
+  $('.control-find-location').on('click', async () => {
     // center on browser's geoposition
     panToPersonalLocation()
       .then((coords) => {
@@ -930,10 +930,10 @@ async function initMap() {
   })
 
   // pop open feature form when control icon clicked
-  $('.control-search-address').click(openSearchAddressForm)
+  $('.control-search-address').on('click', openSearchAddressForm)
 
   // pop open about us when logo is clicked
-  $('.logo').click(openAboutUsForm)
+  $('.logo').on('click', openAboutUsForm)
 
   // handle map events...
 
@@ -1529,7 +1529,7 @@ Posted by
     deleteComment(data._id, featureId)
   })
   // handle click on username
-  $('.user-link', contentEl).click((e) => {
+  $('.user-link', contentEl).on('click', (e) => {
     e.preventDefault()
     // open user profile for this user
     const userId = $(e.target).attr('ws-user-id')
@@ -1650,11 +1650,11 @@ const showInfoWindow = (marker) => {
   })
 
   // handle previous and next feature button clicks
-  $('.info-window-content .prev-feature-link').click((e) => {
+  $('.info-window-content .prev-feature-link').on('click', (e) => {
     e.preventDefault()
     app.markers.previous(marker)
   })
-  $('.info-window-content .next-feature-link').click((e) => {
+  $('.info-window-content .next-feature-link').on('click', (e) => {
     e.preventDefault()
     app.markers.next(marker)
   })
@@ -1720,7 +1720,7 @@ const showInfoWindow = (marker) => {
     }
 
     // handle click on username event
-    $('.info-window .user-link').click((e) => {
+    $('.info-window .user-link').on('click', (e) => {
       e.preventDefault()
 
       // get target userid
@@ -1732,7 +1732,7 @@ const showInfoWindow = (marker) => {
   })
 
   // activate copy link button
-  $('.copy-feature-link').click((e) => {
+  $('.copy-feature-link').on('click', (e) => {
     e.preventDefault()
     const text = window.location.href
     navigator.clipboard.writeText(text).then(
@@ -1755,7 +1755,7 @@ const showInfoWindow = (marker) => {
   })
 
   // activate delete button
-  $('.delete-feature-link').click((e) => {
+  $('.delete-feature-link').on('click', (e) => {
     e.preventDefault()
     // put up one small barrier
     if (!window.confirm(`Delete this post?`)) return
@@ -1786,7 +1786,7 @@ const showInfoWindow = (marker) => {
   }) // if delete link clicked
 
   // activate edit button
-  $('.edit-feature-link').click((e) => {
+  $('.edit-feature-link').on('click', (e) => {
     e.preventDefault()
     // grab the id of the feature to delete
     const featureId = $(e.target).attr('ws-feature-id')
@@ -1843,19 +1843,22 @@ const showInfoWindow = (marker) => {
   })
 
   // show comment form when button clicked
-  $('.info-window-content .show-comment-form-button button').click((e) => {
-    // leaving comments requires login
-    if (!app.auth.getToken()) {
-      return openSigninPanel('Please log in to leave a comment')
+  $('.info-window-content .show-comment-form-button button').on(
+    'click',
+    (e) => {
+      // leaving comments requires login
+      if (!app.auth.getToken()) {
+        return openSigninPanel('Please log in to leave a comment')
+      }
+      $('.info-window-content .comment-form-container').show() // show the form
+      // scroll to textarea field
+      $('.info-window').scrollTop(
+        $('.info-window-content .comment-form-container').offset().top
+      )
+      $('.info-window-content .comment-form-container textarea').focus() // focus on textarea
+      $('.info-window-content .show-comment-form-button').hide() // hide the button
     }
-    $('.info-window-content .comment-form-container').show() // show the form
-    // scroll to textarea field
-    $('.info-window').scrollTop(
-      $('.info-window-content .comment-form-container').offset().top
-    )
-    $('.info-window-content .comment-form-container textarea').focus() // focus on textarea
-    $('.info-window-content .show-comment-form-button').hide() // hide the button
-  })
+  )
 
   // expand textarea when clicked into
   // $('.info-window-content .comment-form textarea').focus((e) => {
@@ -2043,7 +2046,7 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
 
 const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
   // activate expand/contract button
-  $('.info-window .expand-contract-button').click((e) => {
+  $('.info-window .expand-contract-button').on('click', (e) => {
     e.preventDefault()
     const buttonEl = $('.info-window .expand-contract-button')
     if (buttonEl.hasClass('expanded')) {
@@ -2410,7 +2413,7 @@ const openFeatureForm = async (point = false) => {
   fuploader.init() // initalize settings
 
   // activate add image link
-  $('.add-photos-link', formEl).click((e) => {
+  $('.add-photos-link', formEl).on('click', (e) => {
     e.preventDefault()
     $('input[type="file"]', formEl).trigger('click')
   })
@@ -2627,13 +2630,13 @@ const openEditFeatureForm = async (featureId) => {
   fuploader.init() // initalize settings
 
   // activate add image link
-  $('.info-window-content .add-photos-link').click((e) => {
+  $('.info-window-content .add-photos-link').on('click', (e) => {
     e.preventDefault()
     $('.info-window-content input[type="file"]').trigger('click')
   })
 
   // activate cancel button
-  $('.info-window .cancel-link').click(async (e) => {
+  $('.info-window .cancel-link').on('click', async (e) => {
     e.preventDefault()
     showInfoWindow(marker) // switch to feature detail view
   })
@@ -2766,7 +2769,7 @@ const openSearchAddressForm = () => {
             2
           )}">${data.name}</a>`
         )
-        item.click((e) => {
+        item.on('click', (e) => {
           e.preventDefault()
           // what to do after clicking this address
           // app.featureCollection.panTo(data.coords)
@@ -2820,7 +2823,7 @@ const openGeopositionUnavailableForm = () => {
   // copy the search address form into the infowindow
   const infoWindowHTML = $('.geoposition-error-container').html()
   $('.info-window-content').html(infoWindowHTML)
-  $('.info-window-content .ok-button').click((e) => {
+  $('.info-window-content .ok-button').on('click', (e) => {
     collapseInfoWindow()
   })
 
@@ -2877,13 +2880,13 @@ const openSigninPanel = async (title = false, expand = true) => {
   // add title, if any
   if (title) $('.info-window-content h2.panel-title').html(title)
   // activate link to switch to signup panel
-  $('.info-window .signup-link').click((e) => {
+  $('.info-window .signup-link').on('click', (e) => {
     e.preventDefault()
     openSignupPanel()
   })
 
   // activate link to reset password
-  $('.info-window .reset-password-link').click((e) => {
+  $('.info-window .reset-password-link').on('click', (e) => {
     e.preventDefault()
     openResetPasswordPanel()
   })
@@ -2933,7 +2936,7 @@ const openSignupPanel = async () => {
   $('.info-window-content').html(infoWindowHTML)
 
   // activate link to switch to signup panel
-  $('.info-window .signin-link').click((e) => {
+  $('.info-window .signin-link').on('click', (e) => {
     e.preventDefault()
     openSigninPanel()
   })
@@ -3224,7 +3227,7 @@ near ${addressTruncated}.
   })
 
   // handle click on username
-  $('.user-link', listEl).click((e) => {
+  $('.user-link', listEl).on('click', (e) => {
     e.preventDefault()
     e.stopPropagation() // prevent list item click event from being triggered
     // open user profile for this user
@@ -3336,7 +3339,7 @@ const openContributorsList = async () => {
   })
 
   // handle click on username
-  $('.user-link', listEl).click((e) => {
+  $('.user-link', listEl).on('click', (e) => {
     e.preventDefault()
     e.stopPropagation() // prevent list item click event from being triggered
     // open user profile for this user
@@ -3375,7 +3378,7 @@ const openErrorPanel = (message) => {
   const infoWindowHTML = $('.error-container').html()
   $('.info-window-content').html(infoWindowHTML)
   $('.error-message').html(message)
-  $('.info-window-content .ok-button').click((e) => {
+  $('.info-window-content .ok-button').on('click', (e) => {
     collapseInfoWindow()
   })
 
@@ -3395,7 +3398,7 @@ const activateForkButton = () => {
     window.location.href = `${app.apis.wikistreets.staticMapUrl}/${mapData.publicId}`
   })
 
-  $('.info-window .cancel-link').click(async (e) => {
+  $('.info-window .cancel-link').on('click', async (e) => {
     e.preventDefault()
     collapseInfoWindow()
   })

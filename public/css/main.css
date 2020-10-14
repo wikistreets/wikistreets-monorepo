@@ -573,7 +573,7 @@ button.dropdown-toggle img {
   .info-window {
     /* info window is always visible */
     display: block;
-    height: auto;
+    height: 100vh; /* auto; */
     overflow: auto;
     width: 100%;
     position: static;
