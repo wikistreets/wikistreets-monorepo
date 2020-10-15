@@ -96,6 +96,9 @@ const featureCollectionRouter = ({ config }) => {
         })
       })
 
+      // no need to send back all the feature data
+      featureCollection.features = []
+
       res.json({
         status: true,
         message: 'success',
