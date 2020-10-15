@@ -458,7 +458,7 @@ const featureCollectionRouter = ({ config }) => {
 
       // if searching since a particular date, remove features created earlier
       if (sinceDate) {
-        console.log(`since: ${sinceDate}`)
+        // console.log(`since: ${sinceDate}`)
         const filteredFeatures = featureCollection.features.filter(
           (feature, i, arr) => {
             const updatedDate = new Date(feature.updatedAt)
