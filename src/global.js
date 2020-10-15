@@ -164,6 +164,7 @@ const app = {
     numForks: 0,
     dateModified: '',
     dateLastFetched: null,
+    currentlyFetching: false,
     panTo: (coords) => {
       app.featureCollection.element.panTo(coords)
       // store this position
@@ -721,7 +722,10 @@ app.fetchFeatureCollection = async (sinceDate = null) => {
   // record the date of this fetch
   app.featureCollection.dateLastFetched = new Date()
 
+  app.featureCollection.currentlyFetching = true // flag that we're fetching so we don't do more than one at a time
   return app.myFetch(apiUrl, 'GET', options).then((data) => {
+    app.featureCollection.currentlyFetching = false // flag that we're done fetching so we allow subsequent fetches
+
     // get markers
     app.features.features = data.features
 
@@ -863,7 +867,9 @@ async function initMap() {
     // console.log('loading new markers')
     // fetch feaatureCollection data from server
     // don't re-center the map, fetch only new data since last fetch
-    populateMap(false, app.featureCollection.dateLastFetched)
+    if (!app.featureCollection.currentlyFetching) {
+      populateMap(false, app.featureCollection.dateLastFetched)
+    }
   }, 15000)
 
   /**** SET UP EVENT HANDLERS ****/
