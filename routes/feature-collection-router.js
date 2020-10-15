@@ -406,9 +406,9 @@ const featureCollectionRouter = ({ config }) => {
     async (req, res) => {
       const publicId = req.params.publicId
       const sinceDate = req.query.since // optional param to retrieve only features since a given date
+
       let featureCollection = await FeatureCollection.findOne({
         publicId: publicId,
-        sinceDate: sinceDate,
       })
         .populate('contributors', ['_id', 'handle'])
         .populate('forkedFrom', ['title', 'publicId'])
@@ -454,6 +454,19 @@ const featureCollectionRouter = ({ config }) => {
           bbox: [],
           saved: false, // not a real featureCollection
         }
+      }
+
+      // if searching since a particular date, remove features created earlier
+      if (sinceDate) {
+        console.log(`since: ${sinceDate}`)
+        const filteredFeatures = featureCollection.features.filter(
+          (feature, i, arr) => {
+            const updatedDate = new Date(feature.updatedAt)
+            const thresholdDate = new Date(sinceDate)
+            return updatedDate >= thresholdDate
+          }
+        )
+        featureCollection.features = filteredFeatures
       }
 
       // console.log(`MAP: ${map}`)
@@ -510,19 +523,19 @@ const featureCollectionRouter = ({ config }) => {
       newFeatures.forEach((feature) => {
         // do a bit of cleanup
 
-        function toLowerCaseKeys(obj) {
-          return Object.keys(obj).reduce(function (accum, key) {
-            if (typeof obj[key] === 'object' && obj[key] !== null) {
-              // it's a sub-object!
-              obj[key] = toLowerCaseKeys(obj[key])
-            }
-            accum[key.toLowerCase()] = obj[key]
-            return accum
-          }, {})
-        }
+        // function toLowerCaseKeys(obj) {
+        //   return Object.keys(obj).reduce(function (accum, key) {
+        //     if (typeof obj[key] === 'object' && obj[key] !== null) {
+        //       // it's a sub-object!
+        //       obj[key] = toLowerCaseKeys(obj[key])
+        //     }
+        //     accum[key.toLowerCase()] = obj[key]
+        //     return accum
+        //   }, {})
+        // }
 
         // convert all keys to lowercase
-        feature = toLowerCaseKeys(feature)
+        // feature = toLowerCaseKeys(feature)
         // console.log(JSON.stringify(feature, null, 2))
 
         if (!feature.properties) feature.properties = {} // allows us to add properties later
@@ -556,7 +569,6 @@ const featureCollectionRouter = ({ config }) => {
             let point
             let shape
             // leaflet needs to know the center point... calculate and store it
-            // console.log(feature.geometry.type)
             switch (feature.geometry.type) {
               case 'LineString':
                 point = turf.center(feature)
@@ -630,6 +642,10 @@ const featureCollectionRouter = ({ config }) => {
         .populate('contributors', ['_id', 'handle'])
         .populate('features.user', ['_id', 'handle'])
         .populate('features.properties.comments.user', ['_id', 'handle'])
+
+      // save to this user's account
+      req.user.featureCollections.push(featureCollection)
+      req.user.save()
 
       res.json({
         status: 'success',

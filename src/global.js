@@ -163,6 +163,7 @@ const app = {
     forks: [],
     numForks: 0,
     dateModified: '',
+    dateLastFetched: null,
     panTo: (coords) => {
       app.featureCollection.element.panTo(coords)
       // store this position
@@ -714,7 +715,13 @@ app.fetchFeatureCollection = async (sinceDate = null) => {
   let apiUrl = `${
     app.apis.wikistreets.getFeatureCollectionUrl
   }/${app.featureCollection.getPublicIdFromUrl()}`
-  return app.myFetch(apiUrl).then((data) => {
+
+  // if looking for updates since a particular date...
+  const options = sinceDate ? { since: sinceDate.toISOString() } : {}
+  // record the date of this fetch
+  app.featureCollection.dateLastFetched = new Date()
+
+  return app.myFetch(apiUrl, 'GET', options).then((data) => {
     // get markers
     app.features.features = data.features
 
@@ -744,9 +751,9 @@ app.user.fetch = async () => {
     })
 }
 
-const populateMap = async (recenter = true) => {
+const populateMap = async (recenter = true, sinceDate = null) => {
   // get the FeatureCollection data from server
-  const data = await app.fetchFeatureCollection()
+  const data = await app.fetchFeatureCollection(sinceDate)
 
   // recenter on map bounding box
   if (recenter && data.bbox && data.bbox.length) {
@@ -800,6 +807,9 @@ const populateMap = async (recenter = true) => {
 }
 
 async function initMap() {
+  // show loading icon
+  showSpinner($('.info-window'))
+
   let coords = app.browserGeolocation.getCoords() // default coords
   // use last known coords, if any
   if (app.localStorage.getItem('coords'))
@@ -851,7 +861,9 @@ async function initMap() {
   // do this again every 15 seconds
   setInterval(() => {
     // console.log('loading new markers')
-    populateMap(false) // don't re-center the map
+    // fetch feaatureCollection data from server
+    // don't re-center the map, fetch only new data since last fetch
+    populateMap(false, app.featureCollection.dateLastFetched)
   }, 15000)
 
   /**** SET UP EVENT HANDLERS ****/
@@ -1000,6 +1012,9 @@ async function initMap() {
       collapseInfoWindow()
     }
   }
+
+  // hide loading icon when done
+  hideSpinner($('.info-window'))
 } // initMap
 
 // handle safari bug with vh units
@@ -3520,7 +3535,6 @@ const openImportDataPanel = () => {
         // console.log(JSON.stringify(res.data.features, null, 2))
         try {
           app.markers.place(res.data.features)
-          console.log('placed')
         } catch (err) {
           console.log(err)
         }
