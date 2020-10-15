@@ -148,11 +148,14 @@ const app = {
       featurecreate: 17,
       featureview: 15,
       getDefault: () => {
-        return app.localStorage.getItem('zoom')
+        let zoomLevel = app.localStorage.getItem('zoom')
           ? parseInt(app.localStorage.getItem('zoom'))
           : 4
+        if (zoomLevel < 1) zoomLevel = 1
+        return zoomLevel
       },
       setDefault: (zoomLevel = 4) => {
+        if (zoomLevel <= 1) zoomLevel = 1
         app.localStorage.setItem('zoom', zoomLevel)
       },
     },
@@ -835,6 +838,7 @@ async function initMap() {
     attribution:
       '&copy; <a target="_new" href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a target="_new" href="https://www.openstreetmap.org/copyright">ODbL</a>, Imagery &copy; <a target="_new" href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 21,
+    minZoom: 1,
     id: 'mapbox/streets-v11',
     tileSize: 512,
     zoomOffset: -1,
@@ -1356,7 +1360,7 @@ const createMapListItem = (
   $('.map-title', mapListing).html(featureCollectionTitle) // inject the map title
   $('.map-title', mapListing).attr('href', `/map/${data.publicId}`) // activate link
   if (showForkedFrom && data.forkedFrom) showForkedFromInfo(data, mapListing) // show forked info if any
-  $('.num-markers', mapListing).html(data.numMarkers)
+  $('.num-markers', mapListing).html(data.numFeatures)
   // show link to view markers, if relevant
   if (isSelectedMap && app.markers.markers.length) {
     $('.marker-map-link', mapListing).html(`<a href="#">posts</a>`)
@@ -3102,7 +3106,7 @@ const openUserProfile = async (handle, userId) => {
         // prepare some metadata about the map
         data.numForks = data.forks ? data.forks.length : 0
         data.numContributors = data.contributors ? data.contributors.length : 0
-        data.numMarkers = data.features ? data.features.length : 0
+        data.numFeatures = data.numFeatures ? data.numFeatures : 0
 
         // create and populate the map list item
         const mapListing = createMapListItem(data, true, false)
@@ -3141,7 +3145,7 @@ const openFeatureList = async () => {
   const mapData = {
     title: app.featureCollection.getTitle(),
     publicId: app.featureCollection.getPublicIdFromUrl(),
-    numMarkers: app.markers.markers.length,
+    numFeatures: app.markers.markers.length,
     forks: app.featureCollection.forks,
     numForks: app.featureCollection.numForks,
     forkedFrom: app.featureCollection.forkedFrom,
@@ -3288,7 +3292,7 @@ const openContributorsList = async () => {
   const mapData = {
     title: app.featureCollection.getTitle(),
     publicId: app.featureCollection.getPublicIdFromUrl(),
-    numMarkers: app.markers.markers.length,
+    numFeatures: app.markers.markers.length,
     forks: app.featureCollection.forks,
     numForks: app.featureCollection.numForks,
     forkedFrom: app.featureCollection.forkedFrom,
@@ -3594,7 +3598,7 @@ const openMapSelectorPanel = async () => {
   const mapData = {
     title: app.featureCollection.getTitle(),
     publicId: app.featureCollection.publicId,
-    numMarkers: app.markers.markers.length,
+    numFeatures: app.markers.markers.length,
     forks: app.featureCollection.forks,
     numForks: app.featureCollection.numForks,
     forkedFrom: app.featureCollection.forkedFrom,
@@ -3649,7 +3653,7 @@ const openMapSelectorPanel = async () => {
     // prepare some metadata about the map
     data.numForks = data.forks ? data.forks.length : 0
     data.numContributors = data.contributors ? data.contributors.length : 0
-    data.numMarkers = data.features ? data.features.length : 0
+    data.numFeatures = data.numFeatures ? data.numFeatures : 0
 
     // create and populate the map list item
     const mapListing = createMapListItem(data, true, false)

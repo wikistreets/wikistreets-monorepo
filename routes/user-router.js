@@ -285,8 +285,16 @@ const userRouter = ({ config }) => {
         })
       })
 
+    // count features and remove actual features
+    let u = JSON.parse(JSON.stringify(user)) // remove mongoose junk
+    u.featureCollections.forEach((fc) => {
+      fc.numFeatures = fc.features.length
+      fc.features = []
+    })
+    // console.log(JSON.stringify(u, null, 2))
+
     // console.log(`USER: ${user}`)
-    res.json(user)
+    res.json(u)
   })
 
   // route for HTTP GET requests to a user's JSON data
@@ -321,8 +329,15 @@ const userRouter = ({ config }) => {
         })
       })
 
+    // count features and remove actual features
+    let u = JSON.parse(JSON.stringify(user)) // remove mongoose junk
+    u.featureCollections.forEach((fc) => {
+      fc.numFeatures = fc.features.length
+      fc.features = []
+    })
+
     // console.log(`USER: ${JSON.stringify(user, null, 2)}`)
-    res.json(user)
+    res.json(u)
   })
 
   return router

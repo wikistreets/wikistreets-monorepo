@@ -627,6 +627,9 @@ const featureCollectionRouter = ({ config }) => {
           $or: [{ limitContributors: false }, { contributors: req.user }],
         },
         {
+          $set: {
+            updatedAt: new Date(),
+          },
           $addToSet: {
             contributors: req.user,
             subscribers: req.user,

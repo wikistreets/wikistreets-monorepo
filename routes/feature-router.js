@@ -179,6 +179,10 @@ const featureRouter = ({ config }) => {
             $or: [{ limitContributors: false }, { contributors: req.user }],
           },
           {
+            $set: {
+              // update timestamps
+              updatedAt: new Date(),
+            },
             $pull: { features: { _id: featureId } }, // remove the feature from the map
           },
           { new: true } // new = return doc as it is after update, upsert = insert new doc if none exists
@@ -295,11 +299,10 @@ const featureRouter = ({ config }) => {
 
         // set up changes we want to make to the overall map
         let updates = {
-          // save the most recently viewed center point of the map
-          // centerPoint: {
-          //   lat: req.body.lat,
-          //   lng: req.body.lng,
-          // },
+          $set: {
+            // update timestamps
+            updatedAt: new Date(),
+          },
           $push: { features: feature }, // add the new feature to the map
           $addToSet: {
             subscribers: req.user,
@@ -497,6 +500,8 @@ const featureRouter = ({ config }) => {
           },
           {
             $set: {
+              updatedAt: new Date(),
+              'features.$.updatedAt': new Date(),
               // centerPoint: data.position, // map's center point
               'features.$.user': data.user,
               'features.$.geometry.type': data.geometry.type,
@@ -574,7 +579,6 @@ const featureRouter = ({ config }) => {
               console.log(`ERROR ADDING: ${err}`)
             })
         }
-        console.log('got here 2')
         // tack on the bounding box
         // for some reason we need to make a JSON object with none of the mongoose nonsense for buffering to work
         const simpleObject = JSON.parse(
@@ -588,7 +592,6 @@ const featureRouter = ({ config }) => {
           }
         ) // buffer around the points
         featureCollection.bbox = turf.bbox(buffered)
-        console.log('got here 3')
 
         // // add this map to the user's list of maps
         req.user.featureCollections.pull(featureCollection._id) // first remove from list
@@ -683,6 +686,11 @@ const featureRouter = ({ config }) => {
             'features._id': featureId,
           },
           {
+            $set: {
+              // update timestamps
+              updatedAt: new Date(),
+              'features.$.updatedAt': new Date(),
+            },
             // add the comment
             $push: {
               'features.$.properties.comments': comment,
@@ -843,6 +851,10 @@ const featureRouter = ({ config }) => {
             'features._id': featureId,
           },
           {
+            $set: {
+              // update timestamps
+              updatedAt: new Date(),
+            },
             $pull: { 'features.$.properties.comments': { _id: commentId } }, // remove the comment from the feature
           },
           { new: true } // new = return doc as it is after update, upsert = insert new doc if none exists
