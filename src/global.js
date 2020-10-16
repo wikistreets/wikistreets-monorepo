@@ -279,7 +279,7 @@ const app = {
       //     markerColor: 'green',
       //   }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
       // },
-      unknownPhoto: {
+      photo: {
         default: L.ExtraMarkers.icon({
           icon: 'fa-camera',
           shape: 'square',
@@ -293,7 +293,7 @@ const app = {
           markerColor: 'red',
         }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
       },
-      unknownText: {
+      text: {
         default: L.ExtraMarkers.icon({
           icon: 'fa-align-left',
           shape: 'square',
@@ -617,6 +617,13 @@ app.markers.place = async (data, cluster) => {
             riseOnHover: true,
           })
 
+          // determine whether this marker has a photo or only text
+          if (point.properties.photos && point.properties.photos.length) {
+            marker.featureType = 'photo'
+          } else {
+            marker.featureType = 'text'
+          }
+
           let icon // the icon styles for this marker
           const postBody = point.properties.body
           if (
@@ -635,12 +642,6 @@ app.markers.place = async (data, cluster) => {
           }
           if (!icon) {
             // use the default markers
-            // determine whether this marker has a photo or only text
-            if (point.properties.photos && point.properties.photos.length) {
-              marker.featureType = 'unknownPhoto'
-            } else {
-              marker.featureType = 'unknownText'
-            }
             icon = app.markers.icons[marker.featureType].default
           }
           // create the marker with default z-index
