@@ -548,17 +548,20 @@ app.markers.findById = (featureId) => {
   })
   return match
 }
+app.featureCollection.unpackYAML = (feature) => {
+  // extract the YAML front matter data from the body content, if any
+  if (feature.properties.body) {
+    const orig = feature.properties.body // the full body including any YAML and content
+    feature.properties.body = matter(feature.properties.body) // split into data and content
+    feature.properties.body.orig = orig // attach original
+  }
+  return feature
+}
+
 app.markers.place = async (data, cluster) => {
   if (!data) return // ignore no data!
   // make a marker from each data point
   data.map((point, i, arr) => {
-    // extract the YAML front matter data from the body content, if any
-    if (point.properties.body) {
-      const orig = point.properties.body // the full body including any YAML and content
-      point.properties.body = matter(point.properties.body) // split into data and content
-      point.properties.body.orig = orig // attach original
-    }
-
     // check whether this marker already exists on map
     const existingMarker = app.markers.findById(point._id)
     if (existingMarker) {
@@ -614,16 +617,35 @@ app.markers.place = async (data, cluster) => {
             riseOnHover: true,
           })
 
-          // determine whether this marker has a photo or only text
-          if (point.properties.photos && point.properties.photos.length) {
-            marker.featureType = 'unknownPhoto'
-          } else {
-            marker.featureType = 'unknownText'
+          let icon // the icon styles for this marker
+          const postBody = point.properties.body
+          if (
+            postBody &&
+            postBody.data &&
+            postBody.data.markerStyles &&
+            postBody.data.markerStyles.default
+          ) {
+            // there are custom marker settings in the post's YAML... use them
+            const markerStyles = point.properties.body.data.markerStyles.default
+            try {
+              icon = L.ExtraMarkers.icon(markerStyles)
+            } catch (err) {
+              // error parsing marker styles
+            }
           }
-
-          // de-highlight the current marker
+          if (!icon) {
+            // use the default markers
+            // determine whether this marker has a photo or only text
+            if (point.properties.photos && point.properties.photos.length) {
+              marker.featureType = 'unknownPhoto'
+            } else {
+              marker.featureType = 'unknownText'
+            }
+            icon = app.markers.icons[marker.featureType].default
+          }
+          // create the marker with default z-index
+          marker.setIcon(icon)
           marker.setZIndexOffset(app.markers.zIndex.default)
-          marker.setIcon(app.markers.icons[marker.featureType].default)
         } else {
           // this is a non-point geojson shape
           marker = L.geoJSON(point)
@@ -687,9 +709,29 @@ app.markers.activate = (marker = app.markers.current) => {
   marker.isOpen = true
   // change its icon color
   if (marker.featureData.geometry.type == 'Point') {
+    let icon
+    const postBody = marker.featureData.properties.body
+    if (
+      postBody &&
+      postBody.data &&
+      postBody.data.markerStyles &&
+      postBody.data.markerStyles.default
+    ) {
+      // there are custom marker settings in the post's YAML... use them
+      const markerStyles = postBody.data.markerStyles.active
+      try {
+        icon = L.ExtraMarkers.icon(markerStyles)
+      } catch (err) {
+        // error parsing marker styles
+      }
+    }
+    if (!icon) {
+      icon = app.markers.icons[marker.featureType].active
+    }
     marker.setZIndexOffset(app.markers.zIndex.active)
-    marker.setIcon(app.markers.icons[marker.featureType].active)
+    marker.setIcon(icon)
   } else {
+    // it's another geojson shape
     marker.setStyle(() => {
       return app.markers.geoJSONStyles.active
     })
@@ -703,7 +745,29 @@ app.markers.deactivate = (marker = app.markers.current) => {
     marker.isOpen = false
     if (marker.featureData.geometry.type == 'Point') {
       marker.setZIndexOffset(app.markers.zIndex.default)
-      marker.setIcon(app.markers.icons[marker.featureType].default)
+
+      let icon
+      const postBody = marker.featureData.properties.body
+      if (
+        postBody &&
+        postBody.data &&
+        postBody.data.markerStyles &&
+        postBody.data.markerStyles.default
+      ) {
+        // there are custom marker settings in the post's YAML... use them
+        const markerStyles = postBody.data.markerStyles.default
+        try {
+          icon = L.ExtraMarkers.icon(markerStyles)
+        } catch (err) {
+          // error parsing marker styles
+        }
+      }
+      if (!icon) {
+        icon = app.markers.icons[marker.featureType].default
+      }
+      // set the marker with icon and default z-index
+      marker.setIcon(icon)
+      marker.setZIndexOffset(app.markers.zIndex.default)
     } else {
       marker.setStyle(() => {
         return app.markers.geoJSONStyles.default
@@ -841,6 +905,11 @@ const populateMap = async (recenter = true, sinceDate = null) => {
 
   // extract the features
   const features = data.features
+
+  // unpack any metadata within the body of each feature
+  features.map((feature, i, arr) => {
+    features[i] = app.featureCollection.unpackYAML(feature)
+  })
 
   // place new markers down
   await app.markers.place(features, cluster)
