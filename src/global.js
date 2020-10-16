@@ -558,19 +558,19 @@ app.featureCollection.unpackYAML = (feature) => {
   return feature
 }
 
-app.markers.place = async (data, cluster) => {
-  if (!data) return // ignore no data!
+app.markers.place = async (features, cluster) => {
+  if (!features) return // ignore no data!
   // make a marker from each data point
-  data.map((point, i, arr) => {
+  features.map((feature, i, arr) => {
     // check whether this marker already exists on map
-    const marker = app.markers.findById(point._id)
+    const marker = app.markers.findById(feature._id)
     if (marker) {
       // marker exists already... just update data, if necessary
-      point = app.featureCollection.unpackYAML(point)
-      marker.featureData = point // save the data
+      feature = app.featureCollection.unpackYAML(feature)
+      marker.featureData = feature // save the data
 
       // determine whether this marker has a photo or only text
-      if (point.properties.photos && point.properties.photos.length) {
+      if (feature.properties.photos && feature.properties.photos.length) {
         marker.featureType = 'photo'
       } else {
         marker.featureType = 'text'
@@ -581,13 +581,13 @@ app.markers.place = async (data, cluster) => {
 
       // update the marker position unless it's currently being edited
       const isBeingEdited =
-        $(`.feature-form[ws-feature-id="${point._id}"]`).length > 0
+        $(`.feature-form[ws-feature-id="${feature._id}"]`).length > 0
       if (!isBeingEdited) {
         try {
           // this only works for points
           marker.setLatLng({
-            lat: point.geometry.coordinates[1], //point.position.lat,
-            lng: point.geometry.coordinates[0], //point.position.lng,
+            lat: feature.geometry.coordinates[1], //point.position.lat,
+            lng: feature.geometry.coordinates[0], //point.position.lng,
           }) // reposition it
         } catch (err) {
           // this marker is not a point
@@ -595,15 +595,15 @@ app.markers.place = async (data, cluster) => {
       }
 
       // update visible info, if it's currently being viewed open on the page
-      const isBeingViewed = $(`.feature-detail[ws-feature-id="${point._id}"]`)
+      const isBeingViewed = $(`.feature-detail[ws-feature-id="${feature._id}"]`)
         .length
       if (isBeingViewed) {
         // check for comments not yet on the page
-        point.properties.comments.forEach((comment) => {
+        feature.properties.comments.forEach((comment) => {
           const commentEl = $(`.comment[ws-comment-id="${comment._id}"]`)
           if (!commentEl.length) {
             // comment is not on the page... put it there
-            const commentEl = createComment(comment, point._id)
+            const commentEl = createComment(comment, feature._id)
             commentEl.appendTo($('.info-window-content .existing-comments'))
             // make sure the comments are showing
             $('.info-window-content .existing-comments').show()
@@ -612,85 +612,84 @@ app.markers.place = async (data, cluster) => {
       } // if featureEls.length
     } else {
       // new marker
-      if (point.geometry != undefined && point.geometry != null) {
-        let coords = null
-        let marker = null
-        // deal with Point features first
-        if (point.geometry.type == 'Point') {
-          // console.log(point.geometry.coordinates)
-          // points in leaflet have [lat,lng] format, whereas geojson has [lng,lat]
-          coords = [
-            point.geometry.coordinates[1],
-            point.geometry.coordinates[0],
-          ]
-          marker = L.marker(coords, {
-            zIndexOffset: app.markers.zIndex.default,
-            riseOffset: app.markers.zIndex.default,
-            riseOnHover: true,
-          })
+      let coords = null
+      let marker = null
+      // deal with Point features first
+      if (feature.geometry.type == 'Point') {
+        // console.log(point.geometry.coordinates)
+        // points in leaflet have [lat,lng] format, whereas geojson has [lng,lat]
+        coords = [
+          feature.geometry.coordinates[1],
+          feature.geometry.coordinates[0],
+        ]
+        marker = L.marker(coords, {
+          zIndexOffset: app.markers.zIndex.default,
+          riseOffset: app.markers.zIndex.default,
+          riseOnHover: true,
+        })
 
-          // determine whether this marker has a photo or only text
-          if (point.properties.photos && point.properties.photos.length) {
-            marker.featureType = 'photo'
-          } else {
-            marker.featureType = 'text'
-          }
-
-          // attach the data to the marker
-          marker.featureData = point
-
-          // set the marker with correct icon and z-index
-          const icon = app.markers.getIcon(marker, 'default')
-          marker.setIcon(icon)
-          marker.setZIndexOffset(app.markers.zIndex.default)
+        // determine whether this marker has a photo or only text
+        if (feature.properties.photos && feature.properties.photos.length) {
+          marker.featureType = 'photo'
         } else {
-          // this is a non-point geojson shape
-          marker = L.geoJSON(point)
-          // attach a few userful functions for leaflet so these geojson markers behave more like point markers
-          marker.getBbox = () => {
-            const bbox = [
-              [point.properties.bbox[1], point.properties.bbox[0]],
-              [point.properties.bbox[3], point.properties.bbox[2]],
-            ]
-            return bbox
-          }
-          marker.getLatLng = () => {
-            return {
-              lat: marker.featureData.properties.center[1],
-              lng: marker.featureData.properties.center[0],
-            }
-          }
+          marker.featureType = 'text'
         }
 
-        // cluster.addLayer(marker) // add to the marker cluster
-        app.featureCollection.element.addLayer(marker) // add directly to map
+        // extract yaml metadata from body content
+        feature = app.featureCollection.unpackYAML(feature)
+        marker.featureData = feature // save the data
 
-        // add a unique id to each marker for later reference
-        marker._id = `marker-${point._id}`
-        // console.log(marker._id)
-
-        // flag whether the marker feature isopen
-        marker.isOpen = false
-
-        // keep the index number of this marker to maintain order
-        marker.index = app.markers.markers.length //i
-
-        // attach the data to the marker
-        marker.featureData = point
-
-        // add to list of markers
-        app.markers.markers.push(marker)
-
-        // // detect click events
-        marker.on('click', (e) => {
-          showInfoWindow(marker)
-          // hack to allow clicking on geojson leaflet layers to open up info window
-          if (marker.featureData.geometry.type != 'Point') {
-            // this triggers an error which somehow makes it work
-            throw `geojson click - stay calm`
+        // set the marker with correct icon and z-index
+        const icon = app.markers.getIcon(marker, 'default')
+        marker.setIcon(icon)
+        marker.setZIndexOffset(app.markers.zIndex.default)
+      } else {
+        // this is a non-point geojson shape
+        marker = L.geoJSON(feature)
+        // attach a few userful functions for leaflet so these geojson markers behave more like point markers
+        marker.getBbox = () => {
+          const bbox = [
+            [feature.properties.bbox[1], feature.properties.bbox[0]],
+            [feature.properties.bbox[3], feature.properties.bbox[2]],
+          ]
+          return bbox
+        }
+        marker.getLatLng = () => {
+          return {
+            lat: marker.featureData.properties.center[1],
+            lng: marker.featureData.properties.center[0],
           }
-        })
-      } // if
+        }
+      }
+
+      // cluster.addLayer(marker) // add to the marker cluster
+      app.featureCollection.element.addLayer(marker) // add directly to map
+
+      // add a unique id to each marker for later reference
+      marker._id = `marker-${feature._id}`
+      // console.log(marker._id)
+
+      // flag whether the marker feature isopen
+      marker.isOpen = false
+
+      // keep the index number of this marker to maintain order
+      marker.index = app.markers.markers.length //i
+
+      // attach the data to the marker
+      marker.featureData = feature
+
+      // add to list of markers
+      app.markers.markers.push(marker)
+
+      // // detect click events
+      marker.on('click', (e) => {
+        showInfoWindow(marker)
+        // hack to allow clicking on geojson leaflet layers to open up info window
+        if (marker.featureData.geometry.type != 'Point') {
+          // this triggers an error which somehow makes it work
+          throw `geojson click - stay calm`
+        }
+      })
     } // else if marker doesn't yet exist
 
     // if the feature list is currently being viewed, refresh it
@@ -865,9 +864,9 @@ const populateMap = async (recenter = true, sinceDate = null) => {
   const features = data.features
 
   // unpack any metadata within the body of each feature
-  features.map((feature, i, arr) => {
-    features[i] = app.featureCollection.unpackYAML(feature)
-  })
+  // features.map((feature, i, arr) => {
+  //   features[i] = app.featureCollection.unpackYAML(feature)
+  // })
 
   // place new markers down
   await app.markers.place(features, cluster)
