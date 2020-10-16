@@ -279,13 +279,13 @@ const app = {
       // },
       unknownPhoto: {
         default: L.ExtraMarkers.icon({
-          icon: 'fa-image',
+          icon: 'fa-camera',
           shape: 'square',
           prefix: 'fa',
           markerColor: 'black',
         }),
         active: L.ExtraMarkers.icon({
-          icon: 'fa-image',
+          icon: 'fa-camera',
           shape: 'square',
           prefix: 'fa',
           markerColor: 'red',
@@ -293,13 +293,13 @@ const app = {
       },
       unknownText: {
         default: L.ExtraMarkers.icon({
-          icon: 'fa-comment-alt',
+          icon: 'fa-align-left',
           shape: 'square',
           prefix: 'fa',
           markerColor: 'black',
         }),
         active: L.ExtraMarkers.icon({
-          icon: 'fa-comment-alt',
+          icon: 'fa-align-left',
           shape: 'square',
           prefix: 'fa',
           markerColor: 'red',
