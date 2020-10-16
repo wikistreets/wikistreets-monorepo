@@ -251,32 +251,32 @@ const app = {
     shapes: [],
     me: null,
     icons: {
-      sidewalk: {
-        default: L.ExtraMarkers.icon({
-          icon: 'fa-walking',
-          prefix: 'fa',
-          markerColor: 'red',
-        }),
-        active: L.ExtraMarkers.icon({
-          icon: 'fa-walking',
-          prefix: 'fa',
-          markerColor: 'green',
-        }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
-      },
-      street: {
-        default: L.ExtraMarkers.icon({
-          icon: 'fa-road',
-          shape: 'square',
-          prefix: 'fa',
-          markerColor: 'red',
-        }),
-        active: L.ExtraMarkers.icon({
-          icon: 'fa-road',
-          shape: 'square',
-          prefix: 'fa',
-          markerColor: 'green',
-        }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
-      },
+      // sidewalk: {
+      //   default: L.ExtraMarkers.icon({
+      //     icon: 'fa-walking',
+      //     prefix: 'fa',
+      //     markerColor: 'red',
+      //   }),
+      //   active: L.ExtraMarkers.icon({
+      //     icon: 'fa-walking',
+      //     prefix: 'fa',
+      //     markerColor: 'green',
+      //   }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
+      // },
+      // street: {
+      //   default: L.ExtraMarkers.icon({
+      //     icon: 'fa-road',
+      //     shape: 'square',
+      //     prefix: 'fa',
+      //     markerColor: 'red',
+      //   }),
+      //   active: L.ExtraMarkers.icon({
+      //     icon: 'fa-road',
+      //     shape: 'square',
+      //     prefix: 'fa',
+      //     markerColor: 'green',
+      //   }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
+      // },
       unknownPhoto: {
         default: L.ExtraMarkers.icon({
           icon: 'fa-image',
@@ -313,6 +313,18 @@ const app = {
           prefix: 'fa',
           markerColor: 'black',
         }), //{ imageUrl: '/static/images/material_design_icons/directions_walk-24px.svg' }
+      },
+    },
+    geoJSONStyles: {
+      default: {
+        color: 'blue',
+        weight: 3,
+        opacity: 0.25,
+      },
+      active: {
+        color: 'red',
+        weight: 3,
+        opacity: 0.25,
       },
     },
     size: {
@@ -650,27 +662,6 @@ app.markers.place = async (data, cluster) => {
             throw `geojson click - stay calm`
           }
         })
-        // } else {
-        //   // deal with non-Point geojson types
-        //   // check whether this shape is already on the map
-        //   let exists = false
-        //   app.markers.shapes.forEach((shape) => {
-        //     if (shape._id == point._id) exists = true
-        //   })
-        //   if (exists) return // don't re-draw an existing shape
-
-        //   // use the specified style, or a default style
-        //   const myStyle = point.properties.style || {
-        //     color: '#ff7800',
-        //     fillColor: '#00ff78',
-        //     weight: 5,
-        //     opacity: 0.65,
-        //   }
-        //   L.geoJSON(point, { style: myStyle }).addTo(
-        //     app.featureCollection.element
-        //   )
-        //   app.markers.shapes.push(point) // add to list
-        // }
       } // if
     } // else if marker doesn't yet exist
 
@@ -685,6 +676,15 @@ app.markers.activate = (marker = app.markers.current) => {
   app.markers.current = marker
   // mark it as open
   marker.isOpen = true
+  // change its icon color
+  if (marker.featureData.geometry.type == 'Point') {
+    marker.setZIndexOffset(app.markers.zIndex.active)
+    marker.setIcon(app.markers.icons[marker.featureType].active)
+  } else {
+    marker.setStyle(() => {
+      return app.markers.geoJSONStyles.active
+    })
+  }
 }
 app.markers.deactivate = (marker = app.markers.current) => {
   // return selected marker to default state
@@ -692,9 +692,13 @@ app.markers.deactivate = (marker = app.markers.current) => {
   // loop through and mark all as closed
   markerList.forEach((marker) => {
     marker.isOpen = false
-    if (marker.featureData.geometry.point == 'Point') {
+    if (marker.featureData.geometry.type == 'Point') {
       marker.setZIndexOffset(app.markers.zIndex.default)
       marker.setIcon(app.markers.icons[marker.featureType].default)
+    } else {
+      marker.setStyle(() => {
+        return app.markers.geoJSONStyles.default
+      })
     }
   })
   // there is now no active marker
@@ -877,9 +881,6 @@ async function initMap() {
   }, 15000)
 
   /**** SET UP EVENT HANDLERS ****/
-
-  // allow infoWindow to close when icon clicked
-  // $('.info-window .close-icon').on('click', collapseInfoWindow)
 
   // check that user is logged in when they try to expand the map selector
   $('.control-map-selector').on('click', () => {
@@ -1723,11 +1724,6 @@ const showInfoWindow = (marker) => {
     infoWindowHeight = 100
     mapHeight = 0
   }
-
-  // zoom in nice and close, if zoomed out
-  // if (app.featureCollection.zoom.getDefault() < app.featureCollection.zoom.featureview) {
-  //   app.featureCollection.element.setZoom(app.featureCollection.zoom.featureview)
-  // }
 
   expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
     // hack to avoid duplicate marker click events (see where we check this value on click)
