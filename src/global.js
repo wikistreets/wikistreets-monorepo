@@ -715,7 +715,7 @@ app.markers.activate = (marker = app.markers.current) => {
       postBody &&
       postBody.data &&
       postBody.data.markerStyles &&
-      postBody.data.markerStyles.default
+      postBody.data.markerStyles.active
     ) {
       // there are custom marker settings in the post's YAML... use them
       const markerStyles = postBody.data.markerStyles.active
@@ -744,8 +744,6 @@ app.markers.deactivate = (marker = app.markers.current) => {
   markerList.forEach((marker) => {
     marker.isOpen = false
     if (marker.featureData.geometry.type == 'Point') {
-      marker.setZIndexOffset(app.markers.zIndex.default)
-
       let icon
       const postBody = marker.featureData.properties.body
       if (
@@ -765,9 +763,8 @@ app.markers.deactivate = (marker = app.markers.current) => {
       if (!icon) {
         icon = app.markers.icons[marker.featureType].default
       }
-      // set the marker with icon and default z-index
-      marker.setIcon(icon)
       marker.setZIndexOffset(app.markers.zIndex.default)
+      marker.setIcon(icon)
     } else {
       marker.setStyle(() => {
         return app.markers.geoJSONStyles.default
