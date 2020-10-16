@@ -1504,7 +1504,7 @@ near ${addressTruncated}.
     !data.properties.body || !data.properties.body.content
       ? ''
       : `
-        <p>${marked(data.properties.body.content).trim()}</p>
+        <p>${marked(data.properties.body.content.trim())}</p>
     `
   contentString += `
     </article>
