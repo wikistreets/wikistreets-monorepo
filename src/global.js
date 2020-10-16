@@ -1,6 +1,8 @@
 import $ from 'jquery'
 import 'bootstrap'
-import marked from 'marked'
+import matter from 'gray-matter' // to parse YAML front matter
+import marked from 'marked' // to parse Markdown
+
 // the following are imported in the HTML since I couldn't get them to work here
 // import './fuploader'
 // import './date_diff'
@@ -550,6 +552,11 @@ app.markers.place = async (data, cluster) => {
   if (!data) return // ignore no data!
   // make a marker from each data point
   data.map((point, i, arr) => {
+    // extract the YAML front matter data from the body content
+    const orig = point.properties.body // the full body including any YAML and content
+    point.properties.body = matter(point.properties.body) // split into data and content
+    point.properties.body.orig = orig // attach original
+
     // check whether this marker already exists on map
     const existingMarker = app.markers.findById(point._id)
     if (existingMarker) {
@@ -707,15 +714,35 @@ app.markers.deactivate = (marker = app.markers.current) => {
 
 // go to the previous marker
 app.markers.previous = (marker) => {
-  let i = marker.index - 1 // next marker's index
-  if (i < 0) i = app.markers.markers.length - 1 // start from last
-  app.markers.simulateClick(app.markers.markers[i])
+  let targetMarker // the marker to show next
+  // first check whether the marker's metadata includes a prev link.
+  const body = marker.featureData.properties.body
+  if (body.data.previous) {
+    targetMarker = app.markers.findById(body.data.previous)
+  }
+  if (!targetMarker) {
+    // default... show previous in array
+    let i = marker.index - 1 // next marker's index
+    if (i < 0) i = app.markers.markers.length - 1 // start from last
+    targetMarker = app.markers.markers[i]
+  }
+  app.markers.simulateClick(targetMarker)
 }
 // go to the next marker
 app.markers.next = (marker) => {
-  let i = marker.index + 1 // next marker's index
-  if (i == app.markers.markers.length) i = 0 // start from first
-  app.markers.simulateClick(app.markers.markers[i])
+  let targetMarker // the next marker to show
+  const body = marker.featureData.properties.body
+  // first check whether the marker's metadata includes a prev link.
+  if (body.data.next) {
+    targetMarker = app.markers.findById(body.data.next)
+  }
+  if (!targetMarker) {
+    // default... show next in array
+    let i = marker.index + 1 // next marker's index
+    if (i == app.markers.markers.length) i = 0 // start from first
+    targetMarker = app.markers.markers[i]
+  }
+  app.markers.simulateClick(targetMarker)
 }
 
 app.fetchFeatureCollection = async (sinceDate = null) => {
@@ -852,6 +879,9 @@ async function initMap() {
   // fetch this user's info, if logged-in
   if (app.auth.getToken()) await app.user.fetch()
 
+  // grab any marker id in the has of the url... need to do this before populating map
+  const hash = app.featureCollection.getHashFromUrl()
+
   // load and add map data and markers to the map
   await populateMap()
 
@@ -861,7 +891,6 @@ async function initMap() {
   // load any marker in the url hash
   // need to wait till all the markers have been placed
   setTimeout(() => {
-    const hash = app.featureCollection.getHashFromUrl()
     if (hash) {
       //if there is a marker id in the url
       const marker = app.markers.findById(hash)
@@ -1456,9 +1485,6 @@ near ${addressTruncated}.
     </div>
   `
 
-  // do some cleanup of the text comment
-  // data.body = data.body.replace(/\n/g, '<br />')
-
   contentString += `
 <div class="feature-detail" ws-feature-id="${data._id}">
     <div class="prevnext-feature-container row">
@@ -1474,10 +1500,11 @@ near ${addressTruncated}.
     <article>
     ${imgString}
     `
-  contentString += !data.properties.body
-    ? ''
-    : `
-        <p>${marked(data.properties.body)}</p>
+  contentString +=
+    !data.properties.body || !data.properties.body.content
+      ? ''
+      : `
+        <p>${marked(data.properties.body.content).trim()}</p>
     `
   contentString += `
     </article>
@@ -2566,7 +2593,7 @@ const openEditFeatureForm = async (featureId) => {
   $('.info-window-content .feature-form').attr('ws-feature-id', data._id)
   $('.info-window-content .featureId').val(data._id)
   $('.info-window-content .feature-title').val(data.properties.title)
-  $('.info-window-content .feature-body').val(data.properties.body)
+  $('.info-window-content .feature-body').val(data.properties.body.orig)
   $('.info-window-content .address').html(data.properties.address)
   $('.info-window-content .geometryType').val(data.geometry.type)
   $('.info-window-content .geometryCoordinates').val(

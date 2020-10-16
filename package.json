@@ -25,6 +25,7 @@
     "express": "^4.17.1",
     "express-validator": "^6.6.1",
     "generate-password": "^1.5.1",
+    "gray-matter": "^4.0.2",
     "jpeg-autorotate": "^6.0.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.20",
