@@ -552,10 +552,12 @@ app.markers.place = async (data, cluster) => {
   if (!data) return // ignore no data!
   // make a marker from each data point
   data.map((point, i, arr) => {
-    // extract the YAML front matter data from the body content
-    const orig = point.properties.body // the full body including any YAML and content
-    point.properties.body = matter(point.properties.body) // split into data and content
-    point.properties.body.orig = orig // attach original
+    // extract the YAML front matter data from the body content, if any
+    if (point.properties.body) {
+      const orig = point.properties.body // the full body including any YAML and content
+      point.properties.body = matter(point.properties.body) // split into data and content
+      point.properties.body.orig = orig // attach original
+    }
 
     // check whether this marker already exists on map
     const existingMarker = app.markers.findById(point._id)
@@ -717,7 +719,7 @@ app.markers.previous = (marker) => {
   let targetMarker // the marker to show next
   // first check whether the marker's metadata includes a prev link.
   const body = marker.featureData.properties.body
-  if (body.data.previous) {
+  if (body && body.data && body.data.previous) {
     targetMarker = app.markers.findById(body.data.previous)
   }
   if (!targetMarker) {
@@ -733,7 +735,7 @@ app.markers.next = (marker) => {
   let targetMarker // the next marker to show
   const body = marker.featureData.properties.body
   // first check whether the marker's metadata includes a prev link.
-  if (body.data.next) {
+  if (body && body.data && body.data.next) {
     targetMarker = app.markers.findById(body.data.next)
   }
   if (!targetMarker) {
