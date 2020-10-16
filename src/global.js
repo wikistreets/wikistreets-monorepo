@@ -253,32 +253,6 @@ const app = {
     shapes: [],
     me: null,
     icons: {
-      // sidewalk: {
-      //   default: L.ExtraMarkers.icon({
-      //     icon: 'fa-walking',
-      //     prefix: 'fa',
-      //     markerColor: 'red',
-      //   }),
-      //   active: L.ExtraMarkers.icon({
-      //     icon: 'fa-walking',
-      //     prefix: 'fa',
-      //     markerColor: 'green',
-      //   }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
-      // },
-      // street: {
-      //   default: L.ExtraMarkers.icon({
-      //     icon: 'fa-road',
-      //     shape: 'square',
-      //     prefix: 'fa',
-      //     markerColor: 'red',
-      //   }),
-      //   active: L.ExtraMarkers.icon({
-      //     icon: 'fa-road',
-      //     shape: 'square',
-      //     prefix: 'fa',
-      //     markerColor: 'green',
-      //   }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
-      // },
       photo: {
         default: L.ExtraMarkers.icon({
           icon: 'fa-camera',
@@ -337,6 +311,32 @@ const app = {
       default: 50,
       active: 51,
       me: 100,
+    },
+    getIcon: (marker, state = 'default') => {
+      // return the appropriate icon for this marker
+      const feature = marker.featureData
+
+      let icon // the icon styles for this marker
+      const postBody = feature.properties.body
+      if (
+        postBody &&
+        postBody.data &&
+        postBody.data.markerStyles &&
+        postBody.data.markerStyles[state]
+      ) {
+        // there are custom marker settings in the post's YAML... use them
+        const markerStyles = postBody.data.markerStyles[state]
+        try {
+          icon = L.ExtraMarkers.icon(markerStyles)
+        } catch (err) {
+          // error parsing marker styles
+        }
+      }
+      if (!icon) {
+        // use the default markers
+        icon = app.markers.icons[marker.featureType][state]
+      }
+      return icon
     },
   },
   infoPanel: {
@@ -563,17 +563,29 @@ app.markers.place = async (data, cluster) => {
   // make a marker from each data point
   data.map((point, i, arr) => {
     // check whether this marker already exists on map
-    const existingMarker = app.markers.findById(point._id)
-    if (existingMarker) {
+    const marker = app.markers.findById(point._id)
+    if (marker) {
       // marker exists already... just update data, if necessary
-      existingMarker.featureData = point // save the data
+      point = app.featureCollection.unpackYAML(point)
+      marker.featureData = point // save the data
+
+      // determine whether this marker has a photo or only text
+      if (point.properties.photos && point.properties.photos.length) {
+        marker.featureType = 'photo'
+      } else {
+        marker.featureType = 'text'
+      }
+      // set the marker with correct icon
+      const icon = app.markers.getIcon(marker, 'default')
+      marker.setIcon(icon)
+
       // update the marker position unless it's currently being edited
       const isBeingEdited =
         $(`.feature-form[ws-feature-id="${point._id}"]`).length > 0
       if (!isBeingEdited) {
         try {
           // this only works for points
-          existingMarker.setLatLng({
+          marker.setLatLng({
             lat: point.geometry.coordinates[1], //point.position.lat,
             lng: point.geometry.coordinates[0], //point.position.lng,
           }) // reposition it
@@ -624,27 +636,11 @@ app.markers.place = async (data, cluster) => {
             marker.featureType = 'text'
           }
 
-          let icon // the icon styles for this marker
-          const postBody = point.properties.body
-          if (
-            postBody &&
-            postBody.data &&
-            postBody.data.markerStyles &&
-            postBody.data.markerStyles.default
-          ) {
-            // there are custom marker settings in the post's YAML... use them
-            const markerStyles = point.properties.body.data.markerStyles.default
-            try {
-              icon = L.ExtraMarkers.icon(markerStyles)
-            } catch (err) {
-              // error parsing marker styles
-            }
-          }
-          if (!icon) {
-            // use the default markers
-            icon = app.markers.icons[marker.featureType].default
-          }
-          // create the marker with default z-index
+          // attach the data to the marker
+          marker.featureData = point
+
+          // set the marker with correct icon and z-index
+          const icon = app.markers.getIcon(marker, 'default')
           marker.setIcon(icon)
           marker.setZIndexOffset(app.markers.zIndex.default)
         } else {
@@ -710,25 +706,7 @@ app.markers.activate = (marker = app.markers.current) => {
   marker.isOpen = true
   // change its icon color
   if (marker.featureData.geometry.type == 'Point') {
-    let icon
-    const postBody = marker.featureData.properties.body
-    if (
-      postBody &&
-      postBody.data &&
-      postBody.data.markerStyles &&
-      postBody.data.markerStyles.active
-    ) {
-      // there are custom marker settings in the post's YAML... use them
-      const markerStyles = postBody.data.markerStyles.active
-      try {
-        icon = L.ExtraMarkers.icon(markerStyles)
-      } catch (err) {
-        // error parsing marker styles
-      }
-    }
-    if (!icon) {
-      icon = app.markers.icons[marker.featureType].active
-    }
+    const icon = app.markers.getIcon(marker, 'active')
     marker.setZIndexOffset(app.markers.zIndex.active)
     marker.setIcon(icon)
   } else {
@@ -745,25 +723,7 @@ app.markers.deactivate = (marker = app.markers.current) => {
   markerList.forEach((marker) => {
     marker.isOpen = false
     if (marker.featureData.geometry.type == 'Point') {
-      let icon
-      const postBody = marker.featureData.properties.body
-      if (
-        postBody &&
-        postBody.data &&
-        postBody.data.markerStyles &&
-        postBody.data.markerStyles.default
-      ) {
-        // there are custom marker settings in the post's YAML... use them
-        const markerStyles = postBody.data.markerStyles.default
-        try {
-          icon = L.ExtraMarkers.icon(markerStyles)
-        } catch (err) {
-          // error parsing marker styles
-        }
-      }
-      if (!icon) {
-        icon = app.markers.icons[marker.featureType].default
-      }
+      const icon = app.markers.getIcon(marker, 'default')
       marker.setZIndexOffset(app.markers.zIndex.default)
       marker.setIcon(icon)
     } else {
