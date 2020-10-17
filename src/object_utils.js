@@ -5,6 +5,8 @@
  * @param {*} deep Whether to merge nested sub-documents.  Default true.
  */
 const objectMerge = (obj1, obj2, deep = true) => {
+  // create a clone of obj1 so we don't modify the original
+  obj1 = JSON.parse(JSON.stringify(obj1))
   for (let key of Object.keys(obj2)) {
     // merge sub-objects, if any
     if (deep && typeof obj2[key] === 'object' && obj2[key] !== null) {

@@ -319,11 +319,11 @@ const app = {
       if (
         postBody &&
         postBody.data &&
-        (postBody.icon ||
+        (postBody.data.icon ||
           (postBody.data.markerStyles && postBody.data.markerStyles[state]))
       ) {
         // start with a baseline icon, based on whether this post has a photo or just text
-        let markerStyles = app.markers.icons[marker.featureType][state]
+        let defaultStyles = app.markers.icons[marker.featureType][state]
 
         // there are custom marker settings in the post's YAML... either just an icon setting or a whole markerStyles object
         const postMarkerStyles = postBody.data.markerStyles
@@ -331,10 +331,10 @@ const app = {
           : { icon: postBody.data.icon }
 
         // merge the two styles
-        markerStyles = objectMerge(markerStyles, postMarkerStyles)
+        const mergedStyles = objectMerge(defaultStyles, postMarkerStyles)
 
         try {
-          icon = L.ExtraMarkers.icon(markerStyles)
+          icon = L.ExtraMarkers.icon(mergedStyles)
         } catch (err) {
           // error parsing marker styles
         }
