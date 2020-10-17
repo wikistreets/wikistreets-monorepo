@@ -4,13 +4,10 @@ import matter from 'gray-matter' // to parse YAML front matter
 import marked from 'marked' // to parse Markdown
 
 // the following are imported in the HTML since I couldn't get them to work here
-// import './fuploader'
-// import './date_diff'
+const { FUploader } = require('./fuploader')
+const { DateDiff } = require('./date_diff')
+const { objectMerge, objectKeysToLowercase } = require('./object_utils')
 // import Geolocation from './geolocation'
-// the following are bundled separately in leaflet.bundle.js to split the file sizes
-// import 'leaflet'
-// import 'leaflet-extra-markers'
-// import 'leaflet.markercluster'
 
 // app settings
 const app = {
@@ -253,42 +250,43 @@ const app = {
     shapes: [],
     me: null,
     icons: {
+      // objects used as args to L.ExtraMarkers.icon()
       photo: {
-        default: L.ExtraMarkers.icon({
+        default: {
           icon: 'fa-camera',
           shape: 'square',
           prefix: 'fa',
           markerColor: 'black',
-        }),
-        active: L.ExtraMarkers.icon({
+        },
+        active: {
           icon: 'fa-camera',
           shape: 'square',
           prefix: 'fa',
           markerColor: 'red',
-        }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
+        }, //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
       },
       text: {
-        default: L.ExtraMarkers.icon({
+        default: {
           icon: 'fa-align-left',
           shape: 'square',
           prefix: 'fa',
           markerColor: 'black',
-        }),
-        active: L.ExtraMarkers.icon({
+        },
+        active: {
           icon: 'fa-align-left',
           shape: 'square',
           prefix: 'fa',
           markerColor: 'red',
-        }), //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
+        }, //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
       },
       me: {
-        default: L.ExtraMarkers.icon({
+        default: {
           icon: 'fa-walking',
           shape: 'penta',
           extraClasses: 'me-marker',
           prefix: 'fa',
           markerColor: 'black',
-        }), //{ imageUrl: '/static/images/material_design_icons/directions_walk-24px.svg' }
+        }, //{ imageUrl: '/static/images/material_design_icons/directions_walk-24px.svg' }
       },
     },
     geoJSONStyles: {
@@ -334,7 +332,7 @@ const app = {
       }
       if (!icon) {
         // use the default markers
-        icon = app.markers.icons[marker.featureType][state]
+        icon = L.ExtraMarkers.icon(app.markers.icons[marker.featureType][state])
       }
       return icon
     },
@@ -2393,7 +2391,8 @@ const openFeatureForm = async (point = false) => {
     autoPan: true,
   }).addTo(app.featureCollection.element)
 
-  marker.setIcon(app.markers.icons.me.default)
+  const icon = L.ExtraMarkers.icon(app.markers.icons.me.default)
+  marker.setIcon(icon)
   app.markers.me = marker
 
   // save these coordinates as latest
@@ -2860,19 +2859,6 @@ const openSearchAddressForm = () => {
         })
         item.appendTo('.info-window .matching-addresses')
       })
-
-      // pan to the first search result
-      // if (results.length && results[0].coords) {
-      //   const resultCoords = results[0].coords
-      //   app.featureCollection.panTo(resultCoords)
-      //   setTimeout(() => {
-      //     if (app.markers.me && app.markers.me.setLatLng) {
-      //       // console.log('moving me');
-      //       app.markers.me.setLatLng(coords)
-      //     }
-      //   }, 250)
-      // }
-      // console.log(addresses)
     }, 1000)
   })
 

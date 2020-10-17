@@ -78,3 +78,7 @@ const DateDiff = {
     else if (days == 0) return `just now`
   },
 }
+
+module.exports = {
+  DateDiff,
+}

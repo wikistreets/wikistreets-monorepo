@@ -178,3 +178,5 @@ function FUploader(config) {
     config.thumbsContainer.el.innerHTML = ''
   }
 }
+
+module.exports = { FUploader }
