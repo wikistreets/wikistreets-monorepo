@@ -319,11 +319,20 @@ const app = {
       if (
         postBody &&
         postBody.data &&
-        postBody.data.markerStyles &&
-        postBody.data.markerStyles[state]
+        (postBody.icon ||
+          (postBody.data.markerStyles && postBody.data.markerStyles[state]))
       ) {
-        // there are custom marker settings in the post's YAML... use them
-        const markerStyles = postBody.data.markerStyles[state]
+        // start with a baseline icon, based on whether this post has a photo or just text
+        let markerStyles = app.markers.icons[marker.featureType][state]
+
+        // there are custom marker settings in the post's YAML... either just an icon setting or a whole markerStyles object
+        const postMarkerStyles = postBody.data.markerStyles
+          ? postBody.data.markerStyles[state]
+          : { icon: postBody.data.icon }
+
+        // merge the two styles
+        markerStyles = objectMerge(markerStyles, postMarkerStyles)
+
         try {
           icon = L.ExtraMarkers.icon(markerStyles)
         } catch (err) {
