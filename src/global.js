@@ -2064,7 +2064,11 @@ const hideSpinner = (containerEl) => {
 }
 
 const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
-  app.infoPanel.isExpanded = infoWindowHeight == 100 ? true : false
+  app.infoPanel.isExpanded =
+    infoWindowHeight == 100 || !app.responsive.isMobile() ? true : false
+  // add the expanded class if the info window is tall
+  if (app.infoPanel.isExpanded) $('.info-window-content').addClass('expanded')
+  else $('.info-window-content').removeClass('expanded')
 
   // convert vh units to pixel units, since safari mobile is buggy in vh
   const vH = window.innerHeight // actual viewport height
