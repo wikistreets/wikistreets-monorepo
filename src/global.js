@@ -2167,11 +2167,13 @@ const collapseInfoWindow = async (e) => {
   // remove the hash from the url
   window.history.pushState('', document.title, window.location.pathname)
 
+  const vH = window.innerHeight // actual viewport height
+
   // hide the info window on mobile
   if (app.responsive.isMobile()) {
     $('.info-window').css({
       display: 'none',
-      height: '0vh',
+      height: '0',
     })
   } else {
     // desktop mode... show list of markers
@@ -2183,7 +2185,7 @@ const collapseInfoWindow = async (e) => {
     .stop()
     .animate(
       {
-        height: '100vh',
+        height: `${window.innerHeight}px`,
       },
       () => {
         // update mode
