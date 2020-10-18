@@ -367,10 +367,10 @@ button.dropdown-toggle img {
 
 /* allow for extra carousel height if info window is tall */
 .info-window-content.expanded .carousel {
-  height: 80vh;
+  height: 60vh;
 }
 .info-window-content.expanded .carousel .carousel-inner img {
-  max-height: 80vh;
+  max-height: 60vh;
 }
 
 /* Leaflet extra markers */
