@@ -226,8 +226,7 @@ const featureRouter = ({ config }) => {
     upload.array('files', config.markers.maxFiles), // multer file upload
     handleImages(markerImageService), // sharp file editing
     [
-      body('lat').not().isEmpty().trim(),
-      body('lng').not().isEmpty().trim(),
+      body('geometryCoordinates').not().isEmpty().trim(),
       body('title').not().isEmpty().trim().escape(),
       body('address').not().isEmpty().trim().escape(),
       body('zoom').trim(),
@@ -243,10 +242,7 @@ const featureRouter = ({ config }) => {
       const featureCollectionId = req.body.featureCollectionId
       const featureCollectionTitle = req.body.featureCollectionTitle
       const data = {
-        'geometry.coordinates': [
-          parseFloat(req.body.lng),
-          parseFloat(req.body.lat),
-        ],
+        'geometry.coordinates': JSON.parse(req.body.geometryCoordinates),
         properties: {
           title: req.body.title,
           body: req.body.body,
@@ -257,6 +253,8 @@ const featureRouter = ({ config }) => {
         subscribers: [req.user._id],
         user: req.user._id,
       }
+
+      console.log(JSON.stringify(data, null, 2))
 
       // reject posts with no map
       if (!featureCollectionId) {

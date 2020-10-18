@@ -1229,8 +1229,8 @@ async function updateAddress(coords) {
   $('.street-address').html(street)
   $('input.address').val(address) // form fields
   $('span.address').html(address) // other types
-  $('.lat').val(coords.lat)
-  $('.lng').val(coords.lng)
+  // $('.lat').val(coords.lat)
+  // $('.lng').val(coords.lng)
   return address
 }
 
@@ -2432,6 +2432,11 @@ const openFeatureForm = async (point = false) => {
   // insert address
   $('.address', formEl).html(address)
 
+  // update the form's coordinates
+  $('.geometryCoordinates', formEl).val(
+    JSON.stringify([coords.lng, coords.lat])
+  )
+
   // detect dragstart events on me marker
   app.markers.me.on('dragstart', async () => {
     // close the marker popup
@@ -2450,6 +2455,11 @@ const openFeatureForm = async (point = false) => {
     //console.log('dragend panning...')
     let coords = app.browserGeolocation.getCoords()
     app.featureCollection.panTo(coords)
+
+    // update the form's coordinates
+    $('.info-window-content .geometryCoordinates').val(
+      JSON.stringify([coords.lng, coords.lat])
+    )
 
     // update street address
     const address = await updateAddress(coords)
@@ -2673,6 +2683,11 @@ const openEditFeatureForm = async (featureId) => {
       lng: marker.getLatLng().lng,
     }
 
+    // update the form's coordinates
+    $('.info-window-content .geometryCoordinates').val(
+      JSON.stringify([coords.lng, coords.lat])
+    )
+
     // center map on the me marker
     app.featureCollection.panTo(coords)
 
@@ -2774,6 +2789,11 @@ const openEditFeatureForm = async (featureId) => {
         }
         // close any open infowindow except the feature form
         // console.log(JSON.stringify(res, null, 2))
+
+        // disable dragging of point markers
+        if (marker.featureData.geometry.type == 'Point') {
+          marker.dragging.disable() // make it non-draggable
+        }
 
         // this api point returns the full map...
         // console.log(JSON.stringify(res, null, 2))
