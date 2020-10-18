@@ -1114,6 +1114,11 @@ const resizeMap = () => {
         infoWindowHeight = 100
         mapHeight = 0
       }
+      if (!app.responsive.isMobile()) {
+        // show info window
+        $('.info-window').show()
+        infoWindowHeight = 100
+      }
       expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
         app.featureCollection.element.invalidateSize(true)
       })
