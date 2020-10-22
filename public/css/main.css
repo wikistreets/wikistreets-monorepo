@@ -173,9 +173,18 @@ ul {
 .map-controls .feature-options {
   position: absolute;
   top: 30px;
-  right: 100px;
-  width: 240px;
-  border-radius: 5px;
+  /* right: 100px; */
+  left: 50%; /* center it on page, in combination with inner div */
+  width: 200px;
+}
+.map-controls .feature-options-container {
+  position: relative;
+  left: -50%; /* center it on page, in combination with outer div*/
+  z-index: 201;
+  margin: 0;
+  padding: 0;
+  background-color: white;
+  border-radius: 10px;
 }
 
 .map-controls .feature-options .map-control {
