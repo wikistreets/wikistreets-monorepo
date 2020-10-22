@@ -272,12 +272,21 @@ const app = {
       $('.map-controls .feature-options .pick-shape-msg').removeClass('hide')
       $('.map-controls .feature-options .draw-message').addClass('hide')
     },
-    showDrawInstructions: () => {
+    showDrawInstructions: (index = false) => {
+      // optional param to control index
+      if (index) app.controls.drawInstructionIndex = index
+
       const instructions = [
         'Click map to start drawing',
         'Keep clicking to draw...',
         '<a class="done-link" href="#">Click here</a> when done',
+        'Submit form to save',
       ]
+
+      // hide instructions if limit exceeded
+      if (app.controls.drawInstructionIndex >= instructions.length) {
+        app.controls.hideFeatureOptions()
+      }
 
       // show draw instructions for line/polygon
       $('.map-controls .feature-options .map-control').addClass('hide')
@@ -285,7 +294,10 @@ const app = {
       $('.map-controls .feature-options .draw-message').html(
         instructions[app.controls.drawInstructionIndex]
       )
-      app.controls.drawInstructionIndex++
+
+      if (app.controls.drawInstructionIndex != 2)
+        app.controls.drawInstructionIndex++
+
       $('.map-controls .feature-options .draw-message').removeClass('hide')
       // enable done link
       $('.map-controls .feature-options .done-link').on('click', (e) => {
@@ -296,7 +308,9 @@ const app = {
         app.featureCollection.element.editTools.commitDrawing()
         const centerLatLng = app.featureCollection.element.getCenter()
         expandInfoWindow(60, 40).then(async () => {
-          app.controls.hideFeatureOptions()
+          // app.controls.hideFeatureOptions()
+          app.controls.showFeatureOptions()
+          app.controls.showDrawInstructions(3)
           // $('.feature-form input[name="title"]').get(0).focus()
           // re-center on shape
           setTimeout(() => {
@@ -1198,7 +1212,7 @@ async function initMap() {
       openErrorPanel('You do not have permission to modify this map.')
     else {
       // show instructions
-      app.controls.showDrawInstructions('line')
+      app.controls.showDrawInstructions()
       createShape('LineString')
     }
   })
@@ -1211,7 +1225,7 @@ async function initMap() {
       openErrorPanel('You do not have permission to modify this map.')
     else {
       // show instructions
-      app.controls.showDrawInstructions('polygon')
+      app.controls.showDrawInstructions()
       createShape('Polygon')
     }
   })

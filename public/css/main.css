@@ -173,8 +173,9 @@ ul {
 .map-controls .feature-options {
   position: absolute;
   top: 30px;
-  right: 90px;
-  width: 155px;
+  right: 100px;
+  width: 240px;
+  border-radius: 5px;
 }
 
 .map-controls .feature-options .map-control {
@@ -184,18 +185,19 @@ ul {
 }
 
 .map-controls .feature-options .map-control img {
-  height: 35px;
+  height: 40px;
 }
 
 .map-controls .feature-options p {
   z-index: 200;
-  color: black;
+  background-color: black;
+  color: white;
   border-top: 1px solid black;
-  font-size: 12px;
+  /* font-size: 14px; */
   margin: 0;
 }
 .map-controls .feature-options p a {
-  color: black;
+  color: white;
 }
 
 /* info window content */
