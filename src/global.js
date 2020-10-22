@@ -395,7 +395,11 @@ const app = {
     },
     getStyle: (marker, state = 'default') => {
       const feature = marker.featureData
-      const featureType = feature.geometry.type
+      let featureType = feature.geometry.type
+      // handle geojson types that cana be imported that we don't fully support
+      if (!['Point', 'LineString', 'Polygon'].includes(featureType)) {
+        featureType = 'Polygon' // will use polygon styles for these
+      }
 
       let style // the styles for this marker
       const postBody = feature.properties.body
