@@ -280,7 +280,7 @@ const app = {
         'Click map to start drawing',
         'Keep clicking to draw...',
         '<a class="done-link" href="#">Click here</a> when done',
-        'Submit form to save',
+        'Complete form to save',
       ]
 
       // hide instructions if limit exceeded
