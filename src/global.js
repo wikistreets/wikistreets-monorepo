@@ -2706,7 +2706,10 @@ const createShape = (geometryType) => {
   shape.on('editable:drawing:commit', function (e) {
     updateShapeCoords(e.layer, geometryType)
     app.markers.temporaryMarkers.push(e.layer) // save temporarily so we remove it later
-    expandInfoWindow(60, 40).then(async () => {}) // pop open the form
+    expandInfoWindow(60, 40).then(async () => {
+      app.controls.showFeatureOptions()
+      app.controls.showDrawInstructions(3)
+    }) // pop open the form
   })
 }
 
