@@ -143,44 +143,59 @@ ul {
   cursor: pointer;
   position: absolute;
   z-index: 101;
-}
-
-.control-add-feature {
   width: 40px;
-  top: 144px;
   left: auto;
   right: 30px;
   margin: 0;
 }
-.control-add-feature img {
+.map-control img {
   margin-left: 0;
   width: 100%;
+  min-width: 30px;
+  max-width: 50px;
+  min-height: 30px;
+  max-height: 50px;
 }
-.control-find-location {
-  width: 40px;
+.control-add-feature {
   top: 30px;
-  right: 30px;
-}
-.control-find-location img {
-  width: 100%;
 }
 .control-search-address {
-  width: 40px;
   top: 90px;
   right: 25px;
 }
-.control-search-address img {
-  width: 100%;
+.control-find-location {
+  top: 144px;
 }
 .control-download-data {
   float: left;
 }
 
-.map-controls img {
-  min-width: 30px;
-  max-width: 50px;
-  min-height: 30px;
-  max-height: 50px;
+.map-controls .feature-options {
+  position: absolute;
+  top: 30px;
+  right: 90px;
+  width: 155px;
+}
+
+.map-controls .feature-options .map-control {
+  position: static;
+  width: auto;
+  right: auto;
+}
+
+.map-controls .feature-options .map-control img {
+  height: 35px;
+}
+
+.map-controls .feature-options p {
+  z-index: 200;
+  color: black;
+  border-top: 1px solid black;
+  font-size: 12px;
+  margin: 0;
+}
+.map-controls .feature-options p a {
+  color: black;
 }
 
 /* info window content */

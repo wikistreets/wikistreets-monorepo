@@ -126,12 +126,46 @@
 
         <div class="map-controls">
           <div class="map-control control-add-feature">
-            <img
-              alt="Place a new marker"
-              title="Place a new marker"
+            <img class="add-icon add-subtract-feature-toggle"
+              alt="Add a new feature"
+              title="Add a new feature"
               src="/static/images/material_design_icons/add_circle_outline-24px.svg"
             />
+            <img class="subtract-icon add-subtract-feature-toggle hide"
+              alt="Add a new feature"
+              title="Add a new feature"
+              src="/static/images/material_design_icons/subtract_circle_outline-24px.svg"
+            />
           </div>
+          <div class="feature-options row hide">
+            <div class="map-control control-add-point col-4 m-0 p-1">
+              <img
+                alt="Place a marker"
+                title="Place a marker"
+                src="/static/images/material_design_icons/place-24px.svg"
+              />
+            </div>
+            <div class="map-control control-add-line col-4 m-0 p-1">
+              <img
+                alt="Draw a line"
+                title="Draw a line"
+                src="/static/images/material_design_icons/timeline-24px.svg"
+              />
+            </div>
+            <div class="map-control control-add-polygon col-4 m-0 p-1">
+              <img
+                alt="Draw a polygon"
+                title="Draw a polygon"
+                src="/static/images/material_design_icons/polygon-24px.svg"
+              />
+            </div>
+            <p class="pick-shape-msg col-12 text-center alert alert-dark p-1">
+              Add to map
+            </p>
+            <p class="draw-message col-12 text-center hide alert alert-dark p-1">
+              Click map to start drawing
+            </p>
+          </div><!-- //.feature-options -->
 
           <div class="map-control control-find-location">
             <img
@@ -353,6 +387,7 @@
         enctype="multipart/form-data"
       >
         <input type="hidden" name="address" class="address" />
+        <input type="hidden" name="geometryType" class="geometryType" />
         <input type="hidden" name="geometryCoordinates" class="geometryCoordinates" />
 
           <section class="submit-container">

@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 const { fileSchema } = require('./file')
 const { commentSchema } = require('./comment')
-const { featureCollectionSchema } = require('./feature-collection')
+// const { featureCollectionSchema } = require('./feature-collection')
 
 // an issue
 const featureSchema = new Schema(
@@ -20,7 +20,7 @@ const featureSchema = new Schema(
       geometries: [], // used by GeometryCollection only
     },
     properties: {
-      address: { type: String, required: true },
+      address: { type: String },
       zoom: { type: Number },
       title: { type: String, required: true },
       body: String,

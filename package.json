@@ -28,6 +28,7 @@
     "gray-matter": "^4.0.2",
     "jpeg-autorotate": "^6.0.0",
     "jsonwebtoken": "^8.5.1",
+    "leaflet-editable": "^1.2.0",
     "lodash": "^4.17.20",
     "mongoose": "^5.9.1",
     "morgan": "^1.9.1",

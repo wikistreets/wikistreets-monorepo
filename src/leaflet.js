@@ -2,3 +2,4 @@
 import 'leaflet'
 import 'leaflet-extra-markers'
 import 'leaflet.markercluster'
+import 'leaflet-editable'

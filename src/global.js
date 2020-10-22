@@ -174,23 +174,26 @@ const app = {
       app.localStorage.setItem('coords', JSON.stringify(coords))
     },
     flyTo: (marker) => {
-      const coords = marker.getLatLng()
       if (marker.featureData.geometry.type == 'Point') {
         // this marker is a regular leaflet point marker
         let zoom = marker.featureData.properties.zoom
         // use default zoom level, if none present
         if (!zoom) zoom = app.featureCollection.element.getZoom()
         // call the leaflet map's panTo method
+        const coords = marker.getLatLng()
         app.featureCollection.element.flyTo(coords, zoom)
+        // store this position
+        app.browserGeolocation.coords = coords
+        app.localStorage.setItem('coords', JSON.stringify(coords))
       } else {
         // this marker is a different geojson type... use bounding box
-        const bounds = marker.getBbox()
-        app.featureCollection.element.flyToBounds(bounds)
+        let bbox = marker.featureData.properties.bbox
+        bbox = [
+          [bbox[1], bbox[0]],
+          [bbox[3], bbox[2]],
+        ]
+        app.featureCollection.element.flyToBounds(bbox)
       }
-
-      // store this position
-      app.browserGeolocation.coords = coords
-      app.localStorage.setItem('coords', JSON.stringify(coords))
     },
     fitBounds: (bbox) => {
       if (!bbox.length == 4) return // abort
@@ -216,6 +219,12 @@ const app = {
           '/static/images/material_design_icons/add_circle_outline-24px.svg',
       },
     },
+    newLine: {
+      htmlElementSelector: '.control-add-line img',
+      icons: {
+        enabled: '/static/images/material_design_icons/timeline-24px.svg',
+      },
+    },
     editFeature: {
       htmlElementSelector: '.control-edit-feature img',
       icons: {
@@ -239,6 +248,63 @@ const app = {
       },
       timer: null,
     },
+    hideFeatureOptions: () => {
+      app.controls.drawInstructionIndex = 0
+      $('.map-controls .add-subtract-feature-toggle.add-icon').removeClass(
+        'hide'
+      )
+      $('.map-controls .add-subtract-feature-toggle.subtract-icon').addClass(
+        'hide'
+      )
+      $('.map-controls .feature-options').addClass('hide')
+      $('.map-controls .feature-options .map-control').removeClass('hide')
+    },
+    drawInstructionIndex: 0, // which instructino to show
+    showFeatureOptions: () => {
+      app.controls.drawInstructionIndex = 0
+      $('.map-controls .add-subtract-feature-toggle.add-icon').addClass('hide')
+      $('.map-controls .add-subtract-feature-toggle.subtract-icon').removeClass(
+        'hide'
+      )
+      $('.map-controls .feature-options').removeClass('hide')
+      // reset instructions
+      $('.map-controls .feature-options .map-control').removeClass('hide')
+      $('.map-controls .feature-options .pick-shape-msg').removeClass('hide')
+      $('.map-controls .feature-options .draw-message').addClass('hide')
+    },
+    showDrawInstructions: () => {
+      const instructions = [
+        'Click map to start drawing',
+        'Keep clicking to draw...',
+        '<a class="done-link" href="#">Click here</a> when done',
+      ]
+
+      // show draw instructions for line/polygon
+      $('.map-controls .feature-options .map-control').addClass('hide')
+      $('.map-controls .feature-options .pick-shape-msg').addClass('hide')
+      $('.map-controls .feature-options .draw-message').html(
+        instructions[app.controls.drawInstructionIndex]
+      )
+      app.controls.drawInstructionIndex++
+      $('.map-controls .feature-options .draw-message').removeClass('hide')
+      // enable done link
+      $('.map-controls .feature-options .done-link').on('click', (e) => {
+        // done drawing... open info panel
+        e.preventDefault()
+
+        // stop drawaing
+        app.featureCollection.element.editTools.commitDrawing()
+        const centerLatLng = app.featureCollection.element.getCenter()
+        expandInfoWindow(60, 40).then(async () => {
+          app.controls.hideFeatureOptions()
+          // $('.feature-form input[name="title"]').get(0).focus()
+          // re-center on shape
+          setTimeout(() => {
+            app.featureCollection.element.panTo(centerLatLng)
+          }, 1000)
+        })
+      })
+    },
   },
   features: {
     features: [],
@@ -247,11 +313,40 @@ const app = {
     cluster: null,
     current: null,
     markers: [],
+    temporaryMarkers: [], // now saved
     shapes: [],
     me: null,
-    icons: {
+    styles: {
+      LineString: {
+        // see style options: https://leafletjs.com/reference-1.7.1.html#path-option
+        default: {
+          color: 'black',
+          fillColor: 'blue',
+          weight: 6,
+        },
+        active: {
+          color: '#961e1e',
+          fillColor: 'orange',
+          weight: 6,
+        },
+      },
+      Polygon: {
+        // see style options: https://leafletjs.com/reference-1.7.1.html#path-option
+        default: {
+          color: 'black',
+          fillColor: 'blue',
+          weight: 6,
+        },
+        active: {
+          color: '#961e1e',
+          fillColor: 'orange',
+          weight: 6,
+        },
+      },
+      // points
       // objects used as args to L.ExtraMarkers.icon()
       photo: {
+        // see exra markers style options:
         default: {
           icon: 'fa-camera',
           shape: 'square',
@@ -289,18 +384,6 @@ const app = {
         }, //{ imageUrl: '/static/images/material_design_icons/directions_walk-24px.svg' }
       },
     },
-    geoJSONStyles: {
-      default: {
-        color: 'blue',
-        weight: 3,
-        opacity: 0.25,
-      },
-      active: {
-        color: 'red',
-        weight: 3,
-        opacity: 0.25,
-      },
-    },
     size: {
       width: 50,
       height: 50,
@@ -309,6 +392,39 @@ const app = {
       default: 50,
       active: 51,
       me: 100,
+    },
+    getStyle: (marker, state = 'default') => {
+      const feature = marker.featureData
+      const featureType = feature.geometry.type
+
+      let style // the styles for this marker
+      const postBody = feature.properties.body
+      if (
+        postBody &&
+        postBody.data &&
+        postBody.data.styles &&
+        postBody.data.styles[state]
+      ) {
+        // start with a baseline icon, based on whether this post has a photo or just text
+        let defaultStyles = app.markers.styles[featureType][state]
+
+        // there are custom marker settings in the post's YAML... either just an icon setting or a whole styles object
+        const postStyles = postBody.data.styles[state]
+
+        // merge the two styles
+        // console.log(JSON.stringify(defaultStyles, null, 2))
+        // console.log(JSON.stringify(postStyles, null, 2))
+        const mergedStyles = objectMerge(defaultStyles, postStyles)
+
+        // return a function
+        style = mergedStyles
+      }
+      if (!style) {
+        // use the default style
+        // return a function
+        style = app.markers.styles[featureType][state]
+      }
+      return style
     },
     getIcon: (marker, state = 'default') => {
       // return the appropriate icon for this marker
@@ -320,18 +436,18 @@ const app = {
         postBody &&
         postBody.data &&
         (postBody.data.icon ||
-          (postBody.data.markerStyles && postBody.data.markerStyles[state]))
+          (postBody.data.styles && postBody.data.styles[state]))
       ) {
         // start with a baseline icon, based on whether this post has a photo or just text
-        let defaultStyles = app.markers.icons[marker.featureType][state]
+        let defaultStyles = app.markers.styles[marker.featureType][state]
 
-        // there are custom marker settings in the post's YAML... either just an icon setting or a whole markerStyles object
-        const postMarkerStyles = postBody.data.markerStyles
-          ? postBody.data.markerStyles[state]
+        // there are custom marker settings in the post's YAML... either just an icon setting or a whole styles object
+        const postStyles = postBody.data.styles
+          ? postBody.data.styles[state]
           : { icon: postBody.data.icon }
 
         // merge the two styles
-        const mergedStyles = objectMerge(defaultStyles, postMarkerStyles)
+        const mergedStyles = objectMerge(defaultStyles, postStyles)
 
         try {
           icon = L.ExtraMarkers.icon(mergedStyles)
@@ -341,7 +457,9 @@ const app = {
       }
       if (!icon) {
         // use the default markers
-        icon = L.ExtraMarkers.icon(app.markers.icons[marker.featureType][state])
+        icon = L.ExtraMarkers.icon(
+          app.markers.styles[marker.featureType][state]
+        )
       }
       return icon
     },
@@ -505,7 +623,6 @@ app.browserGeolocation.update = async () => {
 
 app.markers.wipeMe = () => {
   // wipe out the me marker
-  // console.log('wiping')
   if (app.markers.me) {
     app.markers.me.remove()
     app.markers.me = null
@@ -576,26 +693,60 @@ app.markers.place = async (features, cluster) => {
       feature = app.featureCollection.unpackYAML(feature)
       marker.featureData = feature // save the data
 
+      // add some kind of address for polygons and lines
+      switch (marker.featureData.geometry.type) {
+        case 'LineString':
+          marker.featureData.properties.address = 'this line'
+          break
+        case 'Polygon':
+          marker.featureData.properties.address = 'this polygon'
+          break
+      }
+
       // determine whether this marker has a photo or only text
       if (feature.properties.photos && feature.properties.photos.length) {
         marker.featureType = 'photo'
       } else {
         marker.featureType = 'text'
       }
-      // set the marker with correct icon
-      const icon = app.markers.getIcon(marker, 'default')
-      marker.setIcon(icon)
+
+      // set pointer marker with correct icon
+      if (marker.featureData.geometry.type == 'Point') {
+        const icon = app.markers.getIcon(marker, 'default')
+        marker.setIcon(icon)
+      }
 
       // update the marker position unless it's currently being edited
       const isBeingEdited =
         $(`.feature-form[ws-feature-id="${feature._id}"]`).length > 0
       if (!isBeingEdited) {
         try {
-          // this only works for points
-          marker.setLatLng({
-            lat: feature.geometry.coordinates[1], //point.position.lat,
-            lng: feature.geometry.coordinates[0], //point.position.lng,
-          }) // reposition it
+          switch (feature.geometry.type) {
+            // update point marker positions in leaflet format
+            case 'Point':
+              marker.setLatLng({
+                lat: feature.geometry.coordinates[1], //point.position.lat,
+                lng: feature.geometry.coordinates[0], //point.position.lng,
+              }) // reposition it
+              break
+            case 'LineString':
+              // set line coords in leaflet format
+              let latlngs = []
+              feature.geometry.coordinates.forEach((lnglat) => {
+                const latlng = [lnglat[1], lnglat[0]]
+                latlngs.push(latlng)
+              })
+              marker.setLatLngs(latlngs) // reposition it
+              break
+            case 'Polygon':
+              // set polygon coords in leaflet format
+              latlngs = [[]]
+              feature.geometry.coordinates[0].forEach((lnglat) => {
+                latlngs[0].push([lnglat[1], lnglat[0]])
+              })
+              marker.setLatLngs(latlngs)
+              break
+          }
         } catch (err) {
           // this marker is not a point
         }
@@ -652,7 +803,44 @@ app.markers.place = async (features, cluster) => {
         marker.setZIndexOffset(app.markers.zIndex.default)
       } else {
         // this is a non-point geojson shape
-        marker = L.geoJSON(feature)
+        let c
+        switch (feature.geometry.type) {
+          case 'LineString':
+            c = []
+            feature.geometry.coordinates.forEach((lnglat) => {
+              c.push([lnglat[1], lnglat[0]])
+            })
+            marker = new L.Polyline(c)
+            break
+          case 'Polygon':
+            c = [[]]
+            feature.geometry.coordinates[0].forEach((lnglat) => {
+              c[0].push([lnglat[1], lnglat[0]])
+            })
+            marker = new L.Polygon(c)
+            break
+          default:
+            marker = L.geoJSON(feature)
+        }
+
+        // extract yaml metadata from body content
+        feature = app.featureCollection.unpackYAML(feature)
+        marker.featureData = feature // save the data
+
+        // set the marker style and add it to the map
+        const style = app.markers.getStyle(marker, 'default')
+        marker.setStyle(style).addTo(app.featureCollection.element)
+
+        // add some kind of address for polygons and lines
+        switch (marker.featureData.geometry.type) {
+          case 'LineString':
+            marker.featureData.properties.address = 'this line'
+            break
+          case 'Polygon':
+            marker.featureData.properties.address = 'this polygon'
+            break
+        }
+
         // attach a few userful functions for leaflet so these geojson markers behave more like point markers
         marker.getBbox = () => {
           const bbox = [
@@ -661,11 +849,20 @@ app.markers.place = async (features, cluster) => {
           ]
           return bbox
         }
-        marker.getLatLng = () => {
-          return {
-            lat: marker.featureData.properties.center[1],
-            lng: marker.featureData.properties.center[0],
+
+        // attach a few userful functions for leaflet so these geojson markers behave more like point markers
+        marker.getShapeCenter = () => {
+          let center
+          if (marker.featureData.geometry.type == 'Point') {
+            center = marker.getLatLng() // official marker point
+          } else {
+            // use our saved center point for other shapes
+            center = {
+              lat: feature.properties.center[1],
+              lng: feature.properties.center[0],
+            }
           }
+          return center
         }
       }
 
@@ -682,19 +879,17 @@ app.markers.place = async (features, cluster) => {
       // keep the index number of this marker to maintain order
       marker.index = app.markers.markers.length //i
 
-      // attach the data to the marker
-      marker.featureData = feature
-
       // add to list of markers
       app.markers.markers.push(marker)
 
       // // detect click events
       marker.on('click', (e) => {
+        app.markers.activate(marker)
         showInfoWindow(marker)
         // hack to allow clicking on geojson leaflet layers to open up info window
         if (marker.featureData.geometry.type != 'Point') {
           // this triggers an error which somehow makes it work
-          throw `geojson click - stay calm`
+          throw `click! stay calm`
         }
       })
     } // else if marker doesn't yet exist
@@ -705,9 +900,10 @@ app.markers.place = async (features, cluster) => {
   return true
 }
 
-app.markers.activate = (marker = app.markers.current) => {
-  // make one of the markers appear 'active'
-  app.markers.current = marker
+app.markers.activate = (marker) => {
+  marker = marker ? marker : app.markers.current // default to current marker, if any
+  if (!marker) return // no marker, no more activation
+  app.markers.current = marker // save it for later
   // mark it as open
   marker.isOpen = true
   // change its icon color
@@ -717,25 +913,27 @@ app.markers.activate = (marker = app.markers.current) => {
     marker.setIcon(icon)
   } else {
     // it's another geojson shape
-    marker.setStyle(() => {
-      return app.markers.geoJSONStyles.active
-    })
+    // set the marker style and add it to the map
+    const style = app.markers.getStyle(marker, 'active')
+    marker.setStyle(style)
   }
 }
-app.markers.deactivate = (marker = app.markers.current) => {
+app.markers.deactivate = (marker) => {
   // return selected marker to default state
   const markerList = marker ? [marker] : app.markers.markers
   // loop through and mark all as closed
   markerList.forEach((marker) => {
+    // console.log(`deactivating ${marker.featureData.properties.title}`)
     marker.isOpen = false
     if (marker.featureData.geometry.type == 'Point') {
       const icon = app.markers.getIcon(marker, 'default')
       marker.setZIndexOffset(app.markers.zIndex.default)
       marker.setIcon(icon)
     } else {
-      marker.setStyle(() => {
-        return app.markers.geoJSONStyles.default
-      })
+      // it's another geojson shape
+      // set the marker style and add it to the map
+      const style = app.markers.getStyle(marker, 'default')
+      marker.setStyle(style)
     }
   })
   // there is now no active marker
@@ -799,7 +997,6 @@ app.fetchFeatureCollection = async (sinceDate = null) => {
 }
 
 app.user.fetch = async () => {
-  // console.log('fetching user data')
   // fetch data from wikistreets api
   return app
     .myFetch(`${app.apis.wikistreets.getUserMe}`)
@@ -825,7 +1022,6 @@ const populateMap = async (recenter = true, sinceDate = null) => {
 
   // recenter on map bounding box
   if (recenter && data.bbox && data.bbox.length) {
-    // console.log('init map panning')
     app.featureCollection.fitBounds(data.bbox)
   }
 
@@ -885,14 +1081,17 @@ async function initMap() {
 
   let coords = app.browserGeolocation.getCoords() // default coords
   // use last known coords, if any
-  if (app.localStorage.getItem('coords'))
-    coords = JSON.parse(app.localStorage.getItem('coords'))
+  const storedCoords = JSON.parse(app.localStorage.getItem('coords'))
+  if (storedCoords && storedCoords.lat && storedCoords.lng)
+    coords = storedCoords
 
   // set up the leaflet.js map view
   app.featureCollection.element = new L.map(
     app.featureCollection.htmlElementId,
     {
       // attributionControl: false,
+      editable: true,
+      // editOptions: {},
       zoomControl: false,
       doubleClickZoom: false,
     }
@@ -936,7 +1135,6 @@ async function initMap() {
 
   // do this again every 15 seconds
   setInterval(() => {
-    // console.log('loading new markers')
     // fetch feaatureCollection data from server
     // don't re-center the map, fetch only new data since last fetch
     if (!app.featureCollection.currentlyFetching) {
@@ -959,8 +1157,18 @@ async function initMap() {
     openSigninPanel()
   })
 
+  // pop open feature types when add-feature control clicked
+  $('.control-add-feature').on('click', (e) => {
+    if ($('.map-controls .feature-options').hasClass('hide'))
+      app.controls.showFeatureOptions()
+    else app.controls.hideFeatureOptions()
+  })
+
   // pop open feature form when control icon clicked
-  $('.control-add-feature').on('click', () => {
+  $('.control-add-point').on('click', () => {
+    // remove any temporary markers from the screen
+    removeTemporaryMarkers()
+
     if (app.auth.getToken() && !app.auth.isEditor()) {
       // user is logged-in, but not a contributor on this private map
       const errorString = $('.error-container').html()
@@ -973,7 +1181,34 @@ async function initMap() {
       })
       expandInfoWindow(30, 70)
     } else {
-      openFeatureForm() // user is logged-in and allowed to contribute
+      createPoint() // user is logged-in and allowed to contribute
+    }
+  })
+
+  // start drawing line when icon clicked
+  $('.control-add-line').on('click', () => {
+    removeTemporaryMarkers()
+    if (!app.auth.getToken())
+      openSigninPanel('Sign in to add a line to this map')
+    else if (!app.auth.isEditor())
+      openErrorPanel('You do not have permission to modify this map.')
+    else {
+      // show instructions
+      app.controls.showDrawInstructions('line')
+      createShape('LineString')
+    }
+  })
+  // start drawing polygon when icon clicked
+  $('.control-add-polygon').on('click', () => {
+    removeTemporaryMarkers()
+    if (!app.auth.getToken())
+      openSigninPanel('Sign in to add a polygon to this map')
+    else if (!app.auth.isEditor())
+      openErrorPanel('You do not have permission to modify this map.')
+    else {
+      // show instructions
+      app.controls.showDrawInstructions('polygon')
+      createShape('Polygon')
     }
   })
 
@@ -984,11 +1219,10 @@ async function initMap() {
       .then((coords) => {
         // move the me marker, if available
         if (
-          app.mode == 'featurecreate' &&
+          app.mode == 'pointcreate' &&
           app.markers.me &&
           app.markers.me.setLatLng
         ) {
-          // console.log('moving me');
           app.markers.me.setLatLng(coords)
         }
         return coords
@@ -1004,23 +1238,26 @@ async function initMap() {
           if (app.auth.getToken() && !app.auth.isEditor()) {
             openErrorPanel(app.copy.mappermissionserror)
           } else {
-            openFeatureForm(coords)
+            createPoint(coords)
           }
         })
         // }
       })
       .catch((err) => {
-        console.error('opening')
         openGeopositionUnavailableForm()
         throw err
       })
   })
 
   // pop open feature form when control icon clicked
-  $('.control-search-address').on('click', openSearchAddressForm)
+  $('.control-search-address').on('click', () => {
+    openSearchAddressForm()
+  })
 
   // pop open about us when logo is clicked
-  $('.logo').on('click', openAboutUsForm)
+  $('.logo').on('click', () => {
+    openAboutUsForm()
+  })
 
   // handle map events...
 
@@ -1033,23 +1270,21 @@ async function initMap() {
 
   app.featureCollection.element.on('dblclick', (e) => {
     const point = e.latlng
-    openFeatureForm(point)
+    createPoint(point)
   })
 
   app.featureCollection.element.on('click', function (event) {
-    // console.log('map clicked');
-    // close any open infowindow except the feature form
-    collapseInfoWindow()
-
-    // remove me marker, if present
-    app.markers.wipeMe()
-
-    // show the map controls
-    $('.map-control').show()
+    // close any open infowindow unless creating a shape at the moment
+    if (app.mode != 'featurecreate' && app.mode != 'featureedit') {
+      collapseInfoWindow()
+      // deactivate any markers
+      app.markers.deactivate()
+      // remove me marker, if present
+      app.markers.wipeMe()
+    }
   })
 
   app.featureCollection.element.on('moveend', async function (e) {
-    // console.log('map moved');
     // // get the center address of the map
     const coords = app.featureCollection.getCenter()
     app.browserGeolocation.setCoords(coords.lat, coords.lng)
@@ -1065,14 +1300,11 @@ async function initMap() {
 
     // close any open infowindow for mobile users only
     if (app.mode == 'featuredetails' && app.responsive.isMobile()) {
-      // console.log('dragstart');
       collapseInfoWindow()
     }
   })
 
-  app.featureCollection.element.on('dragend', (e) => {
-    // console.log('map drag end');
-  })
+  app.featureCollection.element.on('dragend', (e) => {})
 
   // handle browser back/forward button clicks
   window.onpopstate = (e) => {
@@ -1133,7 +1365,6 @@ const handleResizeWindow = () => {
   // wait half a second because safari mobile has a bug sizing elements otherwise
   // this still doesn't stop all the buginess on safari mobile when orientation changes
   resizeTimeout = window.setTimeout(() => {
-    // console.log('resizing!')
     setVh()
     resizeMap()
   }, 400)
@@ -1778,7 +2009,6 @@ const showInfoWindow = (marker) => {
   // update the url hash tag
   window.location.hash = marker._id.substr(marker._id.indexOf('-') + 1)
 
-  // console.log('opening infowindow');
   let infoWindowHeight = 70
   let mapHeight = 30
 
@@ -1786,7 +2016,6 @@ const showInfoWindow = (marker) => {
   enableExpandContractButtons(infoWindowHeight, mapHeight)
 
   if (app.infoPanel.isExpanded) {
-    // console.log('already expanded')
     // override proportions if info panel is already expanded to full height
     infoWindowHeight = 100
     mapHeight = 0
@@ -1796,7 +2025,6 @@ const showInfoWindow = (marker) => {
     // hack to avoid duplicate marker click events (see where we check this value on click)
 
     // center the map on the selected marker after panel has opened
-    //console.log('marker panning')
     app.featureCollection.element.invalidateSize(true) // notify leaflet that size has changed
 
     if (marker.featureData.geometry.type == 'Point') {
@@ -1948,12 +2176,6 @@ const showInfoWindow = (marker) => {
     }
   )
 
-  // expand textarea when clicked into
-  // $('.info-window-content .comment-form textarea').focus((e) => {
-  //   console.log('focused')
-  //   $(e.target).animate({ height: '100px' }, 100)
-  // })
-
   // deal with form submissions
   $('.info-window-content form.comment-form .featureId').val(
     marker.featureData._id
@@ -2069,6 +2291,8 @@ const hideSpinner = (containerEl) => {
 }
 
 const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
+  app.controls.hideFeatureOptions()
+
   app.infoPanel.isExpanded =
     infoWindowHeight == 100 || !app.responsive.isMobile() ? true : false
   // add the expanded class if the info window is tall
@@ -2101,7 +2325,7 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
         () => {
           // reposition add feature button
           // const y = $('.info-window').position().top
-          // $('.control-add-feature').css('top', y - 50)
+          // $('.control-add-point').css('top', y - 50)
         }
       )
 
@@ -2151,7 +2375,6 @@ const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
       buttonEl.removeClass('expanded')
       expandInfoWindow(infoWindowHeight, mapHeight)
     } else {
-      // console.log('expanding')
       // expand info window
       $('.info-window .expand-contract-button img').attr(
         'src',
@@ -2163,8 +2386,19 @@ const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
   }) // if expand/contract button clicked
 }
 
+const removeTemporaryMarkers = () => {
+  // remove any temporary markers from the screen
+  app.markers.temporaryMarkers.forEach((tempMarker) => {
+    app.featureCollection.element.removeLayer(tempMarker)
+  })
+}
+
 const collapseInfoWindow = async (e) => {
   app.mode = 'default'
+
+  app.controls.hideFeatureOptions()
+  // remove any temporary markers from the screen
+  removeTemporaryMarkers()
 
   // console.log(`mode=${app.mode}`);
   // remember it's collapsed
@@ -2201,11 +2435,15 @@ const collapseInfoWindow = async (e) => {
         app.mode = 'default'
 
         // re-center on current marker, if any
-        if (app.markers.current) {
+        if (app.markers.current && app.markers.current != null) {
           setTimeout(() => {
-            const newCenter = app.markers.current.getLatLng()
-            // console.log(`recentering to ${newCenter}`)
-            app.featureCollection.panTo(newCenter)
+            if (app.markers.current.featureData.geometry.type == 'Point') {
+              const newCenter = app.markers.current.getLatLng()
+              app.featureCollection.panTo(newCenter)
+            } else {
+              const bounds = app.markers.current.featureData.properties.bbox
+              app.featureCollection.fitBounds(bounds)
+            }
             // void the current marker
           }, 50)
         }
@@ -2219,7 +2457,7 @@ const collapseInfoWindow = async (e) => {
     )
   // reposition add feature button
   // const y = $('.control-map-selector').position().top
-  // $('.control-add-feature').css('top', y - 50)
+  // $('.control-add-point').css('top', y - 50)
 
   // resolve the promise once the animation is complete
   return $('.feature-map, #map').promise()
@@ -2240,8 +2478,9 @@ const attachMeMarkerPopup = (marker, address) => {
     // check whether this user is authenticated and is allowed to contribute to this map
     if (!app.auth.getToken()) openSigninPanel('Log in to create a post')
     else {
+      // hide popup
       // open the info window
-      openFeatureForm()
+      createPoint()
       expandInfoWindow(60, 40).then(async () => {})
     }
   })
@@ -2289,7 +2528,6 @@ const openRenameMapForm = () => {
       // console.log(`sending data to: ${apiUrl}`)
       let formData = new FormData(e.target)
       formData.set('featureCollectionTitle', featureCollectionTitle) // hacking it.. don't know why this is necessary
-      // console.log('CLIENT MAP TITLE: ' + formData.get('featureCollectionTitle'))
       app.myFetch(apiUrl, 'POST', formData)
     } else {
       console.log('not sending to server')
@@ -2374,15 +2612,98 @@ const openCollaborationSettings = () => {
   }) // settings-map-form submit
 } // openCollaborationSettings
 
-/**
- * Open the form to allow the user to create a new feature.
- * @param {*} point The coordinates at which to associate the post. Defaults to center of map.
- */
-const openFeatureForm = async (point = false) => {
+const updateShapeCoords = (layer, geometryType) => {
+  // e.layer.toggleEdit()
+  // e.layer.setStyle({ color: 'DarkRed' })
+  // update the feature form coordinates
+
+  let coords = []
+  switch (geometryType) {
+    case 'LineString':
+      // add [lng,lat] for each node of the line
+      layer._latlngs.forEach((latlng) => {
+        const node = [latlng.lng, latlng.lat]
+        coords.push(node)
+      })
+      break
+    case 'Polygon':
+      const innerCoords = []
+      // add [lng,lat] for each node of the line
+      layer._latlngs[0].forEach((latlng) => {
+        const node = [latlng.lng, latlng.lat]
+        innerCoords.push(node)
+      })
+      coords.push(innerCoords)
+      break
+  }
+
+  $('.info-window-content .geometryCoordinates').val(JSON.stringify(coords))
+  return coords
+}
+
+const createShape = (geometryType) => {
   // zoom into map
   if (app.mode != 'featurecreate') {
     // keep track
     app.mode = 'featurecreate'
+
+    //deactivate all markers
+    app.markers.deactivate()
+  }
+
+  // remove any previous me marker
+  if (app.markers.me) {
+    app.markers.wipeMe()
+  }
+
+  // get a user-friendly name of this geometry type
+  let gType = geometryType.toLowerCase()
+  if (gType == 'linestring') gType = 'line'
+
+  // pop open the form
+  openNewFeatureForm(
+    geometryType,
+    null,
+    `the ${gType.toLowerCase()} you draw on the map`
+  )
+
+  // handle shape drawing events
+  let shape
+  switch (geometryType) {
+    case 'LineString':
+      shape = app.featureCollection.element.editTools.startPolyline()
+      break
+    case 'Polygon':
+      shape = app.featureCollection.element.editTools.startPolygon()
+      break
+  }
+  shape.on('editable:editing', function (e) {
+    e.layer.setStyle(app.markers.styles.LineString.active) // active style
+    updateShapeCoords(e.layer, geometryType)
+    app.markers.temporaryMarkers.push(e.layer) // save temporarily so we remove it later
+  })
+  shape.on('editable:drawing:click', (e) => {
+    app.controls.showDrawInstructions()
+  })
+  shape.on('editable:drawing:commit', function (e) {
+    updateShapeCoords(e.layer, geometryType)
+    app.markers.temporaryMarkers.push(e.layer) // save temporarily so we remove it later
+    expandInfoWindow(60, 40).then(async () => {}) // pop open the form
+  })
+}
+
+/**
+ * Open the form to allow the user to create a new point.
+ * @param {*} point The coordinates at which to associate the post. Defaults to center of map.
+ */
+const createPoint = async (point = false) => {
+  // hide any control options
+  app.controls.hideFeatureOptions()
+
+  // zoom into map
+  if (app.mode != 'pointcreate') {
+    // keep track
+    app.mode = 'pointcreate'
 
     //deactivate all markers
     app.markers.deactivate()
@@ -2399,8 +2720,8 @@ const openFeatureForm = async (point = false) => {
     point = app.featureCollection.element.getCenter()
   }
 
-  //console.log('feature form panning')
   app.featureCollection.panTo(point)
+
   let coords = [point.lat, point.lng]
   let marker = L.marker(coords, {
     zIndexOffset: app.markers.zIndex.me,
@@ -2411,9 +2732,9 @@ const openFeatureForm = async (point = false) => {
     autoPan: true,
   }).addTo(app.featureCollection.element)
 
-  const icon = L.ExtraMarkers.icon(app.markers.icons.me.default)
+  const icon = L.ExtraMarkers.icon(app.markers.styles.me.default)
   marker.setIcon(icon)
-  app.markers.me = marker
+  app.markers.me = marker // save it
 
   // save these coordinates as latest
   app.browserGeolocation.setCoords(point.lat, point.lng)
@@ -2433,44 +2754,28 @@ const openFeatureForm = async (point = false) => {
     return openSigninPanel('Log in to create a post', false, false)
   }
 
-  // copy the feature form into the infowindow
-  $('.info-window-content').html('') // remove anything from the info window
-  const formEl = $('.new-feature-form-container').clone() // get the form
-  formEl.removeClass('hide')
-  formEl.show()
-  formEl.appendTo($('.info-window-content'))
-
-  // insert address
-  $('.address', formEl).html(address)
-
-  // update the form's coordinates
-  $('.geometryCoordinates', formEl).val(
-    JSON.stringify([coords.lng, coords.lat])
-  )
-
   // detect dragstart events on me marker
-  app.markers.me.on('dragstart', async () => {
+  marker.on('dragstart', async () => {
     // close the marker popup
-    app.markers.me.closePopup()
+    marker.closePopup()
   })
 
   // detect dragend events on me marker
-  app.markers.me.on('dragend', async () => {
-    // get the center address of the map
-    app.browserGeolocation.coords = {
-      lat: app.markers.me.getLatLng().lat,
-      lng: app.markers.me.getLatLng().lng,
+  marker.on('dragend', async () => {
+    // get the coordinates of the new location
+    const coords = {
+      lat: marker.getLatLng().lat,
+      lng: marker.getLatLng().lng,
     }
-
-    // center map on the me marker
-    //console.log('dragend panning...')
-    let coords = app.browserGeolocation.getCoords()
-    app.featureCollection.panTo(coords)
+    // save these coordinates as latest
+    app.browserGeolocation.setCoords(coords.lat, coords.lng)
 
     // update the form's coordinates
     $('.info-window-content .geometryCoordinates').val(
       JSON.stringify([coords.lng, coords.lat])
     )
+    // center map on the new position of this marker
+    app.featureCollection.panTo(coords)
 
     // update street address
     const address = await updateAddress(coords)
@@ -2481,10 +2786,30 @@ const openFeatureForm = async (point = false) => {
     marker.openPopup()
   })
 
-  // remove an image from an feature
-  const removeFeatureImage = (e) => {
-    // console.log(`removing ${e.target}`)
-  }
+  openNewFeatureForm('Point', point, address)
+} // createPoint()
+
+const openNewFeatureForm = (
+  geometryType = 'Point',
+  point = false,
+  address = false
+) => {
+  // copy the feature form into the infowindow
+  $('.info-window-content').html('') // remove anything from the info window
+  const formEl = $('.new-feature-form-container').clone() // get the form
+  formEl.removeClass('hide')
+  formEl.show()
+  formEl.appendTo($('.info-window-content'))
+
+  // insert address, if any
+  if (address) $('.address', formEl).html(address)
+
+  // update the form's gemoetry type and coordinates, if any
+  $('.geometryType', formEl).val(geometryType)
+  if (point)
+    $('.geometryCoordinates', formEl).val(
+      JSON.stringify([point.lng, point.lat])
+    )
 
   // create a decent file uploader for photos
   const fuploader = new FUploader({
@@ -2504,7 +2829,7 @@ const openFeatureForm = async (point = false) => {
       thumbImgClassName: 'thumb-img',
       closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
       closeIconClassName: 'close-icon',
-      closeIconCallback: removeFeatureImage,
+      closeIconCallback: () => {},
     },
     dropContainer: {
       el: document.querySelector('.info-window-content .drop-container'),
@@ -2566,13 +2891,16 @@ const openFeatureForm = async (point = false) => {
     app
       .myFetch(app.apis.wikistreets.postFeatureUrl, 'POST', formData)
       .then((res) => {
+        // remove any temporary markers from the screen
+        removeTemporaryMarkers()
+
         if (!res.status) {
-          //          console.log(`ERROR: ${res}`)
+          // console.log(`ERROR: ${res}`)
           openErrorPanel(res.message)
           return
         }
 
-        //        console.log(`SUCCESS: ${res}`)
+        // console.log(`SUCCESS: ${res}`)
 
         // get a marker cluster
         const cluster = app.markers.cluster
@@ -2616,7 +2944,7 @@ const openFeatureForm = async (point = false) => {
         )
       })
   }) // feature-form submit
-} // openFeatureForm()
+}
 
 const openEditFeatureForm = async (featureId) => {
   // keep track
@@ -2630,6 +2958,13 @@ const openEditFeatureForm = async (featureId) => {
   // allow dragging of point markers
   if (marker.featureData.geometry.type == 'Point') {
     marker.dragging.enable() // make it draggable
+  } else {
+    // it's another geojson shape... allow leaflet-editable editing
+    marker.enableEdit() // doesn't work... perhaps because it's a L.geoJSON object
+
+    marker.on('editable:editing', function (e) {
+      updateShapeCoords(e.layer, marker.featureData.geometry.type)
+    })
   }
 
   // app.featureCollection.panTo(marker.getLatLng()) // pan to marker
@@ -2748,6 +3083,9 @@ const openEditFeatureForm = async (featureId) => {
   // activate cancel button
   $('.info-window .cancel-link').on('click', async (e) => {
     e.preventDefault()
+    if (marker.featureData.geometry.type != 'Point') {
+      marker.disableEdit() // don't allow moving the shape
+    }
     showInfoWindow(marker) // switch to feature detail view
   })
 
@@ -2755,6 +3093,10 @@ const openEditFeatureForm = async (featureId) => {
   $('.info-window-content form.feature-form').on('submit', async (e) => {
     // prevent page reload
     e.preventDefault()
+
+    if (marker.featureData.geometry.type != 'Point') {
+      marker.disableEdit() // don't allow moving the shape
+    }
 
     // show the spinner till done
     showSpinner($('.info-window'))
@@ -2893,7 +3235,7 @@ const openSearchAddressForm = () => {
           } else {
             collapseInfoWindow().then(() => {
               // console.log('logged in')
-              openFeatureForm(data.coords)
+              createPoint(data.coords)
             })
           }
         })
@@ -2938,7 +3280,6 @@ const panToPersonalLocation = () => {
     .update()
     .then((coords) => {
       // console.log(`panning to ${coords}`)
-      //console.log('personal location panning...')
       app.featureCollection.panTo(coords) // pan map to personal location
       app.controls.gps.setState('active')
       return coords
@@ -3203,7 +3544,6 @@ const openUserProfile = async (handle, userId) => {
         el.appendTo('.info-window-content .more-maps')
       }
 
-      // console.log('expanding')
       // open the info window
       expandInfoWindow(50, 50)
     })
@@ -3317,11 +3657,13 @@ near ${addressTruncated}.
       app.markers.deactivate()
       // select the target marker
       app.markers.activate(marker)
-      if (marker.featureData.geometry.type == 'Point') {
-        app.featureCollection.element.panTo(marker.getLatLng())
-      } else {
-        app.featureCollection.element.fitBounds(marker.getBbox())
-      }
+      app.featureCollection.element.panTo(marker.getShapeCenter()) // all markers should have this implemented by us
+
+      // if (marker.featureData.geometry.type == 'Point') {
+      //   app.featureCollection.element.panTo(marker.getLatLng())
+      // } else {
+      //   app.featureCollection.element.fitBounds(marker.getBbox())
+      // }
       // app.featureCollection.element.flyTo(marker)
     } catch (err) {
       // ignore mouseouts on sub-elements
@@ -3653,7 +3995,6 @@ const openMapSelectorPanel = async () => {
   app.mode = 'selectmap'
 
   // update list of maps when user expands map selector dropdown
-  // console.log('opening map selector')
 
   // undo me markers, if any
   if (app.markers.me) {

@@ -5,9 +5,6 @@ const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const passportConfig = require('../passportConfig')
 
-// map-specific stuff
-const turf = require('@turf/turf')
-
 // middleware
 // const _ = require('lodash') // utility functions for arrays, numbers, objects, strings, etc.
 const multer = require('multer') // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
@@ -25,9 +22,14 @@ const { ImageService } = require('../services/ImageService')
 const handleImages = require('../middlewares/handle-images.js') // our own image handler
 const user = require('../models/user')
 
+// map-related middleware
+const turf = require('@turf/turf')
+const geojsonCrunch = require('../middlewares/geojson-crunch.js') // our own geojson data middleware
+
 // email service
 const { EmailService } = require('../services/EmailService')
 const { database } = require('faker')
+const { geometry } = require('@turf/turf')
 
 const featureRouter = ({ config }) => {
   // create an express router
@@ -226,13 +228,17 @@ const featureRouter = ({ config }) => {
     upload.array('files', config.markers.maxFiles), // multer file upload
     handleImages(markerImageService), // sharp file editing
     [
+      body('geometryType').not().isEmpty().trim(),
       body('geometryCoordinates').not().isEmpty().trim(),
       body('title').not().isEmpty().trim().escape(),
-      body('address').not().isEmpty().trim().escape(),
-      body('zoom').trim(),
+      body('address').trim().escape(),
+      body('zoom').not().isEmpty().trim(),
       body('body').trim(),
       body('featureCollectionTitle').trim().escape(),
     ],
+    geojsonCrunch.parseCoords(), // convert coordinate string to proper array
+    geojsonCrunch.addCenter(), // add a center point, based on geojson coords
+    geojsonCrunch.addBbox(), // add a bounding box, based on geojson coords
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
@@ -242,19 +248,24 @@ const featureRouter = ({ config }) => {
       const featureCollectionId = req.body.featureCollectionId
       const featureCollectionTitle = req.body.featureCollectionTitle
       const data = {
-        'geometry.coordinates': JSON.parse(req.body.geometryCoordinates),
+        type: 'Feature',
+        geometry: {
+          type: req.body.geometryType,
+          coordinates: req.body.geometryCoordinates,
+        },
         properties: {
           title: req.body.title,
           body: req.body.body,
           address: req.body.address,
-          zoom: req.body.zoom ? req.body.zoom : null,
+          center: req.body.center,
+          bbox: req.body.bbox,
+          zoom: parseInt(req.body.zoom),
           photos: req.files,
         },
         subscribers: [req.user._id],
         user: req.user._id,
       }
-
-      console.log(JSON.stringify(data, null, 2))
+      // console.log(JSON.stringify(data, null, 2))
 
       // reject posts with no map
       if (!featureCollectionId) {
@@ -275,10 +286,7 @@ const featureRouter = ({ config }) => {
         })
       }
       // reject posts with no address or lat/lng
-      else if (
-        !data.properties.address ||
-        !(data['geometry.coordinates'][0] && data['geometry.coordinates'][1])
-      ) {
+      else if (!(data.geometry.coordinates && data.geometry.type)) {
         const err = 'Please include an address with your post'
         return res.status(400).json({
           status: false,
@@ -340,6 +348,7 @@ const featureRouter = ({ config }) => {
 
         // tack on the bounding box
         // for some reason we need to make a JSON object with none of the mongoose nonsense for buffering to work
+        console.log('pre-buffer')
         const simpleObject = JSON.parse(
           JSON.stringify(featureCollection, null, 2)
         )
@@ -351,6 +360,7 @@ const featureRouter = ({ config }) => {
           }
         ) // buffer around the points
         featureCollection.bbox = turf.bbox(buffered)
+        console.log('post-buffer')
 
         // add this map to the user's list of maps
         // increment the number of posts this user has created
@@ -360,6 +370,7 @@ const featureRouter = ({ config }) => {
           },
           $inc: { numPosts: 1 },
         })
+        console.log('post-userupdate')
 
         // loop through all subscribers to this map and email them
         const targetFeature = feature
@@ -442,11 +453,14 @@ const featureRouter = ({ config }) => {
       body('geometryType').not().isEmpty().trim(),
       body('geometryCoordinates').not().isEmpty().trim(),
       body('title').not().isEmpty().trim().escape(),
-      body('address').not().isEmpty().trim().escape(),
-      body('zoom').trim(),
+      body('address').trim().escape(),
+      body('zoom').not().isEmpty().trim(),
       body('body').trim(),
       body('files_to_delete').trim().escape(),
     ],
+    geojsonCrunch.parseCoords(), // convert coordinate string to proper array
+    geojsonCrunch.addCenter(), // add a center point, based on geojson coords
+    geojsonCrunch.addBbox(), // add a bounding box, based on geojson coords
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
@@ -463,6 +477,7 @@ const featureRouter = ({ config }) => {
 
       const data = {
         _id: featureId,
+        type: 'Feature',
         geometry: {
           type: req.body.geometryType,
           coordinates: req.body.geometryCoordinates,
@@ -471,10 +486,14 @@ const featureRouter = ({ config }) => {
           title: req.body.title,
           body: req.body.body,
           address: req.body.address,
-          zoom: req.body.zoom ? req.body.zoom : null,
+          center: req.body.center,
+          bbox: req.body.bbox,
+          zoom: parseInt(req.body.zoom),
         },
-        user: req.user,
+        user: req.user._id,
       }
+
+      console.log(JSON.stringify(data, null, 2))
 
       // reject posts with no map
       if (!featureCollectionId || !featureId) {
@@ -503,13 +522,13 @@ const featureRouter = ({ config }) => {
               // centerPoint: data.position, // map's center point
               'features.$.user': data.user,
               'features.$.geometry.type': data.geometry.type,
-              'features.$.geometry.coordinates': JSON.parse(
-                data.geometry.coordinates
-              ),
-              'features.$.properties.address': data.properties.address,
-              'features.$.properties.zoom': data.properties.zoom,
+              'features.$.geometry.coordinates': data.geometry.coordinates,
               'features.$.properties.title': data.properties.title,
               'features.$.properties.body': data.properties.body,
+              'features.$.properties.address': data.properties.address,
+              'features.$.properties.center': data.properties.center,
+              'features.$.properties.bbox': data.properties.bbox,
+              'features.$.properties.zoom': data.properties.zoom,
             },
             $addToSet: {
               'features.$.subscribers': req.user, // subscribe to this feature's notifications
