@@ -696,6 +696,13 @@ app.featureCollection.unpackYAML = (feature) => {
     const orig = feature.properties.body // the full body including any YAML and content
     feature.properties.body = matter(feature.properties.body) // split into data and content
     feature.properties.body.orig = orig // attach original
+  } else {
+    // add blank body
+    feature.properties.body = {
+      data: {},
+      content: '',
+      orig: '',
+    }
   }
   return feature
 }
