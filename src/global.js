@@ -2248,9 +2248,6 @@ const showInfoWindow = (marker) => {
           ? app.markers.cluster
           : app.markers.createCluster()
 
-        // bring back the map controls
-        $('.map-control').show()
-
         // inject the new comment
         const commentEl = createComment(res.data, marker.featureData._id)
         commentEl.appendTo($('.info-window-content .existing-comments'))
@@ -2938,9 +2935,6 @@ const openNewFeatureForm = (
         // make a new marker for the new feature
         // put the new feature data into an array and pass to the place method
         app.markers.place([res.data], cluster)
-
-        // bring back the map controls
-        $('.map-control').show()
 
         // remove me marker, if present
         app.markers.wipeMe()
@@ -4029,9 +4023,6 @@ const openMapSelectorPanel = async () => {
     app.markers.me.remove()
     app.markers.me = null
   }
-
-  // make sure controls are visible
-  $('.map-control').show()
 
   // get this user's data from server
   const data = await app.user.fetch()
