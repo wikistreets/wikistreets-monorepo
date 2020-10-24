@@ -1167,6 +1167,7 @@ async function initMap() {
       app.featureCollection.element
     )
     app.featureCollection.element.fitBounds(bounds)
+    app.featureCollection.element.zoomIn(2)
   }
 
   // remove leaflet prefix on copyright notice
