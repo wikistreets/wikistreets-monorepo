@@ -1167,7 +1167,10 @@ async function initMap() {
       app.featureCollection.element
     )
     app.featureCollection.element.fitBounds(bounds)
-    app.featureCollection.element.zoomIn(2)
+    app.featureCollection.element.zoomIn(2) // zoom in a bit
+
+    // hide irrelevant controls to this map type
+    $('.control-search-address, .control-find-location').hide()
   }
 
   // remove leaflet prefix on copyright notice
