@@ -109,6 +109,7 @@ const app = {
         'pk.eyJ1IjoiYWIxMjU4IiwiYSI6ImNrN3FodmtkdzAzbnUzbm1oamJ3cDc4ZGwifQ.VXZygrvQFDu6wNM9i7IN2g',
       baseUrl:
         'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}',
+      geocodeUrl: 'https://api.mapbox.com/geocoding/v5/mapbox.places',
     },
   },
   user: {
@@ -174,26 +175,38 @@ const app = {
       app.localStorage.setItem('coords', JSON.stringify(coords))
     },
     flyTo: (marker) => {
+      let zoom = marker.featureData.properties.zoom // check for this feature's zoom property
+      if (!zoom) zoom = app.featureCollection.element.getZoom() // default zoom, if none present
+      // check whether this marker is a regular leaflet point marker
+      let coords
       if (marker.featureData.geometry.type == 'Point') {
-        // this marker is a regular leaflet point marker
-        let zoom = marker.featureData.properties.zoom
-        // use default zoom level, if none present
-        if (!zoom) zoom = app.featureCollection.element.getZoom()
-        // call the leaflet map's panTo method
-        const coords = marker.getLatLng()
-        app.featureCollection.element.flyTo(coords, zoom)
-        // store this position
-        app.browserGeolocation.coords = coords
-        app.localStorage.setItem('coords', JSON.stringify(coords))
+        coords = marker.getLatLng() // marker's leaflet coords
+        app.featureCollection.element.flyTo(coords, zoom) // use leaflet's flyTo
       } else {
-        // this marker is a different geojson type... use bounding box
-        let bbox = marker.featureData.properties.bbox
-        bbox = [
-          [bbox[1], bbox[0]],
-          [bbox[3], bbox[2]],
-        ]
-        app.featureCollection.element.flyToBounds(bbox)
+        // a non-Point geojson feature shape... should have a center point property
+        if (
+          marker.featureData.properties.center &&
+          marker.featureData.properties.center.length
+        ) {
+          coords = {
+            lat: marker.featureData.properties.center[1],
+            lng: marker.featureData.properties.center[0],
+          }
+          app.featureCollection.element.flyTo(coords, zoom) // use leaflet's flyTo
+        } else {
+          // no center point is stored in this feature... probably older data
+          // use bounding box instead... hopefully this exists
+          let bbox = marker.featureData.properties.bbox
+          bbox = [
+            [bbox[1], bbox[0]],
+            [bbox[3], bbox[2]],
+          ]
+          app.featureCollection.element.flyToBounds(bbox)
+        }
       }
+      // store this position
+      app.browserGeolocation.coords = coords
+      app.localStorage.setItem('coords', JSON.stringify(coords))
     },
     fitBounds: (bbox) => {
       if (!bbox.length == 4) return // abort
@@ -1041,10 +1054,7 @@ app.user.fetch = async () => {
     })
 }
 
-const populateMap = async (recenter = true, sinceDate = null) => {
-  // get the FeatureCollection data from server
-  const data = await app.fetchFeatureCollection(sinceDate)
-
+const populateMap = async (data, recenter = true) => {
   // recenter on map bounding box
   if (recenter && data.bbox && data.bbox.length) {
     app.featureCollection.fitBounds(data.bbox)
@@ -1110,39 +1120,66 @@ async function initMap() {
   if (storedCoords && storedCoords.lat && storedCoords.lng)
     coords = storedCoords
 
-  // set up the leaflet.js map view
-  app.featureCollection.element = new L.map(
-    app.featureCollection.htmlElementId,
-    {
-      // attributionControl: false,
+  // load and add map data and markers to the map
+  const data = await app.fetchFeatureCollection() // get the FeatureCollection data from server
+
+  // load up the appropriate type of map: geographic or non-geographic
+  if (!data.mapType || data.mapType == 'geographic') {
+    // regular geographic map
+    // set up the leaflet.js map view
+    app.featureCollection.element = new L.map(
+      app.featureCollection.htmlElementId,
+      {
+        // attributionControl: false,
+        editable: true,
+        // editOptions: {},
+        zoomControl: false,
+        doubleClickZoom: false,
+      }
+    ).setView([coords.lat, coords.lng], app.featureCollection.zoom.getDefault())
+
+    // load map tiles
+    L.tileLayer(app.apis.mapbox.baseUrl, {
+      attribution:
+        '&copy; <a target="_new" href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a target="_new" href="https://www.openstreetmap.org/copyright">ODbL</a>, Imagery &copy; <a target="_new" href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 21,
+      minZoom: 1,
+      id: 'mapbox/streets-v11',
+      tileSize: 512,
+      zoomOffset: -1,
+      accessToken: app.apis.mapbox.apiKey,
+    }).addTo(app.featureCollection.element)
+  } else if (data.mapType == 'image') {
+    // map on top of uploaded image
+    app.featureCollection.element = L.map(app.featureCollection.htmlElementId, {
+      crs: L.CRS.Simple,
       editable: true,
-      // editOptions: {},
       zoomControl: false,
       doubleClickZoom: false,
-    }
-  ).setView([coords.lat, coords.lng], app.featureCollection.zoom.getDefault())
-  app.featureCollection.element.attributionControl.setPrefix('')
+      minZoom: -2,
+      maxZoom: 20,
+    })
+    const bounds = [
+      [0, 0],
+      [1000, 1000],
+    ]
+    const image = L.imageOverlay(data.underlyingImage, bounds).addTo(
+      app.featureCollection.element
+    )
+    app.featureCollection.element.fitBounds(bounds)
+  }
 
-  // load map tiles
-  L.tileLayer(app.apis.mapbox.baseUrl, {
-    attribution:
-      '&copy; <a target="_new" href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a target="_new" href="https://www.openstreetmap.org/copyright">ODbL</a>, Imagery &copy; <a target="_new" href="https://www.mapbox.com/">Mapbox</a>',
-    maxZoom: 21,
-    minZoom: 1,
-    id: 'mapbox/streets-v11',
-    tileSize: 512,
-    zoomOffset: -1,
-    accessToken: app.apis.mapbox.apiKey,
-  }).addTo(app.featureCollection.element)
+  // remove leaflet prefix on copyright notice
+  app.featureCollection.element.attributionControl.setPrefix('')
 
   // fetch this user's info, if logged-in
   if (app.auth.getToken()) await app.user.fetch()
 
+  // place the data on the map
+  await populateMap(data)
+
   // grab any marker id in the has of the url... need to do this before populating map
   const hash = app.featureCollection.getHashFromUrl()
-
-  // load and add map data and markers to the map
-  await populateMap()
 
   // open the map list of posts for desktop viewers
   openFeatureList()
@@ -1159,11 +1196,13 @@ async function initMap() {
   }, 1000) // note to self: we need to calculate this latency, not hard-code it
 
   // do this again every 15 seconds
-  setInterval(() => {
-    // fetch feaatureCollection data from server
+  setInterval(async () => {
+    // fetch featureCollection data from server
     // don't re-center the map, fetch only new data since last fetch
     if (!app.featureCollection.currentlyFetching) {
-      populateMap(false, app.featureCollection.dateLastFetched)
+      const sinceDate = app.featureCollection.dateLastFetched
+      const data = await app.fetchFeatureCollection(sinceDate) // get the FeatureCollection data from server
+      populateMap(data, false)
     }
   }, 15000)
 
@@ -1410,7 +1449,7 @@ $(function () {
  * @param {*} long The longitude
  */
 const reverseGeocode = async (coords) => {
-  const apiFullUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${coords.lng},${coords.lat}.json?access_token=${app.apis.mapbox.apiKey}`
+  const apiFullUrl = `${app.apis.mapbox.geocodeUrl}/${coords.lng},${coords.lat}.json?access_token=${app.apis.mapbox.apiKey}`
   // console.log(apiFullUrl)
   return fetch(apiFullUrl)
     .then((response) => response.json()) // convert JSON response text to an object
@@ -1449,7 +1488,7 @@ const reverseGeocode = async (coords) => {
  */
 const forwardGeocode = async (searchterm, coords = false) => {
   let proximityQuery = coords ? `&proximity=${coords.lng},${coords.lat}&` : ''
-  const apiFullUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${searchterm}.json?${proximityQuery}access_token=${app.apis.mapbox.apiKey}`
+  const apiFullUrl = `${app.apis.mapbox.geocodeUrl}/${searchterm}.json?${proximityQuery}access_token=${app.apis.mapbox.apiKey}`
   // console.log(apiFullUrl)
   return fetch(apiFullUrl)
     .then((response) => response.json()) // convert JSON response text to an object
@@ -2052,13 +2091,7 @@ const showInfoWindow = (marker) => {
     // center the map on the selected marker after panel has opened
     app.featureCollection.element.invalidateSize(true) // notify leaflet that size has changed
 
-    if (marker.featureData.geometry.type == 'Point') {
-      // it's a point marker... use leaflet to get its center point
-      app.featureCollection.flyTo(marker) // pan to marker
-    } else {
-      // it's some other geojson type... need to fit it on screen
-      app.featureCollection.flyTo(marker) // pan to marker
-    }
+    app.featureCollection.flyTo(marker) // fly to marker
 
     // handle click on username event
     $('.info-window .user-link').on('click', (e) => {
@@ -3416,7 +3449,7 @@ const openSignupPanel = async () => {
     // post to server
     return app
       .myFetch(app.apis.wikistreets.userSignup, 'POST', formData)
-      .then((res) => {
+      .then(async (res) => {
         // check for error
         if (res.error) {
           console.error(`ERROR: ${JSON.stringify(res.error, null, 2)}`)
@@ -3435,7 +3468,8 @@ const openSignupPanel = async () => {
         collapseInfoWindow()
 
         // load the map again, in case this user has been added as an invited contributor
-        populateMap()
+        const data = await app.fetchFeatureCollection() // get the FeatureCollection data from server
+        populateMap(data)
       })
       .catch((err) => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)

@@ -25,6 +25,8 @@ const featureCollectionSchema = new Schema(
       lowercase: true,
     },
     description: String,
+    mapType: String, // 'geographic' or 'image'
+    underlyingImage: String, // the url/path to the image for 'image' mapTypes
     limitContributors: {
       type: Boolean,
       default: true,

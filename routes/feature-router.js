@@ -352,14 +352,15 @@ const featureRouter = ({ config }) => {
         const simpleObject = JSON.parse(
           JSON.stringify(featureCollection, null, 2)
         )
-        const buffered = turf.buffer(
-          simpleObject,
-          config.map.boundingBoxBuffer,
-          {
-            units: 'kilometers',
-          }
-        ) // buffer around the points
-        featureCollection.bbox = turf.bbox(buffered)
+        // const buffered = turf.buffer(
+        //   simpleObject,
+        //   config.map.boundingBoxBuffer,
+        //   {
+        //     units: 'kilometers',
+        //   }
+        // ) // buffer around the points
+        // featureCollection.bbox = turf.bbox(buffered)
+        featureCollection.bbox = turf.bbox(simpleObject)
         console.log('post-buffer')
 
         // add this map to the user's list of maps
@@ -493,7 +494,7 @@ const featureRouter = ({ config }) => {
         user: req.user._id,
       }
 
-      console.log(JSON.stringify(data, null, 2))
+      // console.log(JSON.stringify(data, null, 2))
 
       // reject posts with no map
       if (!featureCollectionId || !featureId) {
@@ -601,14 +602,15 @@ const featureRouter = ({ config }) => {
         const simpleObject = JSON.parse(
           JSON.stringify(featureCollection, null, 2)
         )
-        const buffered = turf.buffer(
-          simpleObject,
-          config.map.boundingBoxBuffer,
-          {
-            units: 'kilometers',
-          }
-        ) // buffer around the points
-        featureCollection.bbox = turf.bbox(buffered)
+        // const buffered = turf.buffer(
+        //   simpleObject,
+        //   config.map.boundingBoxBuffer,
+        //   {
+        //     units: 'kilometers',
+        //   }
+        // ) // buffer around the points
+        // featureCollection.bbox = turf.bbox(buffered)
+        featureCollection.bbox = turf.bbox(simpleObject)
 
         // // add this map to the user's list of maps
         req.user.featureCollections.pull(featureCollection._id) // first remove from list
