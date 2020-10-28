@@ -142,6 +142,7 @@ const app = {
     htmlElementSelector: '#map', // the id of the map element in the html
     mapType: 'geographic', // default type
     title: '',
+    unsaved: true, // assume it's not a saved map
     geolocation: {
       // default geolocation at a random point
       lat: Math.random() * 140 - 70, // bewteen -70 to +70... sorry arctic and antarctic
@@ -1037,6 +1038,9 @@ const populateMap = async (data, recenter = true) => {
     app.featureCollection.fitBounds(data.bbox)
   }
 
+  // determine whether this map is saved to the db, or a blank starter map
+  app.featureCollection.unsaved = data.unsaved || false
+
   // console.log(JSON.stringify(data, null, 2))
   // scrape map metadata
   try {
@@ -1136,19 +1140,19 @@ async function initMap() {
       zoomControl: false,
       doubleClickZoom: false,
       minZoom: -2,
-      maxZoom: 20,
+      maxZoom: 2,
     })
     const bounds = [
       [0, 0],
       [data.underlyingImage.height, data.underlyingImage.width],
     ]
-    console.log(bounds)
+
     const imagePath = `/static/uploads/${data.underlyingImage.filename}`
     const image = L.imageOverlay(imagePath, bounds).addTo(
       app.featureCollection.element
     )
     app.featureCollection.element.fitBounds(bounds)
-    app.featureCollection.element.zoomIn(1) // zoom in a bit
+    // app.featureCollection.element.zoomIn(1) // zoom in a bit
 
     // hide irrelevant controls to this map type
     $('.control-search-address, .control-find-location').hide()
@@ -1529,25 +1533,23 @@ const addMapContextMenu = (selectedMapListItem) => {
   const deleteLinkString = app.auth.isEditor()
     ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Delete</a>`
     : ''
-  const forkLinkString =
-    app.auth.getToken() && app.markers.markers.length > 0
-      ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Fork</a>`
-      : ''
+  const forkLinkString = app.auth.getToken()
+    ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Fork</a>`
+    : ''
   const renameLinkString =
-    app.auth.isEditor() && app.markers.markers.length > 0
+    app.auth.isEditor() && !app.featureCollection.unsaved
       ? `<a class="rename-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Rename...</a>`
       : ''
   const styleLinkString = app.auth.isEditor()
     ? `<a class="style-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Map style...</a>`
     : ''
   const collaborateLinkString =
-    app.auth.isEditor() && app.markers.markers.length > 0
+    app.auth.isEditor() && !app.featureCollection.unsaved
       ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Invite collaborators...</a>`
       : ''
-  const importLinkString =
-    app.auth.isEditor() > 0
-      ? `<a class="import-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Import data...</a>`
-      : ''
+  const importLinkString = app.auth.isEditor()
+    ? `<a class="import-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Import data...</a>`
+    : ''
   const exportLinkString =
     app.markers.markers.length > 0
       ? `<a class="export-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Export data...</a>`
@@ -1563,8 +1565,8 @@ const addMapContextMenu = (selectedMapListItem) => {
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
         <a class="copy-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Copy link</a>
         ${renameLinkString}
-        ${styleLinkString}
         ${collaborateLinkString}
+        ${styleLinkString}
         ${forkLinkString}
         ${deleteLinkString}
         ${importLinkString}

@@ -213,6 +213,10 @@ const featureCollectionRouter = ({ config }) => {
 
       let updates = {
         mapType: mapType,
+        $addToSet: {
+          subscribers: req.user,
+          contributors: req.user,
+        },
       }
 
       // add underlying image if mapType is image type
@@ -236,7 +240,7 @@ const featureCollectionRouter = ({ config }) => {
           $or: [{ limitContributors: false }, { contributors: req.user }],
         },
         updates,
-        { new: true } // new = return doc as it is after update
+        { upsert: true, new: true } // new = return doc as it is after update
       )
 
       // return response
@@ -523,7 +527,7 @@ const featureCollectionRouter = ({ config }) => {
           description: 'A blank starter map',
           features: [],
           bbox: [],
-          saved: false, // not a real featureCollection
+          unsaved: true, // not a real featureCollection
         }
       }
 
