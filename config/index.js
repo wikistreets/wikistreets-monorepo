@@ -31,8 +31,8 @@ const config = {
     boundingBoxBuffer: 1, // 1 km
     uploadDirectory: 'public/uploads',
     maxFiles: 1, // underlying image
-    maxImageWidth: 1200,
-    maxImageHeight: 1200,
+    maxImageWidth: 4000,
+    maxImageHeight: 4000,
     maxImageFileSize: 50 * 1024 * 1024, // 50MB
   },
   jwt: {
