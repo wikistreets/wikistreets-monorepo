@@ -1139,7 +1139,7 @@ async function initMap() {
       editable: true,
       zoomControl: false,
       doubleClickZoom: false,
-      minZoom: -2,
+      minZoom: -4,
       maxZoom: 2,
     })
     const bounds = [
