@@ -14,13 +14,17 @@ const reorientJpeg = async (buffer, quality = 100) => {
   const modified = await jo
     .rotate(buffer, { quality: quality })
     .then(({ buffer, orientation, dimensions, quality }) => {
-      console.log(`Orientation was ${orientation}`)
+      // console.log(`Orientation was ${orientation}`)
       // console.log(
       //   `Dimensions after rotation: ${dimensions.width}x${dimensions.height}`
       // )
       // console.log(`Quality: ${quality}`)
       // ...Do whatever you need with the resulting buffer...
-      return buffer
+      const data = {
+        buffer: buffer,
+        dimensions: dimensions,
+      }
+      return data
     })
     .catch((error) => {
       // console.log('An error occurred when rotating the file: ' + error.message)
@@ -41,6 +45,12 @@ function ImageService({ config }) {
     if (!reoriented) console.log('no buffer from jpeg-autorotate')
     buffer = reoriented ? reoriented : buffer
 
+    // will hold filename and dimensions
+    let image = {
+      filename: filename,
+      filepath: filepath,
+    }
+
     // resize and store image
     await sharp(buffer)
       .resize(config.maxImageWidth, config.maxImageHeight, {
@@ -49,9 +59,17 @@ function ImageService({ config }) {
       })
       .toFormat('jpg')
       .toFile(filepath)
+      .then((info) => {
+        // store dimensions
+        image.dimensions = {
+          width: info.width,
+          height: info.height,
+        }
+        image.size = info.size // bytes
+      })
 
-    // return filename
-    return filename
+    // return data
+    return image
   } // store
 
   this.delete = async (filename) => {

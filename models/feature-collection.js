@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 const { featureSchema } = require('./feature')
 const { userSchema } = require('./user')
+const { fileSchema } = require('./file')
 
 // a FeatureCollection (a.k.a map)
 // aims to be geojson compatible - see spec https://tools.ietf.org/html/rfc7946#section-1.3
@@ -25,8 +26,8 @@ const featureCollectionSchema = new Schema(
       lowercase: true,
     },
     description: String,
-    mapType: String, // 'geographic' or 'image'
-    underlyingImage: String, // the url/path to the image for 'image' mapTypes
+    mapType: { type: String, default: 'geographic' }, // 'geographic' or 'image'
+    underlyingImage: fileSchema, // used for 'image' mapTypes
     limitContributors: {
       type: Boolean,
       default: true,

@@ -925,7 +925,7 @@
 
     <!-- .import-data-container -->
     <div class="import-data-container hide">
-          <h2>Import a GeoJSON data file</h3>
+          <h2>Import a GeoJSON data file</h2>
           <form class="import-data-form" action="/map/import-geojson" method="POST">
             <div class="file-upload-container">
               <div class="button-container">
@@ -959,6 +959,54 @@
           </form>
     </div>
     <!-- // .import-data-container -->
+
+    <!-- .map-styles-container -->
+    <div class="map-styles-container hide">
+          <h2>Map style:</h2>
+          <div class="basemap-selector container-fluid row">
+            <div class="basemap-option geographic col-6">
+              <img class="img-fluid" src="/static/images/basemaps/standard.png" />
+              <p>Standard map</p>
+            </div>
+            <div class="basemap-option image col-6">
+              <img class="img-fluid" src="/static/images/basemaps/custom-image.png" />
+              <p>Custom image</p>
+            </div>
+          </div><!-- //.basemap-selector -->
+
+          <form class="map-style-form" action="/map/styles" method="POST">
+            <input type="hidden" class="mapType" name="mapType" />
+            <div class="file-upload-container hide">
+              <div class="button-container">
+                <input
+                  class="form-control-file hide"
+                  id="files"
+                  name="files-excuse"
+                  type="file"
+                  multiple
+                />
+                <a class="add-photos-link" href="#">Add a custom image</a>
+                <span class="display-none d-md-inline">
+                  <br />(drag-and-drop or
+                  <a href="#" class="add-photos-link">click here</a>)</span
+                >
+              </div>
+              <div class="drop-container hide">
+                <p>Drop your map image here</p>
+              </div>
+              <div class="thumbs-container row">
+                <!-- file thumbnails will go here -->
+              </div>
+            </div>
+            
+            <button type="submit" class="form-control btn btn-primary col-4 col-sm-3 col-md-6 col-lg-5 col-xl-4">
+              Save
+            </button>
+            <a class="cancel-link" href="#">Cancel</a>
+          </form>
+    </div>
+    <!-- // .map-styles -->
+
     <!-- spinner icon -->
     <div class="spinner-container hide">
       <div class="spinner-overlay">

@@ -17,17 +17,19 @@ const handleImages = (imageService) => async (req, res, next) => {
         file.mimetype === 'image/gif'
       ) {
         // save to disk and store data in file object within req.files array
-        const filename = await imageService.store(file.buffer).catch((err) => {
+        const data = await imageService.store(file.buffer).catch((err) => {
           return next(err)
         })
 
         // repackage only the data we want to keep about the file
         const fileObj = {
-          filename: filename,
-          // path: imageService.filepath(filename),
+          filename: data.filename,
+          path: imageService.filepath(data.filename),
           mimetype: file.mimetype,
           encoding: file.encoding,
-          size: file.size,
+          width: data.dimensions.width,
+          height: data.dimensions.height,
+          size: data.size,
         }
 
         // add to accepted file list

@@ -21,6 +21,10 @@ const { FeatureCollection } = require('../models/feature-collection')
 const { Feature } = require('../models/feature')
 const { User } = require('../models/user')
 
+// image editing service
+const { ImageService } = require('../services/ImageService')
+const handleImages = require('../middlewares/handle-images.js') // our own image handler
+
 // emailer
 const { EmailService } = require('../services/EmailService')
 const { Invitation } = require('../models/invitation')
@@ -35,6 +39,9 @@ const featureCollectionRouter = ({ config }) => {
 
   // our passport strategies in action
   const passportJWT = passport.authenticate('jwt', { session: false })
+
+  // set up our image editing service
+  const mapImageService = new ImageService({ config: config.map })
 
   // memory storage
   const storage = multer.memoryStorage()
@@ -180,6 +187,67 @@ const featureCollectionRouter = ({ config }) => {
           status: false,
           message: err,
           error: err,
+        })
+      }
+    }
+  )
+
+  // route to set the map style
+  router.post(
+    '/map/style',
+    passportJWT,
+    upload.array('files', config.markers.maxFiles), // multer file upload
+    handleImages(mapImageService), // sharp file editing
+    [
+      body('mapType').not().isEmpty().trim(),
+      body('featureCollectionId').not().isEmpty().trim(),
+    ],
+    async (req, res) => {
+      let errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw 'Invalid map type or feature collection identifier'
+      }
+
+      const featureCollectionId = req.body.featureCollectionId
+      const mapType = req.body.mapType
+
+      let updates = {
+        mapType: mapType,
+      }
+
+      // add underlying image if mapType is image type
+      if (mapType == 'image' && req.files && req.files.length) {
+        req.files.map((file, i) => {
+          // if multiple files were uploaded, only store the last only
+          updates.underlyingImage = file
+        })
+      } else if (mapType == 'image') {
+        // if there are no files for an image map type, reject it
+        return res.status(400).json({
+          error: 'You must upload an image for a custom map',
+          message: 'You must upload an image for a custom map',
+        })
+      }
+
+      // save the updated map, if existent, or new map if not
+      const featureCollection = await FeatureCollection.findOneAndUpdate(
+        {
+          publicId: featureCollectionId,
+          $or: [{ limitContributors: false }, { contributors: req.user }],
+        },
+        updates,
+        { new: true } // new = return doc as it is after update
+      )
+
+      // return response
+      if (featureCollection) {
+        return res.json({
+          status: true,
+          message: 'Updated map style',
+        })
+      } else {
+        return res.status(400).json({
+          error: 'Invalid map style',
         })
       }
     }

@@ -520,6 +520,21 @@ button.dropdown-toggle img {
 }
 /* // file uploader */
 
+/* map-styles-container */
+.info-window .map-styles-container .basemap-option {
+  cursor: pointer;
+}
+.info-window .map-styles-container .basemap-option * {
+  pointer-events: none;
+}
+.info-window .map-styles-container .basemap-option img {
+  border: 4px solid transparent;
+}
+.info-window .map-styles-container .basemap-option.active img {
+  border: 4px solid blue;
+}
+/* //.map-styles-container */
+
 /* search results */
 .matching-addresses .list-group-item {
   color: #ccc;
@@ -558,6 +573,7 @@ button.dropdown-toggle img {
 .rename-map-container,
 .about-forks,
 .settings-map-container,
+.map-styles-container,
 .log-in,
 .sign-up,
 .reset-password,

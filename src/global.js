@@ -52,6 +52,8 @@ const app = {
     anonymousfeaturecollectiontitle: 'unnamed map',
     sharefeaturemessage: 'Link copied to clipboard.  Share anywhere!',
     sharemapmessage: 'Link copied to clipboard.  Share anywhere!',
+    confirmmapstylechange:
+      'Are you sure? Changing map styles will probably throw off the position of your markers and other existing map features.',
   },
   localStorage: {
     getItem: (key) => {
@@ -97,11 +99,15 @@ const app = {
       getUserUrl: '/users',
       featureCollectionTitleUrl: '/map/title',
       collaborationSettingsUrl: '/map/collaboration',
+      mapStyleUrl: '/map/style',
       deleteFeatureCollectionUrl: '/map/remove',
       forkFeatureCollectionUrl: '/map/fork',
       staticMapUrl: '/map',
       importFeatureCollectionUrl: '/map/import',
       exportFeatureCollectionUrl: '/map/export',
+    },
+    openstreetmap: {
+      baseUrl: 'http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
     },
     mapbox: {
       // settings for the Mapbox API
@@ -134,6 +140,7 @@ const app = {
     element: null,
     htmlElementId: 'map',
     htmlElementSelector: '#map', // the id of the map element in the html
+    mapType: 'geographic', // default type
     title: '',
     geolocation: {
       // default geolocation at a random point
@@ -354,7 +361,6 @@ const app = {
         active: {
           color: '#961e1e',
           fillColor: 'orange',
-          weight: 6,
         },
       },
       Polygon: {
@@ -367,7 +373,6 @@ const app = {
         active: {
           color: '#961e1e',
           fillColor: 'orange',
-          weight: 6,
         },
       },
       // points
@@ -381,9 +386,6 @@ const app = {
           markerColor: 'black',
         },
         active: {
-          icon: 'fa-camera',
-          shape: 'square',
-          prefix: 'fa',
           markerColor: 'red',
         }, //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
       },
@@ -395,9 +397,6 @@ const app = {
           markerColor: 'black',
         },
         active: {
-          icon: 'fa-align-left',
-          shape: 'square',
-          prefix: 'fa',
           markerColor: 'red',
         }, //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
       },
@@ -427,72 +426,50 @@ const app = {
       if (!['Point', 'LineString', 'Polygon'].includes(featureType)) {
         featureType = 'Polygon' // will use polygon styles for these
       }
+      // handle Points, where we have two sub-featureTypes when it comes to styles
+      if (featureType == 'Point') {
+        featureType = marker.featureType
+      }
 
-      let style // the styles for this marker
+      // start with a baseline style, based on whether this post has a photo or just text
+      let style = app.markers.styles[featureType][state]
+
+      // merge these styles with the default styles for this feature type, if available
+      if (state != 'default' && app.markers.styles[featureType]['default']) {
+        style = objectMerge(app.markers.styles[featureType]['default'], style)
+      }
+
       const postBody = feature.properties.body
-      if (
-        postBody &&
-        postBody.data &&
-        postBody.data.styles &&
-        postBody.data.styles[state]
-      ) {
-        // start with a baseline icon, based on whether this post has a photo or just text
-        let defaultStyles = app.markers.styles[featureType][state]
-
-        // there are custom marker settings in the post's YAML... either just an icon setting or a whole styles object
-        const postStyles = postBody.data.styles[state]
+      if (postBody && postBody.data) {
+        let postStyles = {} // assume blank
+        // for Points, we allow just an 'icon' setting, if present
+        if (feature.geometry.type == 'Point') {
+          if (
+            postBody.data.icon ||
+            (postBody.data.styles && postBody.data.styles[state])
+          ) {
+            postStyles = postBody.data.styles
+              ? postBody.data.styles[state]
+              : { icon: postBody.data.icon }
+          }
+        }
+        // for all other geometry types, require the regular style object with explicit states
+        else if (postBody.data.styles && postBody.data.styles[state]) {
+          // there are custom marker settings in the post's YAML... either just an icon setting or a whole styles object
+          postStyles = postBody.data.styles[state]
+        }
 
         // merge the two styles
-        // console.log(JSON.stringify(defaultStyles, null, 2))
-        // console.log(JSON.stringify(postStyles, null, 2))
-        const mergedStyles = objectMerge(defaultStyles, postStyles)
-
-        // return a function
-        style = mergedStyles
-      }
-      if (!style) {
-        // use the default style
-        // return a function
-        style = app.markers.styles[featureType][state]
+        style = objectMerge(style, postStyles)
       }
       return style
     },
     getIcon: (marker, state = 'default') => {
-      // return the appropriate icon for this marker
-      const feature = marker.featureData
+      // get the styles for this marker
+      const style = app.markers.getStyle(marker, state)
 
-      let icon // the icon styles for this marker
-      const postBody = feature.properties.body
-      if (
-        postBody &&
-        postBody.data &&
-        (postBody.data.icon ||
-          (postBody.data.styles && postBody.data.styles[state]))
-      ) {
-        // start with a baseline icon, based on whether this post has a photo or just text
-        let defaultStyles = app.markers.styles[marker.featureType][state]
-
-        // there are custom marker settings in the post's YAML... either just an icon setting or a whole styles object
-        const postStyles = postBody.data.styles
-          ? postBody.data.styles[state]
-          : { icon: postBody.data.icon }
-
-        // merge the two styles
-        const mergedStyles = objectMerge(defaultStyles, postStyles)
-
-        try {
-          icon = L.ExtraMarkers.icon(mergedStyles)
-        } catch (err) {
-          // error parsing marker styles
-        }
-      }
-      if (!icon) {
-        // use the default markers
-        icon = L.ExtraMarkers.icon(
-          app.markers.styles[marker.featureType][state]
-        )
-      }
-      return icon
+      // return an icon with these styles
+      return L.ExtraMarkers.icon(style)
     },
   },
   infoPanel: {
@@ -1124,7 +1101,8 @@ async function initMap() {
   const data = await app.fetchFeatureCollection() // get the FeatureCollection data from server
 
   // load up the appropriate type of map: geographic or non-geographic
-  if (!data.mapType || data.mapType == 'geographic') {
+  app.featureCollection.mapType = data.mapType ? data.mapType : 'geographic' // default to geographic
+  if (app.featureCollection.mapType == 'geographic') {
     // regular geographic map
     // set up the leaflet.js map view
     app.featureCollection.element = new L.map(
@@ -1140,6 +1118,7 @@ async function initMap() {
 
     // load map tiles
     L.tileLayer(app.apis.mapbox.baseUrl, {
+      // or app.apis.openstreetmap.baseUrl
       attribution:
         '&copy; <a target="_new" href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a target="_new" href="https://www.openstreetmap.org/copyright">ODbL</a>, Imagery &copy; <a target="_new" href="https://www.mapbox.com/">Mapbox</a>',
       maxZoom: 21,
@@ -1149,7 +1128,7 @@ async function initMap() {
       zoomOffset: -1,
       accessToken: app.apis.mapbox.apiKey,
     }).addTo(app.featureCollection.element)
-  } else if (data.mapType == 'image') {
+  } else if (app.featureCollection.mapType == 'image') {
     // map on top of uploaded image
     app.featureCollection.element = L.map(app.featureCollection.htmlElementId, {
       crs: L.CRS.Simple,
@@ -1161,13 +1140,15 @@ async function initMap() {
     })
     const bounds = [
       [0, 0],
-      [1000, 1000],
+      [data.underlyingImage.height, data.underlyingImage.width],
     ]
-    const image = L.imageOverlay(data.underlyingImage, bounds).addTo(
+    console.log(bounds)
+    const imagePath = `/static/uploads/${data.underlyingImage.filename}`
+    const image = L.imageOverlay(imagePath, bounds).addTo(
       app.featureCollection.element
     )
     app.featureCollection.element.fitBounds(bounds)
-    app.featureCollection.element.zoomIn(2) // zoom in a bit
+    app.featureCollection.element.zoomIn(1) // zoom in a bit
 
     // hide irrelevant controls to this map type
     $('.control-search-address, .control-find-location').hide()
@@ -1554,8 +1535,11 @@ const addMapContextMenu = (selectedMapListItem) => {
       : ''
   const renameLinkString =
     app.auth.isEditor() && app.markers.markers.length > 0
-      ? `<a class="rename-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Rename</a>`
+      ? `<a class="rename-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Rename...</a>`
       : ''
+  const styleLinkString = app.auth.isEditor()
+    ? `<a class="style-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Map style...</a>`
+    : ''
   const collaborateLinkString =
     app.auth.isEditor() && app.markers.markers.length > 0
       ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Invite collaborators...</a>`
@@ -1579,6 +1563,7 @@ const addMapContextMenu = (selectedMapListItem) => {
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
         <a class="copy-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Copy link</a>
         ${renameLinkString}
+        ${styleLinkString}
         ${collaborateLinkString}
         ${forkLinkString}
         ${deleteLinkString}
@@ -1645,7 +1630,13 @@ const addMapContextMenu = (selectedMapListItem) => {
     openCollaborationSettings()
   }) // collaborate-map-link click
 
-  // enable rename map link, if authorized
+  // enable link to manage styles
+  $('.style-map-link', selectedMapListItem).on('click', (e) => {
+    e.preventDefault()
+    openStyleMapForm()
+  })
+
+  // enable rename map link and style link, if authorized
   if (app.auth.isEditor()) {
     // $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
     $('.rename-map-link', selectedMapListItem).on('click', (e) => {
@@ -2596,6 +2587,136 @@ const openRenameMapForm = () => {
     collapseInfoWindow()
   })
 } // openRenameMapForm
+
+const openStyleMapForm = () => {
+  // remove anything currently in the info window
+  $('.info-window-content').html('')
+  // inject a copy of the style settings into info window
+  const panelEl = $('.map-styles-container').clone()
+  panelEl.appendTo('.info-window-content')
+  panelEl.removeClass('hide')
+  panelEl.show()
+
+  // get this map's type
+  let mapType = app.featureCollection.mapType
+    ? app.featureCollection.mapType
+    : 'geographic' // default to geographic
+  // pre-select the appropriate thumbnail
+  $(`.basemap-selector .basemap-option.${mapType}`, panelEl).addClass('active')
+  $('.mapType', panelEl).val(mapType) // set map type in form
+  if (mapType == 'image') $('.file-upload-container').removeClass('hide') // show image upload options, if relevant
+
+  // handle clicks on basemap style options
+  $('.basemap-option', panelEl).on('click', (e) => {
+    // add active class to selected type
+    $('.basemap-option', panelEl).removeClass('active') // dehighlight all
+    $(e.target).addClass('active') // highlight selected
+    // show image upload options, if selected
+    if ($(e.target).hasClass('image')) {
+      $('.mapType', panelEl).val('image') // set map type in form
+      // show image map options, if that is selected
+      $('.file-upload-container', panelEl).removeClass('hide')
+      $('.file-upload-container', panelEl).show()
+    } else {
+      $('.mapType', panelEl).val('geographic') // set map type in form
+      // hide image map options if geographic map selected
+      $('.file-upload-container', panelEl).addClass('hide')
+      $('.file-upload-container', panelEl).hide()
+    }
+  })
+
+  // create a decent file uploader for photos
+  const fuploader = new FUploader({
+    container: {
+      el: document.querySelector('.info-window-content .file-upload-container'),
+      activeClassName: 'active',
+    },
+    fileSelector: {
+      el: document.querySelector('.info-window-content input[type="file"]'),
+    },
+    buttonContainer: {
+      el: document.querySelector('.info-window-content .button-container'),
+    },
+    thumbsContainer: {
+      el: document.querySelector('.info-window-content .thumbs-container'),
+      thumbClassName: 'thumb',
+      thumbImgClassName: 'thumb-img',
+      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
+      closeIconClassName: 'close-icon',
+      closeIconCallback: () => {},
+    },
+    dropContainer: {
+      el: document.querySelector('.info-window-content .drop-container'),
+      activeClassName: 'active',
+    },
+    form: {
+      el: document.querySelector('.info-window-content .import-data-form'),
+      droppedFiles: [], // nothing yet
+    },
+  })
+  fuploader.init() // initalize settings
+
+  // activate add image link
+  $('.add-photos-link', panelEl).on('click', (e) => {
+    e.preventDefault()
+    $('input[type="file"]', panelEl).trigger('click')
+  })
+
+  // handle cancel button click
+  $('.cancel-link', panelEl).on('click', (e) => {
+    e.preventDefault()
+    collapseInfoWindow()
+  })
+
+  // handle form submission
+  $('.map-style-form').on('submit', (e) => {
+    e.preventDefault()
+    // show the spinner till done
+    showSpinner($('.info-window'))
+
+    // ask user to confirm if there are markers on the map already
+    const confirmed =
+      app.features.features.length == 0 ||
+      confirm(app.copy.confirmmapstylechange)
+    if (confirmed) {
+      // go ahead and submit
+      // construct a FormData object from the form DOM element
+      let formData = new FormData(e.target)
+
+      // remove the input type='file' data, since we don't need it
+      formData.delete('files-excuse')
+
+      // add any drag-and-dropped files to this
+      const files = fuploader.getDroppedFiles()
+      // console.log(files)
+
+      // add files from array to formdata
+      $.each(files, function (i, file) {
+        formData.append('files', file)
+      })
+
+      // post to server
+      app
+        .myFetch(app.apis.wikistreets.mapStyleUrl, 'POST', formData)
+        .then((res) => {
+          // hide the spinner
+          hideSpinner($('.info-window'))
+
+          if (!res.status) {
+            openErrorPanel(res.message)
+            return
+          }
+
+          // reload page
+          window.location.replace(
+            window.location.pathname +
+              window.location.search +
+              window.location.hash
+          )
+        })
+    }
+  })
+}
 
 const openCollaborationSettings = () => {
   // remove anything currently in the info window
