@@ -1172,6 +1172,7 @@ async function initMap() {
 
     let x = 0
     let y = 0
+    let totalY = 0
     data.underlyingImages.forEach((imageData) => {
       // console.log(JSON.stringify(image, null, 2))
       const bounds = [
@@ -1188,11 +1189,12 @@ async function initMap() {
       // update x and y for next image, if any
       x += imageData.width
       // y += imageData.height
+      totalY += imageData.height
     })
 
     const totalBounds = [
       [0, 0],
-      [y, x],
+      [totalY, x],
     ]
     app.featureCollection.element.fitBounds(totalBounds)
     // app.featureCollection.element.zoomIn(1) // zoom in a bit
