@@ -3351,7 +3351,11 @@ const openEditFeatureForm = async (featureId) => {
   $('.info-window .cancel-link').on('click', async (e) => {
     e.preventDefault()
     if (marker.featureData.geometry.type != 'Point') {
-      marker.disableEdit() // don't allow moving the shape
+      try {
+        marker.disableEdit() // don't allow moving the shape
+      } catch (err) {
+        // multi-part geojson shapes aren't supported yet
+      }
     }
     showInfoWindow(marker) // switch to feature detail view
   })
@@ -3362,7 +3366,11 @@ const openEditFeatureForm = async (featureId) => {
     e.preventDefault()
 
     if (marker.featureData.geometry.type != 'Point') {
-      marker.disableEdit() // don't allow moving the shape
+      try {
+        marker.disableEdit() // don't allow moving the shape
+      } catch (err) {
+        // multi-part geojson shapes aren't supported yet
+      }
     }
 
     // show the spinner till done
