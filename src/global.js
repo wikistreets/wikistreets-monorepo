@@ -3223,11 +3223,15 @@ const openEditFeatureForm = async (featureId) => {
     marker.dragging.enable() // make it draggable
   } else {
     // it's another geojson shape... allow leaflet-editable editing
-    marker.enableEdit() // doesn't work... perhaps because it's a L.geoJSON object
+    try {
+      marker.enableEdit() // doesn't work for some types
 
-    marker.on('editable:editing', function (e) {
-      updateShapeCoords(e.layer, marker.featureData.geometry.type)
-    })
+      marker.on('editable:editing', function (e) {
+        updateShapeCoords(e.layer, marker.featureData.geometry.type)
+      })
+    } catch (err) {
+      // multi-part geojson shapes don't work yet
+    }
   }
 
   // app.featureCollection.panTo(marker.getLatLng()) // pan to marker
