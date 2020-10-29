@@ -1824,8 +1824,18 @@ near ${addressTruncated}.
       ? `<br /><a class="comments-link" href="#">${data.properties.comments.length} comments</a>`
       : ''
 
+  // generate a photo carousel, if needed
   let imgString = createPhotoCarousel(data.properties.photos, data._id)
-  // console.log(imgString)
+
+  // generate an embed iframe, if needed
+  let embedString = ''
+  if (
+    data.properties.body &&
+    data.properties.body.data &&
+    data.properties.body.data.embed
+  ) {
+    embedString = `<iframe width="560" height="315" src="${data.properties.body.data.embed}" frameborder="0" allowfullscreen></iframe>`
+  }
 
   // generate the context menu
   // only show delete link to logged-in users who have permissions to edit this map
@@ -1864,6 +1874,7 @@ near ${addressTruncated}.
     </header>
     <div class="feedback alert alert-success hide"></div>
     <article>
+    ${embedString}
     ${imgString}
     `
   contentString +=
