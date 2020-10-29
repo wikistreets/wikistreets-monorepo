@@ -1203,7 +1203,8 @@ async function initMap() {
   // open the map list of posts for desktop viewers
   openFeatureList()
 
-  handleResizeWindow()
+  // try to fix safari mobile height bug on page load
+  resizeMap()
 
   // load any marker in the url hash
   // need to wait till all the markers have been placed
