@@ -1563,6 +1563,7 @@ const addMapContextMenu = (selectedMapListItem) => {
   // generate the context menu
   // only show delete link to logged-in users who have permissions to edit this map
   // if this is an unsaved app, the only way to currently infer that is through no markers
+  const copyLinkString = `<a class="copy-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Copy link</a>`
   const deleteLinkString = app.auth.isEditor()
     ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Delete</a>`
     : ''
@@ -1596,9 +1597,9 @@ const addMapContextMenu = (selectedMapListItem) => {
         <img src="/static/images/material_design_icons/more_vert_white-24px.svg" title="more options" />
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a class="copy-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Copy link</a>
-        ${renameLinkString}
+        ${copyLinkString}
         ${collaborateLinkString}
+        ${renameLinkString}
         ${styleLinkString}
         ${forkLinkString}
         ${deleteLinkString}
