@@ -60,7 +60,7 @@ const featureCollectionRouter = ({ config }) => {
     storage: storage,
     fileFilter: multerFilter,
     limits: {
-      fileSize: config.markers.maxImageFileSize,
+      fileSize: config.markers.maxImageFileSize, // currently using same max upload size for all upload types: map underlying images, marker images, and geojson import files
     },
     onError: function (err, next) {
       console.log('error', err)
@@ -196,7 +196,7 @@ const featureCollectionRouter = ({ config }) => {
   router.post(
     '/map/style',
     passportJWT,
-    upload.array('files', config.markers.maxFiles), // multer file upload
+    upload.array('files', config.map.maxFiles), // multer file upload
     handleImages(mapImageService), // sharp file editing
     [
       body('mapType').not().isEmpty().trim(),
@@ -205,12 +205,14 @@ const featureCollectionRouter = ({ config }) => {
     async (req, res) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
+        console.log(errors)
         throw 'Invalid map type or feature collection identifier'
       }
 
       const featureCollectionId = req.body.featureCollectionId
       const mapType = req.body.mapType
 
+      // updates to the featureCollection
       let updates = {
         mapType: mapType,
         $addToSet: {
@@ -219,22 +221,18 @@ const featureCollectionRouter = ({ config }) => {
         },
       }
 
-      // add underlying image if mapType is image type
+      // add any underlying images
       if (mapType == 'image' && req.files && req.files.length) {
-        req.files.map((file, i) => {
-          // if multiple files were uploaded, only store the last only
-          updates.underlyingImage = file
-        })
-      } else if (mapType == 'image') {
-        // if there are no files for an image map type, reject it
-        return res.status(400).json({
-          error: 'You must upload an image for a custom map',
-          message: 'You must upload an image for a custom map',
-        })
+        const filesToAdd = req.files
+        updates.$push = {
+          underlyingImages: {
+            $each: filesToAdd,
+          },
+        }
       }
 
       // save the updated map, if existent, or new map if not
-      const featureCollection = await FeatureCollection.findOneAndUpdate(
+      let featureCollection = await FeatureCollection.findOneAndUpdate(
         {
           publicId: featureCollectionId,
           $or: [{ limitContributors: false }, { contributors: req.user }],
@@ -242,6 +240,40 @@ const featureCollectionRouter = ({ config }) => {
         updates,
         { upsert: true, new: true } // new = return doc as it is after update
       )
+
+      // pull deleted images
+      const filesToDelete = req.body.files_to_delete
+        ? req.body.files_to_delete.split(',')
+        : []
+      if (filesToDelete.length) {
+        featureCollection = await FeatureCollection.findOneAndUpdate(
+          {
+            publicId: featureCollectionId,
+            $or: [{ limitContributors: false }, { contributors: req.user }],
+          },
+          {
+            $pull: {
+              underlyingImages: {
+                filename: {
+                  $in: filesToDelete,
+                },
+              },
+            },
+          },
+          { new: true }
+        ).catch((err) => {
+          console.log(`ERROR DELETING: ${err}`)
+        })
+      }
+
+      // add this map to the user's list of maps
+      // increment the number of posts this user has created
+      await req.user.updateOne({
+        $addToSet: {
+          featureCollections: featureCollection,
+        },
+      })
+      // console.log('post-userupdate')
 
       // return response
       if (featureCollection) {
@@ -553,7 +585,7 @@ const featureCollectionRouter = ({ config }) => {
   router.post(
     '/map/import',
     passportJWT, // jwt authentication
-    upload.array('files', config.markers.maxFiles), // multer file upload
+    upload.array('files', config.imports.maxFiles), // multer file upload
     [body('featureCollectionId').trim().escape()],
     async (req, res, next) => {
       // check for validation errors

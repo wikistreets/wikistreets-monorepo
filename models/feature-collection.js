@@ -27,7 +27,7 @@ const featureCollectionSchema = new Schema(
     },
     description: String,
     mapType: { type: String, default: 'geographic' }, // 'geographic' or 'image'
-    underlyingImage: fileSchema, // used for 'image' mapTypes
+    underlyingImages: [fileSchema], // used for 'image' mapTypes
     limitContributors: {
       type: Boolean,
       default: true,

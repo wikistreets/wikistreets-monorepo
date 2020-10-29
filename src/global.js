@@ -1044,6 +1044,10 @@ const populateMap = async (data, recenter = true) => {
   // console.log(JSON.stringify(data, null, 2))
   // scrape map metadata
   try {
+    app.featureCollection.underlyingImages = data.underlyingImages
+      ? data.underlyingImages
+      : []
+
     app.featureCollection.contributors = data.contributors
       ? data.contributors
       : []
@@ -1142,16 +1146,32 @@ async function initMap() {
       minZoom: -4,
       maxZoom: 2,
     })
-    const bounds = [
-      [0, 0],
-      [data.underlyingImage.height, data.underlyingImage.width],
-    ]
 
-    const imagePath = `/static/uploads/${data.underlyingImage.filename}`
-    const image = L.imageOverlay(imagePath, bounds).addTo(
-      app.featureCollection.element
-    )
-    app.featureCollection.element.fitBounds(bounds)
+    let x = 0
+    let y = 0
+    data.underlyingImages.forEach((imageData) => {
+      // console.log(JSON.stringify(image, null, 2))
+      const bounds = [
+        [y, x],
+        [y + imageData.height, x + imageData.width],
+      ]
+
+      // add image to map
+      const imagePath = `/static/uploads/${imageData.filename}`
+      const image = L.imageOverlay(imagePath, bounds).addTo(
+        app.featureCollection.element
+      )
+
+      // update x and y for next image, if any
+      x += imageData.width
+      // y += imageData.height
+    })
+
+    const totalBounds = [
+      [0, 0],
+      [y, x],
+    ]
+    app.featureCollection.element.fitBounds(totalBounds)
     // app.featureCollection.element.zoomIn(1) // zoom in a bit
 
     // hide irrelevant controls to this map type
@@ -2627,6 +2647,35 @@ const openStyleMapForm = () => {
     }
   })
 
+  // inject images that already exist for this post
+  let filesToRemove = [] // we'll fill it up later
+  if (app.featureCollection && app.featureCollection.underlyingImages) {
+    console.log(app.featureCollection.underlyingImages.length)
+    const existingImagesEl = $(
+      '.info-window-content .existing-thumbs-container'
+    )
+    app.featureCollection.underlyingImages.forEach((photo) => {
+      // create a thumbnail
+      const thumb = $(
+        `<div class="thumb" ws-image-filename="${photo.filename}" >
+        <img class="thumb-img" src="/static/uploads/${photo.filename}" title="${photo.filename}" />
+        <img class="close-icon" ws-image-filename="${photo.filename}" src="/static/images/material_design_icons/close-24px.svg">
+      </div>`
+      )
+      // handle removing it
+      $('.close-icon', thumb).on('click', (e) => {
+        const filename = $(e.target).attr('ws-image-filename') // get the image title, which contains the filename
+        $(
+          `.info-window-content .thumb[ws-image-filename="${filename}"]`
+        ).remove() // remove it from screen
+        filesToRemove.push(filename) // add it to list of those to remove
+        console.log(`removing ${filename}`)
+        // add the filename to the list
+      })
+      thumb.appendTo(existingImagesEl)
+    })
+  }
+
   // create a decent file uploader for photos
   const fuploader = new FUploader({
     container: {
@@ -2687,6 +2736,11 @@ const openStyleMapForm = () => {
 
       // remove the input type='file' data, since we don't need it
       formData.delete('files-excuse')
+
+      // add any existing files to delete
+      if (filesToRemove.length) {
+        formData.append('files_to_delete', filesToRemove.join(','))
+      }
 
       // add any drag-and-dropped files to this
       const files = fuploader.getDroppedFiles()
@@ -3903,7 +3957,7 @@ const openContributorsList = async () => {
     updatedAt: app.featureCollection.timestamps.updatedAt,
   }
 
-  const contentEl = $('.contributor-list-container').clone()
+  let contentEl = $('.contributor-list-container').clone()
 
   // add map summary stats to this
   const selectedMapListItem = createMapListItem(mapData, true, true, true, true)

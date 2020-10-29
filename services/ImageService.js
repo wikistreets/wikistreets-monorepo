@@ -37,15 +37,14 @@ const reorientJpeg = async (buffer, quality = 100) => {
 function ImageService({ config }) {
   this.store = async (buffer) => {
     // store buffer to image file
-    const filename = this.filename()
-    const filepath = this.filepath(filename)
-
     // auto-rotate jpegs
     reoriented = await reorientJpeg(buffer) // returns false if messed up
     if (!reoriented) console.log('no buffer from jpeg-autorotate')
     buffer = reoriented ? reoriented : buffer
 
     // will hold filename and dimensions
+    const filename = this.filename()
+    const filepath = this.filepath(filename)
     let image = {
       filename: filename,
       filepath: filepath,

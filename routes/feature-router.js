@@ -348,7 +348,7 @@ const featureRouter = ({ config }) => {
 
         // tack on the bounding box
         // for some reason we need to make a JSON object with none of the mongoose nonsense for buffering to work
-        console.log('pre-buffer')
+        // console.log('pre-buffer')
         const simpleObject = JSON.parse(
           JSON.stringify(featureCollection, null, 2)
         )
@@ -361,7 +361,7 @@ const featureRouter = ({ config }) => {
         // ) // buffer around the points
         // featureCollection.bbox = turf.bbox(buffered)
         featureCollection.bbox = turf.bbox(simpleObject)
-        console.log('post-buffer')
+        // console.log('post-buffer')
 
         // add this map to the user's list of maps
         // increment the number of posts this user has created
@@ -371,7 +371,7 @@ const featureRouter = ({ config }) => {
           },
           $inc: { numPosts: 1 },
         })
-        console.log('post-userupdate')
+        // console.log('post-userupdate')
 
         // loop through all subscribers to this map and email them
         const targetFeature = feature

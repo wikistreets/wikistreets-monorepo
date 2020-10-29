@@ -30,10 +30,14 @@ const config = {
   map: {
     boundingBoxBuffer: 1, // 1 km
     uploadDirectory: 'public/uploads',
-    maxFiles: 1, // underlying image
+    maxFiles: 10, // underlying images
     maxImageWidth: 4000,
     maxImageHeight: 4000,
     maxImageFileSize: 50 * 1024 * 1024, // 50MB
+  },
+  imports: {
+    maxFiles: 10, // imported geojson files
+    maxImageFileSize: 100 * 1024 * 1024, // 100MB
   },
   jwt: {
     jwtIssuer: process.env.JWT_ISSUER,

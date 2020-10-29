@@ -20,6 +20,7 @@ const handleImages = (imageService) => async (req, res, next) => {
         const data = await imageService.store(file.buffer).catch((err) => {
           return next(err)
         })
+        console.log(JSON.stringify(data, null, 2))
 
         // repackage only the data we want to keep about the file
         const fileObj = {

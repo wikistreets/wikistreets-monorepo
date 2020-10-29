@@ -493,7 +493,7 @@ button.dropdown-toggle img {
   padding-bottom: 15px;
 }
 .thumbs-container,
-.feature-form .existing-thumbs-container {
+.existing-thumbs-container {
   margin-top: 10px;
 }
 .existing-thumbs-container {
@@ -507,7 +507,7 @@ button.dropdown-toggle img {
   border: 1px solid white;
 }
 .thumbs-container .thumb img.thumb-img,
-.feature-form .existing-thumbs-container .thumb img.thumb-img {
+.existing-thumbs-container .thumb img.thumb-img {
   height: 100px;
 }
 .thumbs-container .thumb .close-icon,
