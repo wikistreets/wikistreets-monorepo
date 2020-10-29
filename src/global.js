@@ -694,12 +694,19 @@ app.markers.findById = (featureId) => {
 app.featureCollection.unpackYAML = (feature) => {
   // extract the YAML front matter data from the body content, if any
   if (feature.properties.body) {
+    const orig = feature.properties.body // the full body including any YAML and content
     try {
-      const orig = feature.properties.body // the full body including any YAML and content
       feature.properties.body = matter(feature.properties.body) // split into data and content
       feature.properties.body.orig = orig // attach original
     } catch (err) {
-      console.log('YAML error: ${err}')
+      // problems with the yaml
+      console.log(`YAML problem: ${err}`)
+      // hack together something
+      feature.properties.body = {
+        data: {},
+        orig: orig,
+        content: feature.properties.body,
+      }
     }
   }
   // add a blank body if none
