@@ -593,6 +593,16 @@ app.browserGeolocation.setCoords = (lat, lng) => {
   }
 }
 
+// get random coordinaates on the map
+app.browserGeolocation.getRandomCoords = () => {
+  const coords = {
+    // default geolocation at a random point
+    lat: Math.random() * 140 - 70, // bewteen -70 to +70... sorry arctic and antarctic
+    lng: Math.random() * 360 - 180, // bewteen -180 to +180
+  }
+  return coords
+}
+
 // get the last known coordinates of the map
 app.browserGeolocation.getCoords = () => {
   return app.browserGeolocation.coords
@@ -1099,11 +1109,11 @@ async function initMap() {
   // show loading icon
   showSpinner($('.info-window'))
 
-  let coords = app.browserGeolocation.getCoords() // default coords
+  let coords = app.browserGeolocation.getRandomCoords() // default coords
   // use last known coords, if any
-  const storedCoords = JSON.parse(app.localStorage.getItem('coords'))
-  if (storedCoords && storedCoords.lat && storedCoords.lng)
-    coords = storedCoords
+  // const storedCoords = JSON.parse(app.localStorage.getItem('coords'))
+  // if (storedCoords && storedCoords.lat && storedCoords.lng)
+  //   coords = storedCoords
 
   // load and add map data and markers to the map
   const data = await app.fetchFeatureCollection() // get the FeatureCollection data from server
