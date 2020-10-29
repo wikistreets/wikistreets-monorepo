@@ -1194,11 +1194,11 @@ async function initMap() {
   // fetch this user's info, if logged-in
   if (app.auth.getToken()) await app.user.fetch()
 
-  // place the data on the map
-  await populateMap(data)
-
   // grab any marker id in the has of the url... need to do this before populating map
   const hash = app.featureCollection.getHashFromUrl()
+
+  // place the data on the map
+  await populateMap(data)
 
   // open the map list of posts for desktop viewers
   openFeatureList()
