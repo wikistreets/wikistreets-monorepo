@@ -1829,12 +1829,14 @@ near ${addressTruncated}.
 
   // generate an embed iframe, if needed
   let embedString = ''
-  if (
-    data.properties.body &&
-    data.properties.body.data &&
-    data.properties.body.data.embed
-  ) {
-    embedString = `<iframe width="560" height="315" src="${data.properties.body.data.embed}" frameborder="0" allowfullscreen></iframe>`
+  const body = data.properties.body
+  if (body && body.data && body.data.embed) {
+    // special allow attribute for youtube
+    let allow = ''
+    if (body.data.embed.match(/youtube/i)) {
+      allow = `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"`
+    }
+    embedString = `<iframe width="100%" height="400" src="${data.properties.body.data.embed}" frameborder="0" ${allow} allowfullscreen></iframe>`
   }
 
   // generate the context menu
