@@ -1200,11 +1200,11 @@ async function initMap() {
   // place the data on the map
   await populateMap(data)
 
+  // necessary for safari mobile height bug
+  collapseInfoWindow()
+
   // open the map list of posts for desktop viewers
   openFeatureList()
-
-  // try to fix safari mobile height bug on page load
-  resizeMap()
 
   // load any marker in the url hash
   // need to wait till all the markers have been placed
