@@ -63,6 +63,19 @@ const app = {
       if (localStorage) localStorage.setItem(key, value)
     },
   },
+  setTitle: (postTitle = false) => {
+    // update the window title and various meta tags
+    postTitle = postTitle ? `${toTitleCase(postTitle)} - ` : ''
+    const featureCollectionTitle = app.featureCollection.getTitle(true)
+    const newTitle = `${postTitle}${featureCollectionTitle}`
+    const newTitleWithBranding = `${newTitle} - Wikistreets`
+    $('head title').html(newTitleWithBranding) // window title
+    $('.selected-map').html(featureCollectionTitle.toLowerCase()) // map selector dropdown
+    // update social media/seo meta tags
+    $('meta[property="og:title"]').attr('content', newTitle)
+    $('meta[name="twitter:title"]').attr('content', newTitle)
+    $('meta[itemprop="name"]').attr('content', newTitleWithBranding)
+  },
   mode: 'default', // default, featuredetails, featurecreate, featureedit, signin, signup, userprofile, resetpassword, searchaddress, errorgeneric, errorgeoposition, showcontributors
   browserGeolocation: {
     enabled: false,
@@ -561,17 +574,11 @@ app.featureCollection.getTitle = (titlecase = false) => {
 }
 
 // set the title of the map
-app.featureCollection.setTitle = (title) => {
+app.featureCollection.setTitle = (title = false) => {
   // store it if it's valid
   if (title) app.featureCollection.title = title
   else title = app.copy.anonymousfeaturecollectiontitle // use generic title, if none
-  const newTitle = `${toTitleCase(title)} - Wikistreets`
-  $('head title').html(newTitle) // window title
-  $('.map-title.selected-map').text(title) // update the visible name
-  // update social media metadata
-  $(
-    `meta[property="og\\:title"], meta[itemprop="name"], meta[name="twitter\\:title"]`
-  ).attr('content', newTitle)
+  app.setTitle() // set the window title
 }
 
 // get the center point of the map
@@ -2123,11 +2130,7 @@ const showInfoWindow = (marker) => {
   $('.info-window-content .carousel').carousel()
 
   // update the page title
-  $('head title').html(
-    `${data.properties.title} - ${app.featureCollection.getTitle(
-      true
-    )} - Wikistreets`
-  ) // window title
+  app.setTitle(data.properties.title)
 
   // update the url hash tag
   window.location.hash = marker._id.substr(marker._id.indexOf('-') + 1)
