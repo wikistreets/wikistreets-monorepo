@@ -575,6 +575,11 @@ app.featureCollection.getTitle = (titlecase = false) => {
 
 // set the title of the map
 app.featureCollection.setTitle = (title = false) => {
+  // unescape html entities from title
+  const elem = document.createElement('textarea')
+  elem.innerHTML = title
+  title = elem.value
+
   // store it if it's valid
   if (title) app.featureCollection.title = title
   else title = app.copy.anonymousfeaturecollectiontitle // use generic title, if none
@@ -4018,6 +4023,8 @@ const openContributorsList = async () => {
   }
 
   let contentEl = $('.contributor-list-container').clone()
+  contentEl.removeClass('hide')
+  contentEl.show()
 
   // add map summary stats to this
   const selectedMapListItem = createMapListItem(mapData, true, true, true, true)
@@ -4057,53 +4064,6 @@ const openContributorsList = async () => {
 
     item.appendTo(listEl)
   })
-
-  // handle mouseover feature in list
-  $('.feature-list-item', listEl).on('mouseenter', (e) => {
-    // pan to the relevant marker for this feature
-    const featureId = $(e.target).attr('ws-feature-id')
-    const marker = app.markers.findById(featureId)
-    try {
-      // deselect all
-      app.markers.deactivate()
-      // select the target marker
-      app.markers.activate(marker)
-      if (marker.featureData.geometry.type == 'Point') {
-        app.featureCollection.element.panTo(marker.getLatLng())
-      } else {
-        app.featureCollection.element.fitBounds(marker.getBbox())
-      }
-      // app.featureCollection.element.flyTo(marker)
-    } catch (err) {
-      // ignore mouseouts on sub-elements
-    }
-  })
-
-  // handle click on username
-  $('.user-link', listEl).on('click', (e) => {
-    e.preventDefault()
-    e.stopPropagation() // prevent list item click event from being triggered
-    // open user profile for this user
-    const userId = $(e.target).attr('ws-user-id')
-    const userHandle = $(e.target).attr('ws-user-handle')
-    openUserProfile(userHandle, userId)
-  })
-
-  // handle mouseout from entire list
-  listEl.on('mouseleave', (e) => {
-    // deselect all
-    app.markers.deactivate()
-  })
-
-  // special message if no markers exist on this map
-  if (!app.markers.markers.length) {
-    contentEl = $('.no-posts-container.hide').clone().removeClass('hide')
-    $('.map-select-link', contentEl).on('click', (e) => {
-      e.preventDefault()
-      if (app.auth.getToken()) openMapSelectorPanel()
-      else openSigninPanel('Log in to view your maps')
-    })
-  }
 
   // add to page
   $('.info-window-content').html('')

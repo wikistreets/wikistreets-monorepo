@@ -4,7 +4,7 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
-  color: #cccccc;
+  color: #eae4d8; /* #cccccc; */
   background-color: black;
   overflow: hidden;
   font-family: 'DDG_ProximaNova', 'DDG_ProximaNova_UI_0', 'DDG_ProximaNova_UI_1',
@@ -35,7 +35,7 @@ h1.logo {
   margin-left: -55px; /* half the width */
   background-color: black;
   border: 1px solid black;
-  color: white;
+  color: #eae4d8; /* #cccccc; */
   cursor: pointer;
 }
 h1.logo:hover {
@@ -48,11 +48,11 @@ h1.logo:hover {
 a,
 a:link,
 a:visited {
-  color: #cccccc;
+  color: #eae4d8; /* #cccccc; */
   text-decoration: underline;
 }
 a:hover {
-  color: white;
+  color: #eae4d8; /* #cccccc; */
   text-decoration: none;
 }
 
@@ -94,7 +94,7 @@ ul {
   /* position: relative; */
 }
 .leaflet-container {
-  background-color: #292d30;
+  background-color: #eae4d8;
 }
 #map {
   border: 1px solid black;
@@ -185,7 +185,7 @@ ul {
   z-index: 201;
   margin: 0;
   padding: 0;
-  background-color: white;
+  background-color: #eae4d8; /* #cccccc; */
   border-radius: 10px;
 }
 
@@ -202,13 +202,13 @@ ul {
 .map-controls .feature-options p {
   z-index: 200;
   background-color: black;
-  color: white;
+  color: #eae4d8; /* #cccccc; */
   border-top: 1px solid black;
   /* font-size: 14px; */
   margin: 0;
 }
 .map-controls .feature-options p a {
-  color: white;
+  color: #eae4d8; /* #cccccc; */
 }
 
 /* info window content */
@@ -231,11 +231,11 @@ ul {
 .info-window .dropdown-menu {
   border: 1px solid #cccccc;
   background-color: black;
-  color: white;
+  color: #eae4d8; /* #cccccc; */
 }
 .info-window .dropdown-item {
   background-color: transparent;
-  color: white;
+  color: #eae4d8; /* #cccccc; */
 }
 
 /* context menu */
@@ -286,7 +286,7 @@ button.dropdown-toggle img {
 .info-window-content .card {
   padding-top: 10px;
   background-color: black;
-  color: white;
+  color: #eae4d8; /* #cccccc; */
 }
 
 .info-window .close-icon {
@@ -365,12 +365,12 @@ button.dropdown-toggle img {
   top: 0;
   left: 0;
   margin: 0;
-  color: #cccccc;
+  color: #eae4d8; /* #cccccc; */
   background-color: black;
   border-color: black;
 }
 .alert.instructions a {
-  color: #cccccc;
+  color: #eae4d8; /* #cccccc; */
 }
 
 .attribution {
@@ -488,7 +488,7 @@ button.dropdown-toggle img {
 }
 .file-upload-container.active {
   background-color: blue;
-  color: white;
+  color: #eae4d8; /* #cccccc; */
 }
 .drop-container {
   text-align: center;
@@ -516,7 +516,7 @@ button.dropdown-toggle img {
 .existing-thumbs-container .thumb .close-icon {
   top: 0;
   right: 0;
-  background-color: white;
+  background-color: #eae4d8; /* #cccccc; */
   cursor: pointer;
   pointer-events: all; /* allow clicks! */
 }
@@ -539,14 +539,14 @@ button.dropdown-toggle img {
 
 /* search results */
 .matching-addresses .list-group-item {
-  color: #ccc;
+  color: #eae4d8; /* #cccccc; */
   border-color: #555;
   text-decoration: none;
   padding: 5px 0;
 }
 .matching-addresses .list-group-item-action:hover {
   background-color: transparent;
-  color: white;
+  color: #eae4d8; /* #cccccc; */
 }
 
 /* comments */
@@ -620,6 +620,7 @@ button.dropdown-toggle img {
     z-index: auto;
   }
   .control-map-selector button.map-title {
+    color: #eae4d8; /* #cccccc; */
     /* simpler map-selector styles */
     width: 100%;
     margin: 0;
@@ -644,6 +645,8 @@ button.dropdown-toggle img {
   }
   .prevnext-feature-container a {
     /* margin: 0 !important; */
+  }
+  .prevnext-feature-container button {
   }
   .expand-contract-button {
     display: none;
