@@ -1377,8 +1377,11 @@ async function initMap() {
   })
 
   app.featureCollection.element.on('dblclick', (e) => {
-    const point = e.latlng
-    createPoint(point)
+    // create a new point, unless creating a shape already at the moment
+    if (app.mode != 'featurecreate' && app.mode != 'featureedit') {
+      const point = e.latlng
+      createPoint(point)
+    }
   })
 
   app.featureCollection.element.on('click', function (event) {
