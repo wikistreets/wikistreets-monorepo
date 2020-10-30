@@ -197,7 +197,7 @@ const app = {
     },
     flyTo: (marker) => {
       let zoom = marker.featureData.properties.zoom // check for this feature's zoom property
-      if (!zoom) zoom = app.featureCollection.element.getZoom() // default zoom, if none present
+      if (!zoom && !zoom === 0) zoom = app.featureCollection.element.getZoom() // default zoom, if none present
       // check whether this marker is a regular leaflet point marker
       let coords
       if (marker.featureData.geometry.type == 'Point') {
