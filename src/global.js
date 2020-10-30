@@ -575,10 +575,12 @@ app.featureCollection.getTitle = (titlecase = false) => {
 
 // set the title of the map
 app.featureCollection.setTitle = (title = false) => {
-  // unescape html entities from title
-  const elem = document.createElement('textarea')
-  elem.innerHTML = title
-  title = elem.value
+  if (title) {
+    // unescape html entities from title
+    const elem = document.createElement('textarea')
+    elem.innerHTML = title
+    title = elem.value
+  }
 
   // store it if it's valid
   if (title) app.featureCollection.title = title
