@@ -93,7 +93,9 @@ ul {
 .feature-map {
   /* position: relative; */
 }
-
+.leaflet-container {
+  background-color: #6c757d;
+}
 #map {
   border: 1px solid black;
   position: relative;
