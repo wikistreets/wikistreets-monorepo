@@ -367,32 +367,33 @@ const app = {
     styles: {
       all: {
         default: {
-          opacity: 1,
-          fillOpacity: 1,
+          weight: 1,
           color: 'black',
-          fillColor: 'blue',
-          weight: 6,
+          opacity: 1,
+          // fillColor: 'blue',
+          fillOpacity: 1,
         },
         mouseover: {
-          opacity: 1,
-          fillOpacity: 1,
-          color: 'white',
-          fillColor: 'white',
           weight: 1,
+          color: 'white',
+          opacity: 1,
+          // fillColor: 'white',
+          fillOpacity: 1,
         },
         active: {
-          opacity: 1,
-          fillOpacity: 1,
+          weight: 1,
           color: '#961e1e',
-          fillColor: 'orange',
+          opacity: 1,
+          // fillColor: 'orange',
+          fillOpacity: 1,
         },
       },
       LineString: {
         // see style options: https://leafletjs.com/reference-1.7.1.html#path-option
         default: {
+          weight: 6,
           color: 'black',
           fillColor: 'blue',
-          weight: 6,
         },
         mouseover: {
           color: 'white',
