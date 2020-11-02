@@ -382,7 +382,7 @@ const app = {
         },
         active: {
           weight: 1,
-          color: '#961e1e',
+          color: 'white',
           opacity: 1,
           // fillColor: 'orange',
           fillOpacity: 1,
@@ -393,32 +393,29 @@ const app = {
         default: {
           weight: 6,
           color: 'black',
-          fillColor: 'blue',
         },
         mouseover: {
           color: 'white',
           strokeOpacity: 1,
-          fillOpacity: 0,
           weight: 1,
         },
         active: {
-          color: '#961e1e',
+          color: 'white',
         },
       },
       Polygon: {
         // see style options: https://leafletjs.com/reference-1.7.1.html#path-option
         default: {
           color: 'black',
-          fillColor: 'blue',
           weight: 6,
         },
         mouseover: {
-          color: '#961e1e',
+          color: 'white',
           strokeOpacity: 1,
           weight: 1,
         },
         active: {
-          color: '#961e1e',
+          color: 'white',
         },
       },
       // points
