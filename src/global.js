@@ -469,7 +469,8 @@ const app = {
         featureType = marker.featureType
       }
 
-      let style = app.markers.styles.all.default // start with baseline generic styles
+      let style =
+        feature.geometry.type != 'Point' ? app.markers.styles.all.default : {} // start with baseline generic styles
       // add default styles
       try {
         style = objectMerge(style, app.markers.styles[featureType]['default']) // add any feature-type-specific default styles
@@ -482,7 +483,8 @@ const app = {
       } catch (err) {}
       // add state-specific styles
       try {
-        style = objectMerge(style, app.markers.styles.all[state]) // add any state-specific but generic styles
+        if (feature.geometry.type != 'Point')
+          style = objectMerge(style, app.markers.styles.all[state]) // add any state-specific but generic styles
       } catch (err) {}
       try {
         style = objectMerge(style, app.markers.styles[featureType][state]) // add any feature-type-specific state-specific styles
