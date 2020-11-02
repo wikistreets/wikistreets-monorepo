@@ -370,53 +370,48 @@ const app = {
           weight: 1,
           color: 'black',
           opacity: 1,
+          strokeOpacity: 1,
           // fillColor: 'blue',
-          fillOpacity: 1,
+          fillOpacity: 0,
         },
         mouseover: {
           weight: 1,
           color: 'white',
           opacity: 1,
+          strokeOpacity: 1,
           // fillColor: 'white',
-          fillOpacity: 1,
+          fillOpacity: 0,
         },
         active: {
           weight: 1,
-          color: 'white',
+          color: 'red',
           opacity: 1,
+          strokeOpacity: 1,
           // fillColor: 'orange',
-          fillOpacity: 1,
+          fillOpacity: 0,
         },
       },
       LineString: {
         // see style options: https://leafletjs.com/reference-1.7.1.html#path-option
         default: {
           weight: 6,
-          color: 'black',
         },
         mouseover: {
-          color: 'white',
-          strokeOpacity: 1,
-          weight: 1,
+          weight: 6,
         },
         active: {
-          color: 'white',
+          weight: 6,
         },
       },
       Polygon: {
         // see style options: https://leafletjs.com/reference-1.7.1.html#path-option
         default: {
-          color: 'black',
           weight: 6,
         },
         mouseover: {
-          color: 'white',
-          strokeOpacity: 1,
-          weight: 1,
+          weight: 6,
         },
-        active: {
-          color: 'white',
-        },
+        active: {},
       },
       // points
       // objects used as args to L.ExtraMarkers.icon()
