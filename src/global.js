@@ -365,12 +365,34 @@ const app = {
     shapes: [],
     me: null,
     styles: {
+      all: {
+        default: {
+          color: 'black',
+          fillColor: 'blue',
+          weight: 6,
+        },
+        mouseover: {
+          color: 'white',
+          fillColor: 'white',
+          weight: 1,
+        },
+        active: {
+          color: '#961e1e',
+          fillColor: 'orange',
+        },
+      },
       LineString: {
         // see style options: https://leafletjs.com/reference-1.7.1.html#path-option
         default: {
           color: 'black',
           fillColor: 'blue',
           weight: 6,
+        },
+        mouseover: {
+          color: 'white',
+          strokeOpacity: 1,
+          fillOpacity: 0,
+          weight: 1,
         },
         active: {
           color: '#961e1e',
@@ -383,6 +405,12 @@ const app = {
           color: 'black',
           fillColor: 'blue',
           weight: 6,
+        },
+        mouseover: {
+          color: 'white',
+          strokeOpacity: 1,
+          fillOpacity: 0,
+          weight: 1,
         },
         active: {
           color: '#961e1e',
@@ -445,37 +473,31 @@ const app = {
         featureType = marker.featureType
       }
 
-      // start with a baseline style, based on whether this post has a photo or just text
-      let style = app.markers.styles[featureType][state]
+      let style = app.markers.styles.all.default // start with baseline generic styles
+      // add default styles
+      try {
+        style = objectMerge(style, app.markers.styles[featureType]['default']) // add any feature-type-specific default styles
+      } catch (err) {}
+      try {
+        style = objectMerge(
+          style,
+          feature.properties.body.data.styles['default']
+        ) // add any post-specific generic styles
+      } catch (err) {}
+      // add state-specific styles
+      try {
+        style = objectMerge(style, app.markers.styles.all[state]) // add any state-specific but generic styles
+      } catch (err) {}
+      try {
+        style = objectMerge(style, app.markers.styles[featureType][state]) // add any feature-type-specific state-specific styles
+      } catch (err) {}
+      try {
+        style = objectMerge(style, feature.properties.body.data.styles[state]) // add post-specific and state-specific styles
+      } catch (err) {}
+      try {
+        style.icon = feature.properties.body.data.icon // if the yaml contains just an icon
+      } catch (err) {}
 
-      // merge these styles with the default styles for this feature type, if available
-      if (state != 'default' && app.markers.styles[featureType]['default']) {
-        style = objectMerge(app.markers.styles[featureType]['default'], style)
-      }
-
-      const postBody = feature.properties.body
-      if (postBody && postBody.data) {
-        let postStyles = {} // assume blank
-        // for Points, we allow just an 'icon' setting, if present
-        if (feature.geometry.type == 'Point') {
-          if (
-            postBody.data.icon ||
-            (postBody.data.styles && postBody.data.styles[state])
-          ) {
-            postStyles = postBody.data.styles
-              ? postBody.data.styles[state]
-              : { icon: postBody.data.icon }
-          }
-        }
-        // for all other geometry types, require the regular style object with explicit states
-        else if (postBody.data.styles && postBody.data.styles[state]) {
-          // there are custom marker settings in the post's YAML... either just an icon setting or a whole styles object
-          postStyles = postBody.data.styles[state]
-        }
-
-        // merge the two styles
-        style = objectMerge(style, postStyles)
-      }
       return style
     },
     getIcon: (marker, state = 'default') => {
@@ -945,6 +967,28 @@ app.markers.place = async (features, cluster) => {
           throw `click! stay calm`
         }
       })
+
+      // // detect mouseover and mouseout events
+      marker.on('mouseover', (e) => {
+        if (marker.featureData.geometry.type == 'Point') {
+          const style = app.markers.getIcon(marker, 'mouseover')
+          marker.setIcon(style)
+        } else {
+          const style = app.markers.getStyle(marker, 'mouseover')
+          marker.setStyle(style)
+        }
+      }) // marker mouseover
+
+      // // detect mouseover and mouseout events
+      marker.on('mouseout', (e) => {
+        if (marker.featureData.geometry.type == 'Point') {
+          const style = app.markers.getIcon(marker, 'default')
+          marker.setIcon(style)
+        } else {
+          const style = app.markers.getStyle(marker, 'default')
+          marker.setStyle(style)
+        }
+      }) // marker mouseout
     } // else if marker doesn't yet exist
 
     // if the feature list is currently being viewed, refresh it
