@@ -367,16 +367,22 @@ const app = {
     styles: {
       all: {
         default: {
+          opacity: 1,
+          fillOpacity: 1,
           color: 'black',
           fillColor: 'blue',
           weight: 6,
         },
         mouseover: {
+          opacity: 1,
+          fillOpacity: 1,
           color: 'white',
           fillColor: 'white',
           weight: 1,
         },
         active: {
+          opacity: 1,
+          fillOpacity: 1,
           color: '#961e1e',
           fillColor: 'orange',
         },
