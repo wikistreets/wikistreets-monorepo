@@ -403,7 +403,6 @@ const app = {
         },
         active: {
           color: '#961e1e',
-          fillColor: 'orange',
         },
       },
       Polygon: {
@@ -414,14 +413,12 @@ const app = {
           weight: 6,
         },
         mouseover: {
-          color: 'white',
+          color: '#961e1e',
           strokeOpacity: 1,
-          fillOpacity: 0,
           weight: 1,
         },
         active: {
           color: '#961e1e',
-          fillColor: 'orange',
         },
       },
       // points
