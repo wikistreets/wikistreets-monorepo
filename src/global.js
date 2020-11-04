@@ -434,8 +434,6 @@ const app = {
       me: 100,
     },
     getStyle: (marker, state = 'default') => {
-      // need to update this
-      console.log('insufficient but necessary')
       const feature = marker.featureData
       let featureType = feature.geometry.type
       // handle geojson types that cana be imported that we don't fully support
@@ -447,37 +445,33 @@ const app = {
         featureType = marker.featureType
       }
 
-      // start with a baseline style, based on whether this post has a photo or just text
-      let style = app.markers.styles[featureType][state]
+      let style =
+        feature.geometry.type != 'Point' ? app.markers.styles.all.default : {} // start with baseline generic styles
+      // add default styles
+      try {
+        style = objectMerge(style, app.markers.styles[featureType]['default']) // add any feature-type-specific default styles
+      } catch (err) {}
+      try {
+        style = objectMerge(
+          style,
+          feature.properties.body.data.styles['default']
+        ) // add any post-specific generic styles
+      } catch (err) {}
+      // add state-specific styles
+      try {
+        if (feature.geometry.type != 'Point')
+          style = objectMerge(style, app.markers.styles.all[state]) // add any state-specific but generic styles
+      } catch (err) {}
+      try {
+        style = objectMerge(style, app.markers.styles[featureType][state]) // add any feature-type-specific state-specific styles
+      } catch (err) {}
+      try {
+        style = objectMerge(style, feature.properties.body.data.styles[state]) // add post-specific and state-specific styles
+      } catch (err) {}
+      try {
+        style.icon = feature.properties.body.data.icon // if the yaml contains just an icon
+      } catch (err) {}
 
-      // merge these styles with the default styles for this feature type, if available
-      if (state != 'default' && app.markers.styles[featureType]['default']) {
-        style = objectMerge(app.markers.styles[featureType]['default'], style)
-      }
-
-      const postBody = feature.properties.body
-      if (postBody && postBody.data) {
-        let postStyles = {} // assume blank
-        // for Points, we allow just an 'icon' setting, if present
-        if (feature.geometry.type == 'Point') {
-          if (
-            postBody.data.icon ||
-            (postBody.data.styles && postBody.data.styles[state])
-          ) {
-            postStyles = postBody.data.styles
-              ? postBody.data.styles[state]
-              : { icon: postBody.data.icon }
-          }
-        }
-        // for all other geometry types, require the regular style object with explicit states
-        else if (postBody.data.styles && postBody.data.styles[state]) {
-          // there are custom marker settings in the post's YAML... either just an icon setting or a whole styles object
-          postStyles = postBody.data.styles[state]
-        }
-
-        // merge the two styles
-        style = objectMerge(style, postStyles)
-      }
       return style
     },
     getIcon: (marker, state = 'default') => {
