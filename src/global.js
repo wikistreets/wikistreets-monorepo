@@ -583,7 +583,7 @@ app.featureCollection.setTitle = (title = false) => {
   title = elem.value
 
   // store it if it's valid
-  if (title) app.featureCollection.title = title
+  if (title && title != 'false') app.featureCollection.title = title
   else title = app.copy.anonymousfeaturecollectiontitle // use generic title, if none
   app.setTitle() // set the window title
 }
