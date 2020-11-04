@@ -991,7 +991,6 @@ app.markers.place = async (features, cluster) => {
       //       marker.setStyle(style)
       //     }
       //   }) // marker mouseout
->>>>>>> tmp
     } // else if marker doesn't yet exist
 
     // if the feature list is currently being viewed, refresh it
