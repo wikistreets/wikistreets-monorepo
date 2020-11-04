@@ -365,28 +365,54 @@ const app = {
     shapes: [],
     me: null,
     styles: {
+      all: {
+        default: {
+          weight: 1,
+          color: 'black',
+          opacity: 1,
+          strokeOpacity: 1,
+          // fillColor: 'blue',
+          fillOpacity: 0,
+        },
+        mouseover: {
+          weight: 1,
+          color: 'red',
+          opacity: 1,
+          strokeOpacity: 1,
+          // fillColor: 'white',
+          fillOpacity: 0,
+        },
+        active: {
+          weight: 1,
+          color: 'red',
+          opacity: 1,
+          strokeOpacity: 1,
+          // fillColor: 'orange',
+          fillOpacity: 0,
+        },
+      },
       LineString: {
         // see style options: https://leafletjs.com/reference-1.7.1.html#path-option
         default: {
-          color: 'black',
-          fillColor: 'blue',
+          weight: 6,
+        },
+        mouseover: {
           weight: 6,
         },
         active: {
-          color: '#961e1e',
-          fillColor: 'orange',
+          weight: 6,
         },
       },
       Polygon: {
         // see style options: https://leafletjs.com/reference-1.7.1.html#path-option
         default: {
-          color: 'black',
-          fillColor: 'blue',
+          weight: 6,
+        },
+        mouseover: {
           weight: 6,
         },
         active: {
-          color: '#961e1e',
-          fillColor: 'orange',
+          weight: 6,
         },
       },
       // points
@@ -399,6 +425,7 @@ const app = {
           prefix: 'fa',
           markerColor: 'black',
         },
+        mouseover: {},
         active: {
           markerColor: 'red',
         }, //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
@@ -410,6 +437,7 @@ const app = {
           prefix: 'fa',
           markerColor: 'black',
         },
+        mouseover: {},
         active: {
           markerColor: 'red',
         }, //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
