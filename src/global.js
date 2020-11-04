@@ -411,7 +411,9 @@ const app = {
         mouseover: {
           weight: 6,
         },
-        active: {},
+        active: {
+          weight: 6,
+        },
       },
       // points
       // objects used as args to L.ExtraMarkers.icon()
@@ -423,6 +425,7 @@ const app = {
           prefix: 'fa',
           markerColor: 'black',
         },
+        mouseover: {},
         active: {
           markerColor: 'red',
         }, //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
@@ -434,6 +437,7 @@ const app = {
           prefix: 'fa',
           markerColor: 'black',
         },
+        mouseover: {},
         active: {
           markerColor: 'red',
         }, //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
@@ -458,8 +462,6 @@ const app = {
       me: 100,
     },
     getStyle: (marker, state = 'default') => {
-      // need to update this
-      console.log('insufficient but necessary')
       const feature = marker.featureData
       let featureType = feature.geometry.type
       // handle geojson types that cana be imported that we don't fully support
@@ -597,10 +599,12 @@ app.featureCollection.getTitle = (titlecase = false) => {
 
 // set the title of the map
 app.featureCollection.setTitle = (title = false) => {
-  // unescape html entities from title
-  const elem = document.createElement('textarea')
-  elem.innerHTML = title
-  title = elem.value
+  if (title) {
+    // unescape html entities from title
+    const elem = document.createElement('textarea')
+    elem.innerHTML = title
+    title = elem.value
+  }
 
   // store it if it's valid
   if (title) app.featureCollection.title = title
@@ -966,27 +970,28 @@ app.markers.place = async (features, cluster) => {
         }
       })
 
-      // // detect mouseover and mouseout events
-      marker.on('mouseover', (e) => {
-        if (marker.featureData.geometry.type == 'Point') {
-          const style = app.markers.getIcon(marker, 'mouseover')
-          marker.setIcon(style)
-        } else {
-          const style = app.markers.getStyle(marker, 'mouseover')
-          marker.setStyle(style)
-        }
-      }) // marker mouseover
+      //   // detect mouseover and mouseout events
+      //   marker.on('mouseover', (e) => {
+      //     if (marker.featureData.geometry.type == 'Point') {
+      //       const style = app.markers.getIcon(marker, 'mouseover')
+      //       marker.setIcon(style)
+      //     } else {
+      //       const style = app.markers.getStyle(marker, 'mouseover')
+      //       marker.setStyle(style)
+      //     }
+      //   }) // marker mouseover
 
-      // // detect mouseover and mouseout events
-      marker.on('mouseout', (e) => {
-        if (marker.featureData.geometry.type == 'Point') {
-          const style = app.markers.getIcon(marker, 'default')
-          marker.setIcon(style)
-        } else {
-          const style = app.markers.getStyle(marker, 'default')
-          marker.setStyle(style)
-        }
-      }) // marker mouseout
+      //   // // detect mouseover and mouseout events
+      //   marker.on('mouseout', (e) => {
+      //     if (marker.featureData.geometry.type == 'Point') {
+      //       const style = app.markers.getIcon(marker, 'default')
+      //       marker.setIcon(style)
+      //     } else {
+      //       const style = app.markers.getStyle(marker, 'default')
+      //       marker.setStyle(style)
+      //     }
+      //   }) // marker mouseout
+>>>>>>> tmp
     } // else if marker doesn't yet exist
 
     // if the feature list is currently being viewed, refresh it
