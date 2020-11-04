@@ -458,6 +458,8 @@ const app = {
       me: 100,
     },
     getStyle: (marker, state = 'default') => {
+      // need to update this
+      console.log('insufficient but necessary')
       const feature = marker.featureData
       let featureType = feature.geometry.type
       // handle geojson types that cana be imported that we don't fully support
