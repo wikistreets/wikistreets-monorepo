@@ -969,6 +969,28 @@ app.markers.place = async (features, cluster) => {
           throw `click! stay calm`
         }
       })
+
+      //   // detect mouseover and mouseout events
+      //   marker.on('mouseover', (e) => {
+      //     if (marker.featureData.geometry.type == 'Point') {
+      //       const style = app.markers.getIcon(marker, 'mouseover')
+      //       marker.setIcon(style)
+      //     } else {
+      //       const style = app.markers.getStyle(marker, 'mouseover')
+      //       marker.setStyle(style)
+      //     }
+      //   }) // marker mouseover
+
+      //   // // detect mouseover and mouseout events
+      //   marker.on('mouseout', (e) => {
+      //     if (marker.featureData.geometry.type == 'Point') {
+      //       const style = app.markers.getIcon(marker, 'default')
+      //       marker.setIcon(style)
+      //     } else {
+      //       const style = app.markers.getStyle(marker, 'default')
+      //       marker.setStyle(style)
+      //     }
+      //   }) // marker mouseout
     } // else if marker doesn't yet exist
 
     // if the feature list is currently being viewed, refresh it
