@@ -1031,11 +1031,12 @@ app.markers.activate = (marker) => {
     marker.setStyle(style)
   }
 }
-app.markers.deactivate = (marker) => {
+app.markers.deactivate = (marker, exceptOpenMarkers = false) => {
   // return selected marker to default state
   const markerList = marker ? [marker] : app.markers.markers
   // loop through and mark all as closed
   markerList.forEach((marker) => {
+    if (exceptOpenMarkers && marker.isOpen) return // skip open markers, if desired
     // console.log(`deactivating ${marker.featureData.properties.title}`)
     marker.isOpen = false
     if (marker.featureData.geometry.type == 'Point') {
@@ -1474,7 +1475,7 @@ async function initMap() {
   // minimize any open infowindow while dragging
   app.featureCollection.element.on('dragstart', (e) => {
     // deactivate any currently-selected markers
-    app.markers.deactivate()
+    app.markers.deactivate(null, true) // do not deactivate open markers
 
     // close any open infowindow for mobile users only
     if (app.mode == 'featuredetails' && app.responsive.isMobile()) {
