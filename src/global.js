@@ -1235,6 +1235,9 @@ async function initMap() {
       accessToken: app.apis.mapbox.apiKey,
     }).addTo(app.featureCollection.element)
   } else if (app.featureCollection.mapType == 'image') {
+    // add special class to the body to help css changes
+    $('body').addClass('non-geographic')
+
     // map on top of uploaded image
     app.featureCollection.element = L.map(app.featureCollection.htmlElementId, {
       crs: L.CRS.Simple,
@@ -1907,8 +1910,8 @@ const createFeature = (data) => {
   // give attribution to author
   const attribution = `
 Posted by
-<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${data.user.handle}" href="#">${data.user.handle}</a> ${date}
-near ${addressTruncated}.
+<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${data.user.handle}" href="#">${data.user.handle}</a> 
+${date}<span class="nearby-address"> near ${addressTruncated}</span>.
 `
 
   // show how many comments this post has
@@ -3986,8 +3989,8 @@ const openFeatureList = async () => {
         : data.properties.address
     const attribution = `
 Posted by
-<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${data.user.handle}"href="#">${data.user.handle}</a> ${date}
-near ${addressTruncated}.
+<a class="user-link" ws-user-id="${data.user._id}" ws-user-handle="${data.user.handle}"href="#">${data.user.handle}</a> 
+${date}<span class="nearby-address"> near ${addressTruncated}</span>.
 `
     const commentsString = data.properties.comments.length
       ? `<br />${data.properties.comments.length} comment${

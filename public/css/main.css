@@ -468,6 +468,10 @@ button.dropdown-toggle img {
 .feature-form .nearby-address {
   font-size: 0.75em;
 }
+.non-geographic .nearby-address {
+  /* hide nearby addresses if this map is non-geographic */
+  display: none;
+}
 
 .feature-form span.address {
   font-weight: bold;
