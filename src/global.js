@@ -970,6 +970,11 @@ app.markers.place = async (features, cluster) => {
 
       // // detect click events
       marker.on('click', (e) => {
+        // do nothing if currently editing/creating a feature
+        if (['featurecreate', 'featureedit'].indexOf(app.mode) >= 0) {
+          return
+        }
+
         app.markers.activate(marker)
         showInfoWindow(marker)
         // hack to allow clicking on geojson leaflet layers to open up info window
@@ -981,6 +986,10 @@ app.markers.place = async (features, cluster) => {
 
       //   // detect mouseover and mouseout events
       marker.on('mouseover', (e) => {
+        // do nothing if currently editing/creating a feature
+        if (['featurecreate', 'featureedit'].indexOf(app.mode) >= 0) {
+          return
+        }
         // console.log('mouseover')
         if (marker.featureData.geometry.type == 'Point') {
           const style = app.markers.getIcon(marker, 'mouseover')
@@ -993,6 +1002,10 @@ app.markers.place = async (features, cluster) => {
 
       //   // // detect mouseover and mouseout events
       marker.on('mouseout', (e) => {
+        // do nothing if currently editing/creating a feature
+        if (['featurecreate', 'featureedit'].indexOf(app.mode) >= 0) {
+          return
+        }
         // console.log('mouseout')
         if (marker.featureData.geometry.type == 'Point') {
           const style = app.markers.getIcon(marker, 'default')
