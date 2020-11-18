@@ -3272,6 +3272,8 @@ const openNewFeatureForm = (
         }
 
         // console.log(`SUCCESS: ${res}`)
+        // switch back to default mode
+        app.mode = 'default'
 
         // get a marker cluster
         const cluster = app.markers.cluster
@@ -3545,7 +3547,7 @@ const openEditFeatureForm = async (featureId) => {
         // open the updated feature
         setTimeout(() => {
           // fire click event
-          console.log('simulating...')
+          // console.log('simulating...')
           app.markers.simulateClick(marker)
         }, 100)
       })
