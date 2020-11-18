@@ -3516,12 +3516,13 @@ const openEditFeatureForm = async (featureId) => {
       .myFetch(app.apis.wikistreets.editFeatureUrl, 'POST', formData)
       .then((res) => {
         if (!res.status) {
-          //          console.log(`ERROR: ${res}`)
+          // console.log(`ERROR: ${res}`)
           openErrorPanel(res.message)
           return
         }
-        // close any open infowindow except the feature form
-        // console.log(JSON.stringify(res, null, 2))
+
+        // switch back to default mode
+        app.mode = 'default'
 
         // disable dragging of point markers
         if (marker.featureData.geometry.type == 'Point') {
@@ -3544,6 +3545,7 @@ const openEditFeatureForm = async (featureId) => {
         // open the updated feature
         setTimeout(() => {
           // fire click event
+          console.log('simulating...')
           app.markers.simulateClick(marker)
         }, 100)
       })
