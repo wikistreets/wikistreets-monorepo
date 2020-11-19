@@ -424,6 +424,7 @@ const app = {
           shape: 'square',
           prefix: 'fa',
           markerColor: 'black',
+          svg: true,
         },
         mouseover: {},
         active: {
@@ -436,6 +437,7 @@ const app = {
           shape: 'square',
           prefix: 'fa',
           markerColor: 'black',
+          svg: true,
         },
         mouseover: {},
         active: {
