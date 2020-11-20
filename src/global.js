@@ -3525,9 +3525,8 @@ const openEditFeatureForm = async (featureId) => {
           return
         }
 
-        // switch back to default mode
-        // app.mode = 'default'
-        collapseInfoWindow()
+        // prepare for feature view that will happen after timeout
+        app.mode = 'featuredetails'
 
         // disable dragging of point markers
         if (marker.featureData.geometry.type == 'Point') {
