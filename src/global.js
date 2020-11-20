@@ -3526,7 +3526,7 @@ const openEditFeatureForm = async (featureId) => {
         }
 
         // switch back to default mode
-        app.mode = 'default'
+        // app.mode = 'default'
 
         // disable dragging of point markers
         if (marker.featureData.geometry.type == 'Point') {
