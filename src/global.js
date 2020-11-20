@@ -3273,9 +3273,8 @@ const openNewFeatureForm = (
           return
         }
 
-        // console.log(`SUCCESS: ${res}`)
-        // switch back to default mode
-        app.mode = 'default'
+        // prepare for feature view that will happen after timeout
+        app.mode = 'featuredetails'
 
         // get a marker cluster
         const cluster = app.markers.cluster
