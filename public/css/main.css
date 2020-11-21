@@ -519,6 +519,13 @@ button.dropdown-toggle img {
 .first-feature-link:hover {
   background-color: #d6cfe6;
 }
+.prevnext-feature-container .btn-secondary:not(:disabled):not(.disabled).active,
+.prevnext-feature-container .btn-secondary:not(:disabled):not(.disabled):active,
+.prevnext-feature-container .show > .btn-secondary.dropdown-toggle {
+  background-color: #b8e6b8;
+  border: 1px solid #8c68b2;
+  color: #8c68b2;
+}
 .next-feature-link,
 .last-feature-link {
   background-color: #9e9e89;
@@ -657,9 +664,20 @@ button.dropdown-toggle img {
 .user-stats {
   padding-top: 20px;
 }
+
+.no-posts-container {
+  border-top: 1px solid #8c68b2;
+  padding-top: 20px;
+}
 .no-posts-container header {
   /* center the welcome message */
   text-align: center;
+}
+.no-posts-container header h2 {
+  margin-bottom: 0;
+}
+.no-posts-container img {
+  max-width: 30%;
 }
 .no-posts-container h2 {
   margin-top: 20px;

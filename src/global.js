@@ -1353,6 +1353,7 @@ async function initMap() {
 
   // pop open feature types when add-feature control clicked
   $('.control-add-feature').on('click', (e) => {
+    e.preventDefault()
     if ($('.map-controls .feature-options').hasClass('hide'))
       app.controls.showFeatureOptions()
     else app.controls.hideFeatureOptions()
