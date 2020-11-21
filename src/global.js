@@ -3965,6 +3965,7 @@ const openFeatureList = async () => {
       <button class="navigate-features-link last-feature-link btn btn-secondary col-6">Latest post</button>
     </div>
     <div class="map-summary-stats"></div>
+    <h3>Posts in this map:</h3>
   </div>
   `)
 
