@@ -63,12 +63,15 @@ a:hover {
   text-decoration: none;
 }
 
-.btn-primary {
+.btn-primary,
+a.btn-primary,
+a:visited.btn-primary {
   background-color: #8c68b2;
   border: 1px solid #33332c;
   color: #ffffc8;
   margin-top: 10px;
   margin-bottom: 10px;
+  text-decoration: none;
 }
 .btn-primary:hover {
   /* invert colors */
@@ -498,6 +501,9 @@ button.dropdown-toggle img {
   top: 2px;
   z-index: 101;
 }
+.prevnext-feature-container a {
+  text-decoration: none;
+}
 .info-window .prev-feature-link,
 .info-window .next-feature-link,
 .info-window .navigate-features-link {
@@ -654,6 +660,9 @@ button.dropdown-toggle img {
 .no-posts-container header {
   /* center the welcome message */
   text-align: center;
+}
+.no-posts-container h2 {
+  margin-top: 20px;
 }
 
 .feature-list-item {
