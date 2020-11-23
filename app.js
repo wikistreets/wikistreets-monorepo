@@ -4,6 +4,9 @@ const bodyParser = require('body-parser') // helps process incoming HTTP POST da
 const morgan = require('morgan') // middleware for logging HTTP requests.
 const cors = require('cors') // middleware for enabling CORS (Cross-Origin Resource Sharing) requests.
 
+// pre-rendering or SEO
+const prerender = require('prerender-node')
+
 // load routes
 const featureRouter = require('./routes/feature-router')
 const featureCollectionRouter = require('./routes/feature-collection-router')
@@ -38,6 +41,9 @@ const server = ({ config }) => {
   app.use(['/', '/map'], featureCollectionRouter({ config })) // requests for a map
   app.use('/features', featureRouter({ config })) // requests for just marker data
   app.use('/users', userRouter({ config })) // requests for just acccount actions
+
+  // enable pre-rendering
+  app.use(prerender)
 
   return app
 }
