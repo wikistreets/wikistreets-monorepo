@@ -1263,6 +1263,7 @@ async function initMap() {
       maxZoom: 2,
     })
 
+    // loop through all underlying images
     let x = 0
     let y = 0
     let totalY = 0
@@ -1273,11 +1274,16 @@ async function initMap() {
         [y + imageData.height, x + imageData.width],
       ]
 
-      // add image to map
+      // pre-load image
       const imagePath = `/static/uploads/${imageData.filename}`
-      const image = L.imageOverlay(imagePath, bounds).addTo(
-        app.featureCollection.element
-      )
+      let bgImg = new Image()
+      bgImg.src = imagePath
+      bgImg.onload = () => {
+        // add image to map
+        const image = L.imageOverlay(imagePath, bounds).addTo(
+          app.featureCollection.element
+        )
+      }
 
       // update x and y for next image, if any
       x += imageData.width
