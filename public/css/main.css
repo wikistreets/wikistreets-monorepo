@@ -345,7 +345,7 @@ button.dropdown-toggle img {
 
 /* map selector */
 .more-maps article {
-  border: 1px solid #cccc;
+  border: 1px solid rgba(0, 0, 0, 0.125);
   border-bottom-width: 0px;
   margin-bottom: 0px;
   padding: 10px;
@@ -357,6 +357,12 @@ button.dropdown-toggle img {
 .more-maps article h2 a.map-title {
   line-height: 1.5;
   font-size: 1rem;
+}
+.more-maps article {
+  padding-bottom: 10px;
+}
+.more-maps article p {
+  margin-bottom: 0;
 }
 
 .info-window-content .more-maps-container .other-maps-heading {
@@ -385,14 +391,15 @@ button.dropdown-toggle img {
 .import-data-container {
   padding-top: 20px;
 }
-.info-window-content .map-details-container .prevnext-feature-container {
-  /* margin-top: -60px; */
-}
 .info-window-content .map-details-container .context-menu {
   margin-top: -15px;
 }
 .info-window-content .map-summary-stats .context-menu {
   margin-top: 5px;
+}
+
+.contributor-list-container ul li {
+  padding-bottom: 10px;
 }
 
 /* info panel styles */
@@ -665,9 +672,21 @@ button.dropdown-toggle img {
   padding-top: 20px;
 }
 
-.no-posts-container {
-  border-top: 1px solid #8c68b2;
+.no-posts-container,
+.map-details-container,
+.about-forks,
+.map-styles-container,
+.import-data-container,
+.settings-map-container,
+.rename-map-container,
+.feature-form,
+.user-stats {
+  border-top: 1px solid #9e9e89;
   padding-top: 20px;
+}
+.map-details-container {
+  position: relative;
+  top: -1px; /* to hide the 1px top border under the prev/next buttons, if any */
 }
 .no-posts-container header {
   /* center the welcome message */
