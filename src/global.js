@@ -2786,7 +2786,7 @@ const openStyleMapForm = () => {
       $('.file-upload-container', panelEl).addClass('hide')
       $('.file-upload-container', panelEl).hide()
     }
-  })
+  }) // handle basemap style click
 
   // inject images that already exist for this post
   let filesToRemove = [] // we'll fill it up later
@@ -2867,9 +2867,7 @@ const openStyleMapForm = () => {
     showSpinner($('.info-window'))
 
     // ask user to confirm if there are markers on the map already
-    const confirmed =
-      app.features.features.length == 0 ||
-      confirm(app.copy.confirmmapstylechange)
+    const confirmed = confirm(app.copy.confirmmapstylechange)
     if (confirmed) {
       // go ahead and submit
       // construct a FormData object from the form DOM element
@@ -2911,6 +2909,11 @@ const openStyleMapForm = () => {
               window.location.hash
           )
         })
+    } // if confirmed
+    else {
+      // not confirmed
+      hideSpinner($('.info-window'))
+      collapseInfoWindow()
     }
   })
 }
