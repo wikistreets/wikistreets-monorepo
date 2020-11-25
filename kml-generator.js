@@ -1,4 +1,6 @@
 /**
+ * This script is out of date and needs to be updated to match changes in the data models used.
+ *
  * Encode content to be embeddable within XML
  * @param {*} unsafe The content to escape
  */
