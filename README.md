@@ -2,9 +2,9 @@
 
 The collaborative map-maker. View live at https://wikistreets.io
 
-## Map examples:
+## Map examples
 
-Example maps showing some features of the app:
+Example maps showing off some features of the app:
 
 - Geographic map example: [Walking School Bus Routes to An Elementary School](https://wikistreets.io/map/e94b632b-e932-4b8e-a262-a388219212fc)
 - Custom image map example: [Anatomy of Vermeer's _The MilkMaid_](https://wikistreets.io/map/0e54d5e0-6d66-4a51-ba2c-4316956dc40f)
@@ -24,7 +24,7 @@ Example maps showing some features of the app:
 
 ## Community
 
-The GIS community is an amazing place, and this project would not be possible without community-created tools including [OpenStreetMap](https://openstreetmap.org), [Leaflet](https://leafletjs.com), [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable), [Turfjs](https://github.com/Turfjs).
+The GIS community is an amazing place, and this project would not be possible without community-created tools including [OpenStreetMap](https://openstreetmap.org), [Leaflet](https://leafletjs.com), [Leaflet.ExtraMarkers](https://github.com/coryasilva/Leaflet.ExtraMarkers), [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable), [Turfjs](https://github.com/Turfjs).
 
 ## Contributing
 
