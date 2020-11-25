@@ -1,6 +1,12 @@
 # Wikistreets
 
-The collaborative map-maker. View live: https://wikistreets.io
+The collaborative map-maker.
+
+- View live: https://wikistreets.io
+- Geographic map example: [Walking School Bus Routes to An Elementary School](https://wikistreets.io/map/e94b632b-e932-4b8e-a262-a388219212fc)
+- Custom image map example: [Anatomy of Vermeer's _The MilkMaid_][https://wikistreets.io/map/0e54d5e0-6d66-4a51-ba2c-4316956dc40f]
+
+## Key features
 
 - Maps for everyone
 - Works at home or on the road
