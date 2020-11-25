@@ -1,6 +1,6 @@
 # Wikistreets
 
-The collaborative map-maker.
+The collaborative map-maker. View live: https://wikistreets.io
 
 - Maps for everyone
 - Works at home or on the road

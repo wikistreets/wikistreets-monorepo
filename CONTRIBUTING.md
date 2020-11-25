@@ -73,3 +73,7 @@ This project follows a standard forking workflow:
 - issues a pull request to this repository to have your changes reviewed and merged
 
 All changes should address a particular Issue (feature request or bug report) listed in the Issue tracker.
+
+## Publishing changes
+
+There is currently no continuous deployment setup. Changes must be manually pulled to the server at https://wikistreets.io. Hopefully we'll implement that soon.
