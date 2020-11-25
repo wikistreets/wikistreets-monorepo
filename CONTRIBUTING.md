@@ -8,11 +8,15 @@ There is much work left to do!
 
 ## Local setup
 
-The wikistreets server is a classic node.js/express app. The web client is currently bundled into the same repository. At a glance, you will need to do the following steps:
+The wikistreets server is a classic node.js/express app with a MongoDB database. The web client is currently bundled into the same repository. At a glance, you will need to do the following steps:
 
 ### Clone this repository
 
 You know how to do that.
+
+### Set up a MongoDB database
+
+Either install MongoDB locally or use a hosted service such as MongoDB Atlas.
 
 ### Install Node.js and npm
 
@@ -22,9 +26,13 @@ Install `node.js`, `npm`, and `npx` on your machine, if you haven't already.
 
 Go into the project directory and run `npm install`
 
+### Configuration and environment variables
+
+This project stores configuration options in a file named `.env`. For security reasaons, that file is not stored in version control. The file named `env.example` shows the structure of that file. Copy the contents of the example file into a new file named `.env` in the main project directory and plug in your own database and authentication settings into that file.
+
 ### Run the server
 
-The server currently runs on port `10520`. Start it up:
+The server currently runs by default on port `10520`. Start it up:
 
 ```
 nodemon index.js
