@@ -2,9 +2,28 @@
 
 There is much work left to do!
 
-## Main tasks
+## Feature requests & bug reports
 
-... coming soon
+Use [GitHub Issues](https://github.com/wikistreets/wikistreets/issues) to submit feature requests and bug reports.
+
+## Main tasks (call it a roadmap if you must)
+Some priorities at the moment:
+- documentation: 
+  - create Markdown tutorials w/ YouTube instructional videos showing current functionality
+  - documentation: more example maps 
+- port to React
+  - port web app to React.js primarily for the data binding and easy port to React Native
+  - separate client and server code into separate repositories to prepare for multiple clients
+  - create iOS and Android native client apps using React Native
+- notifications
+  - allow subscription to specific maps (currently it's all-maps-or-none)
+  - support for progressive web app notifications
+  - consider a notification info panel within the app interface
+- map styles
+  - allow map-wide style configs that are inherited by all posts within that map
+- layers
+  - support for layers within the [optional] [YAML front-matter](https://www.npmjs.com/package/gray-matter) config 
+  - there are ideas for how to do this that require some documentation and experimentation
 
 ## Local setup
 
@@ -59,10 +78,6 @@ This will output the public HTTPS web address you can use to try out the web app
 ### Try out the app on the web
 
 Plug the HTTPS web address output by `ngrok` into your web browser of choice to test out the app.
-
-## Issue tracking
-
-Use the GitHub Issues to submit feature requests and bug reports.
 
 ## Workflow
 
