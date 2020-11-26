@@ -35,7 +35,7 @@ This is not to downplay the unbelievable contributions of the general web applic
 
 See our [guidelines for contributing](CONTRIBUTING.md).
 
-## Feedback and comments
+## Contact us
 
 Your feedback is welcome! Contact us:
 
