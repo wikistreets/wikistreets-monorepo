@@ -43,3 +43,4 @@ Your feedback is welcome! Contact us:
 - chat: [discord.gg/aSYF3XAtXa](https://discord.gg/aSYF3XAtXa)
 - email: [hello@wikistreets.io](mailto:hello@wikistreets.io)
 - twitter: [@wikistreets_io](https://twitter.com/wikistreets_io
+- discord: [*wikistreets.io](https://discord.gg/aSYF3XAtXa)
