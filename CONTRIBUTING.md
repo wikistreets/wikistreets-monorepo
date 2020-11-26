@@ -10,7 +10,7 @@ Use [GitHub Issues](https://github.com/wikistreets/wikistreets/issues) to submit
 Some priorities at the moment:
 - documentation: 
   - create Markdown tutorials w/ YouTube instructional videos showing current functionality
-  - documentation: more example maps 
+  - more example maps showing progressively more sophisticated uses
 - port to React
   - port web app to React.js primarily for the data binding and easy port to React Native
   - separate client and server code into separate repositories to prepare for multiple clients
