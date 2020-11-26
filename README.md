@@ -42,5 +42,5 @@ Your feedback is welcome! Contact us:
 - feature requests and bug reports: [GitHub Issues](https://github.com/wikistreets/wikistreets/issues)
 - chat: [discord.gg/aSYF3XAtXa](https://discord.gg/aSYF3XAtXa)
 - email: [hello@wikistreets.io](mailto:hello@wikistreets.io)
-- twitter: [@wikistreets_io](https://twitter.com/wikistreets_io
+- twitter: [@wikistreets_io](https://twitter.com/wikistreets_io)
 - discord: [*wikistreets.io](https://discord.gg/aSYF3XAtXa)
