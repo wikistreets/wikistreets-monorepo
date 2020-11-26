@@ -40,7 +40,7 @@ nodemon index.js
 
 ### Start up the webpack bundler
 
-Client-side scripts are minified and bundled using [webpack](https://webpack.js.org/). Automatically re-bundled on changes by setting the following watcher:
+Client-side scripts in the `src/` folder are automatically minified and bundled on save using [webpack](https://webpack.js.org/). Automatically re-bundle any changes by setting the following watcher:
 
 ```
 npx webpack --watch

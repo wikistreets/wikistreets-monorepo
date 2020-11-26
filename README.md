@@ -22,9 +22,14 @@ Example maps showing off some features of the app:
 - Write posts in Markdown, if desired
 - Import and export data as GeoJSON
 
+## Free / open source
+Source code copylefted under the [GNU General Public License 3.0](LICENSE.md).
+
 ## Community
 
 The GIS community is an amazing place, and this project would not be possible without community-created tools including [OpenStreetMap](https://openstreetmap.org), [Leaflet](https://leafletjs.com), [Leaflet.ExtraMarkers](https://github.com/coryasilva/Leaflet.ExtraMarkers), [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable), [Turfjs](https://github.com/Turfjs).
+
+This is not to downplay the unbelievable contributions of the general web application community, including particularly [Node](https://nodejs.org/en/), [NPM](https://www.npmjs.com/), [Express](https://expressjs.com/), [Passport](http://www.passportjs.org/), and all the others you see in our [package.json](package.json) who make it look so easy.
 
 ## Contributing
 
@@ -35,5 +40,6 @@ See our [guidelines for contributing](CONTRIBUTING.md).
 Your feedback is welcome! Contact us:
 
 - feature requests and bug reports: [GitHub Issues](https://github.com/wikistreets/wikistreets/issues)
-- email: hello@wikistreets.io
-- twitter: @wikistreets_io
+- chat: [discord.gg/aSYF3XAtXa](https://discord.gg/aSYF3XAtXa)
+- email: [hello@wikistreets.io](mailto:hello@wikistreets.io)
+- twitter: [@wikistreets_io](https://twitter.com/wikistreets_io
