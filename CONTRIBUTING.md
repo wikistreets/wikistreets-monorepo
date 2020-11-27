@@ -51,10 +51,15 @@ This project stores configuration options in a file named `.env`. For security r
 
 ### Run the server
 
-The server currently runs by default on port `10520`. Start it up:
+The server currently runs by default on port `10520`. Assuming you have installed `nodemon` (if not, run `npm install -g nodemon` or `sudo npm install -g nodemon`), start up the server locally:
 
 ```
 nodemon index.js
+```
+
+On a production server, conventional wisdom says to use `pm2` rather than `nodemon`.  Install `pm2` (i.e. `npm install -g pm2` or `sudo npm install pm2`) and run the server:
+```
+pm2 node index.js
 ```
 
 ### Start up the webpack bundler
@@ -67,7 +72,7 @@ npx webpack --watch
 
 ### Expose your server via https
 
-The web browser geolocation used by the app typically requires a 'secure' HTTPS connection. Your local machine probably does not support HTTPS. To allow HTTPS connections from the public web to your wikistreets instance running on port `10520` of your local machine, use a service such as [ngrok](https://ngrok.com/).
+The web browser geolocation used by the app typically requires a 'secure' HTTPS connection. Your local machine probably does not support HTTPS. To allow HTTPS connections from the public web to your wikistreets instance running on port `10520` of your local machine, use a service such as [ngrok](https://ngrok.com/) - install it and then...
 
 ```
 ngrok http 10520
