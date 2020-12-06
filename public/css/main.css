@@ -51,6 +51,10 @@ h1.logo:hover {
 }
 
 /* general styles */
+blockquote {
+  padding-left: 16px;
+  border-left: 2px solid #b8e6b8/*#8c68b2*/
+}
 
 a,
 a:link,
