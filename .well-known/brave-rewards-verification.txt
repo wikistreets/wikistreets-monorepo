@@ -1,4 +1,0 @@
-This is a Brave Rewards publisher verification file.
-
-Domain: wikistreets.io
-Token: f6fd4658fd8796885750a26609416b9dcbc24619d9690d07f3146381ea253365

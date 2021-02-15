@@ -34,9 +34,6 @@ const server = ({ config }) => {
   // make 'public' directory publicly readable
   app.use('/static', express.static('public'))
 
-  // make 'public' directory publicly readable
-  app.use('/.well-known', express.static('.well-known'))
-
   // serve up favicon
   app.use('/favicon.ico', express.static('public/favicon.ico'))
 
