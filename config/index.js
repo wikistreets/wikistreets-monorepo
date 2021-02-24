@@ -23,8 +23,8 @@ const config = {
   markers: {
     uploadDirectory: "public/uploads",
     maxFiles: 10,
-    maxImageWidth: 5000,
-    maxImageHeight: 5000,
+    maxImageWidth: 7000,
+    maxImageHeight: 7000,
     maxImageFileSize: 100 * 1024 * 1024, // 100MB
   },
   map: {
