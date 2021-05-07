@@ -176,7 +176,7 @@ ul {
   /* override bootstrap garbage */
   color: #33332c;
   background-color: #f5f5ff; /* #ffffe1; */
-  border: none;
+  border: 1px solid transparent;
   box-shadow: none;
 }
 
