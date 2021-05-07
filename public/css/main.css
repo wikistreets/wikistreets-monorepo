@@ -11,7 +11,7 @@ body {
   margin: 0;
   padding: 0;
   color: #33332c;
-  background-color: #ffffe1;
+  background-color: #fff; /* #ffffe1; */
   overflow: hidden;
   font-family: "DDG_ProximaNova", "DDG_ProximaNova_UI_0", "DDG_ProximaNova_UI_1",
     "DDG_ProximaNova_UI_2", "DDG_ProximaNova_UI_3", "DDG_ProximaNova_UI_4",
@@ -40,8 +40,8 @@ h1.logo {
   top: -10px;
   left: 50%;
   margin-left: -55px; /* half the width */
-  background-color: #ffffe1;
-  border: 1px solid #ffffe1;
+  background-color: #fff; /* #ffffe1; */
+  border: 1px solid #fff; /* #ffffe1; */
   color: #33332c;
   cursor: pointer;
 }
@@ -130,7 +130,7 @@ ul {
   background-color: #fff; /* #ffffc8; */
 }
 #map {
-  border: 1px solid #ffffe1;
+  border: 1px solid #fff; /* #ffffe1; */
   border-right: 1px solid #8c68b2;
   position: relative;
   width: 100%;
@@ -162,10 +162,19 @@ ul {
     "DDG_ProximaNova_UI_5", "DDG_ProximaNova_UI_6", "Proxima Nova",
     "Helvetica Neue", "Helvetica", "Segoe UI", "Nimbus Sans L",
     "Liberation Sans", "Open Sans", FreeSans, Arial, sans-serif;
-  background-color: #ffffe1;
+  background-color: #fff; /* #ffffe1; */
   color: #33332c;
   width: 240px;
   margin-left: -120px;
+  border: none;
+  box-shadow: none;
+}
+.btn-secondary:not(:disabled):not(.disabled):active,
+.btn-secondary:not(:disabled):not(.disabled):focus,
+.btn-secondary:not(:disabled):not(.disabled):active:focus {
+  /* override bootstrap garbage */
+  color: #33332c;
+  background-color: #fff; /* #ffffe1; */
   border: none;
   box-shadow: none;
 }
@@ -260,7 +269,7 @@ ul {
   bottom: 0;
   width: 100vw;
   height: 50px;
-  background-color: #ffffe1;
+  background-color: transparent; /* #ffffe1; */
   /* border-top: 1px solid #FFFFE1; */
   padding: 0px 20px 0 20px;
   margin-bottom: 0px;
@@ -270,7 +279,7 @@ ul {
 /* info-window context dropdown menu */
 .info-window .dropdown-menu {
   border: 1px solid #cccccc;
-  background-color: #ffffe1;
+  background-color: inherit /* #ffffe1; */
   color: #33332c;
 }
 .info-window .dropdown-item {
@@ -444,7 +453,7 @@ button.dropdown-toggle img {
 .carousel {
   width: 100%;
   height: 50vh;
-  background-color: #fffece;
+  background-color: #fffff1; /* #fffece; */
   /* height: 300px; */
 }
 .carousel .carousel-inner img {
@@ -515,7 +524,7 @@ button.dropdown-toggle img {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: #ffffe1;
+  background-color: inherit /* #ffffe1; */
   opacity: 0.75;
   z-index: 10;
 }
@@ -543,12 +552,12 @@ button.dropdown-toggle img {
 }
 .prev-feature-link,
 .first-feature-link {
-  background-color: #ffffc8;
+  background-color: #d6cfe6;
   border: 1px solid #9e9e89;
 }
 .prev-feature-link:hover,
 .first-feature-link:hover {
-  background-color: #d6cfe6;
+  background-color: #ffffc8;
 }
 .prevnext-feature-container .btn-secondary:not(:disabled):not(.disabled).active,
 .prevnext-feature-container .btn-secondary:not(:disabled):not(.disabled):active,
@@ -559,14 +568,15 @@ button.dropdown-toggle img {
 }
 .next-feature-link,
 .last-feature-link {
-  background-color: #9e9e89;
+  background-color: #b8e2e6;
   border: 1px solid #9e9e89;
   color: #ffffc8;
   border-left-width: 0px;
 }
 .next-feature-link:hover,
 .last-feature-link:hover {
-  background-color: #b8e2e6;
+  /* background-color: #9e9e89; */
+  background-color: #ffffc8;
 }
 
 .feature-form {
