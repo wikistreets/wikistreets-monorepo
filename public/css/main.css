@@ -13,11 +13,11 @@ body {
   color: #33332c;
   background-color: #ffffe1;
   overflow: hidden;
-  font-family: 'DDG_ProximaNova', 'DDG_ProximaNova_UI_0', 'DDG_ProximaNova_UI_1',
-    'DDG_ProximaNova_UI_2', 'DDG_ProximaNova_UI_3', 'DDG_ProximaNova_UI_4',
-    'DDG_ProximaNova_UI_5', 'DDG_ProximaNova_UI_6', 'Proxima Nova',
-    'Helvetica Neue', 'Helvetica', 'Segoe UI', 'Nimbus Sans L',
-    'Liberation Sans', 'Open Sans', FreeSans, Arial, sans-serif;
+  font-family: "DDG_ProximaNova", "DDG_ProximaNova_UI_0", "DDG_ProximaNova_UI_1",
+    "DDG_ProximaNova_UI_2", "DDG_ProximaNova_UI_3", "DDG_ProximaNova_UI_4",
+    "DDG_ProximaNova_UI_5", "DDG_ProximaNova_UI_6", "Proxima Nova",
+    "Helvetica Neue", "Helvetica", "Segoe UI", "Nimbus Sans L",
+    "Liberation Sans", "Open Sans", FreeSans, Arial, sans-serif;
   font-weight: 300;
 }
 .clear {
@@ -53,7 +53,7 @@ h1.logo:hover {
 /* general styles */
 blockquote {
   padding-left: 16px;
-  border-left: 2px solid #b8e6b8/*#8c68b2*/
+  border-left: 2px solid #b8e6b8; /*#8c68b2*/
 }
 
 a,
@@ -127,7 +127,7 @@ ul {
   /* position: relative; */
 }
 .leaflet-container {
-  background-color: #ffffc8;
+  background-color: #fff; /* #ffffc8; */
 }
 #map {
   border: 1px solid #ffffe1;
@@ -157,11 +157,11 @@ ul {
   z-index: 101;
 }
 .control-map-selector button.map-title {
-  font-family: 'DDG_ProximaNova', 'DDG_ProximaNova_UI_0', 'DDG_ProximaNova_UI_1',
-    'DDG_ProximaNova_UI_2', 'DDG_ProximaNova_UI_3', 'DDG_ProximaNova_UI_4',
-    'DDG_ProximaNova_UI_5', 'DDG_ProximaNova_UI_6', 'Proxima Nova',
-    'Helvetica Neue', 'Helvetica', 'Segoe UI', 'Nimbus Sans L',
-    'Liberation Sans', 'Open Sans', FreeSans, Arial, sans-serif;
+  font-family: "DDG_ProximaNova", "DDG_ProximaNova_UI_0", "DDG_ProximaNova_UI_1",
+    "DDG_ProximaNova_UI_2", "DDG_ProximaNova_UI_3", "DDG_ProximaNova_UI_4",
+    "DDG_ProximaNova_UI_5", "DDG_ProximaNova_UI_6", "Proxima Nova",
+    "Helvetica Neue", "Helvetica", "Segoe UI", "Nimbus Sans L",
+    "Liberation Sans", "Open Sans", FreeSans, Arial, sans-serif;
   background-color: #ffffe1;
   color: #33332c;
   width: 240px;
@@ -303,7 +303,7 @@ ul {
 }
 .info-window .context-menu.dropdown button.dropdown-toggle:after {
   /* remove divot */
-  content: '';
+  content: "";
   display: none;
 }
 .info-window .expand-contract-button img,
@@ -455,10 +455,12 @@ button.dropdown-toggle img {
   object-fit: contain;
   overflow: hidden;
 }
-.carousel .carousel-control-prev-icon, .carousel .carousel-control-next-icon {
+.carousel .carousel-control-prev-icon,
+.carousel .carousel-control-next-icon {
   background-image: none;
 }
-.carousel .carousel-control-next, .carousel .carousel-control-prev {
+.carousel .carousel-control-next,
+.carousel .carousel-control-prev {
   /* background: no-repeat 50%/100% 100%; */
   background-image: url(/static/images/bootstrap/carousel-next.png);
   background-size: contain;
