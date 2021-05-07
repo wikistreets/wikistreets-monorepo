@@ -1,24 +1,24 @@
-import $ from 'jquery'
-import 'bootstrap'
-import matter from 'gray-matter' // to parse YAML front matter
-import marked from 'marked' // to parse Markdown
+import $ from "jquery"
+import "bootstrap"
+import matter from "gray-matter" // to parse YAML front matter
+import marked from "marked" // to parse Markdown
 
 // the following are imported in the HTML since I couldn't get them to work here
-const { FUploader } = require('./fuploader')
-const { DateDiff } = require('./date_diff')
-const { objectMerge, objectKeysToLowercase } = require('./object_utils')
+const { FUploader } = require("./fuploader")
+const { DateDiff } = require("./date_diff")
+const { objectMerge, objectKeysToLowercase } = require("./object_utils")
 // import Geolocation from './geolocation'
 
 // app settings
 const app = {
   auth: {
     // get and set a JWT token for authorizing this user
-    setToken: (token) => app.localStorage.setItem('token', token),
-    getToken: () => app.localStorage.getItem('token'),
-    isContributor: (userId) => {
+    setToken: token => app.localStorage.setItem("token", token),
+    getToken: () => app.localStorage.getItem("token"),
+    isContributor: userId => {
       const contributors = app.featureCollection.contributors
       let found = false
-      contributors.forEach((contributor) => {
+      contributors.forEach(contributor => {
         if (contributor._id == userId) found = true
         return
       })
@@ -45,19 +45,19 @@ const app = {
   },
   copy: {
     signinerror:
-      'The email or password you entered is not correct.  Please correct and try again',
+      "The email or password you entered is not correct.  Please correct and try again",
     signuperror:
-      'An account exists with that email address.  Please sign in or create a new account',
-    mappermissionserror: 'You do not have permission to edit this map.',
-    anonymousfeaturecollectiontitle: 'unnamed map',
-    sharefeaturemessage: 'Link copied to clipboard.  Share anywhere!',
-    sharemapmessage: 'Link copied to clipboard.  Share anywhere!',
+      "An account exists with that email address.  Please sign in or create a new account",
+    mappermissionserror: "You do not have permission to edit this map.",
+    anonymousfeaturecollectiontitle: "unnamed map",
+    sharefeaturemessage: "Link copied to clipboard.  Share anywhere!",
+    sharemapmessage: "Link copied to clipboard.  Share anywhere!",
     confirmmapstylechange:
-      'Are you sure? Changing map styles will probably throw off the position of your markers and other existing map features.',
+      "Are you sure? Changing map styles will probably throw off the position of your markers and other existing map features.",
   },
   localStorage: {
-    getItem: (key) => {
-      return localStorage ? localStorage.getItem(key) : ''
+    getItem: key => {
+      return localStorage ? localStorage.getItem(key) : ""
     },
     setItem: (key, value) => {
       if (localStorage) localStorage.setItem(key, value)
@@ -65,18 +65,18 @@ const app = {
   },
   setTitle: (postTitle = false) => {
     // update the window title and various meta tags
-    postTitle = postTitle ? `${toTitleCase(postTitle)} - ` : ''
+    postTitle = postTitle ? `${toTitleCase(postTitle)} - ` : ""
     const featureCollectionTitle = app.featureCollection.getTitle(true)
     const newTitle = `${postTitle}${featureCollectionTitle}`
     const newTitleWithBranding = `${newTitle} - Wikistreets`
-    $('head title').html(newTitleWithBranding) // window title
-    $('.selected-map').html(featureCollectionTitle.toLowerCase()) // map selector dropdown
+    $("head title").html(newTitleWithBranding) // window title
+    $(".selected-map").html(featureCollectionTitle.toLowerCase()) // map selector dropdown
     // update social media/seo meta tags
-    $('meta[property="og:title"]').attr('content', newTitle)
-    $('meta[name="twitter:title"]').attr('content', newTitle)
-    $('meta[itemprop="name"]').attr('content', newTitleWithBranding)
+    $('meta[property="og:title"]').attr("content", newTitle)
+    $('meta[name="twitter:title"]').attr("content", newTitle)
+    $('meta[itemprop="name"]').attr("content", newTitleWithBranding)
   },
-  mode: 'default', // default, featuredetails, featurecreate, featureedit, signin, signup, userprofile, resetpassword, searchaddress, errorgeneric, errorgeoposition, showcontributors
+  mode: "default", // default, featuredetails, featurecreate, featureedit, signin, signup, userprofile, resetpassword, searchaddress, errorgeneric, errorgeoposition, showcontributors
   browserGeolocation: {
     enabled: false,
     coords: {
@@ -98,63 +98,63 @@ const app = {
   apis: {
     wikistreets: {
       // settings for WikiStreets API
-      userSignin: '/users/signin',
-      userSignup: '/users/signup',
-      userSecret: '/users/secret',
-      userResetPassword: '/users/reset-password',
-      getUserMe: '/users/me',
-      getFeatureCollectionUrl: '/map/data',
-      postFeatureUrl: '/features/create',
-      editFeatureUrl: '/features/edit',
-      deleteFeatureUrl: '/features/delete',
-      postCommentUrl: '/features/comments/create',
-      deleteCommentUrl: '/features/comments/delete',
-      getUserUrl: '/users',
-      featureCollectionTitleUrl: '/map/title',
-      collaborationSettingsUrl: '/map/collaboration',
-      mapStyleUrl: '/map/style',
-      deleteFeatureCollectionUrl: '/map/remove',
-      forkFeatureCollectionUrl: '/map/fork',
-      staticMapUrl: '/map',
-      importFeatureCollectionUrl: '/map/import',
-      exportFeatureCollectionUrl: '/map/export',
+      userSignin: "/users/signin",
+      userSignup: "/users/signup",
+      userSecret: "/users/secret",
+      userResetPassword: "/users/reset-password",
+      getUserMe: "/users/me",
+      getFeatureCollectionUrl: "/map/data",
+      postFeatureUrl: "/features/create",
+      editFeatureUrl: "/features/edit",
+      deleteFeatureUrl: "/features/delete",
+      postCommentUrl: "/features/comments/create",
+      deleteCommentUrl: "/features/comments/delete",
+      getUserUrl: "/users",
+      featureCollectionTitleUrl: "/map/title",
+      collaborationSettingsUrl: "/map/collaboration",
+      mapStyleUrl: "/map/style",
+      deleteFeatureCollectionUrl: "/map/remove",
+      forkFeatureCollectionUrl: "/map/fork",
+      staticMapUrl: "/map",
+      importFeatureCollectionUrl: "/map/import",
+      exportFeatureCollectionUrl: "/map/export",
     },
     openstreetmap: {
-      baseUrl: 'http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+      baseUrl: "http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
     },
     mapbox: {
       // settings for the Mapbox API
       apiKey:
-        'pk.eyJ1IjoiYWIxMjU4IiwiYSI6ImNrN3FodmtkdzAzbnUzbm1oamJ3cDc4ZGwifQ.VXZygrvQFDu6wNM9i7IN2g',
+        "pk.eyJ1IjoiYWIxMjU4IiwiYSI6ImNrN3FodmtkdzAzbnUzbm1oamJ3cDc4ZGwifQ.VXZygrvQFDu6wNM9i7IN2g",
       baseUrl:
-        'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}',
-      geocodeUrl: 'https://api.mapbox.com/geocoding/v5/mapbox.places',
+        "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+      geocodeUrl: "https://api.mapbox.com/geocoding/v5/mapbox.places",
     },
   },
   user: {
-    id: '',
+    id: "",
     maps: [],
   },
   featureCollection: {
     getPublicIdFromUrl: () => {
       // get this map's ID from the URL
       const url = window.location.pathname
-      const urlParts = url.split('/') // split by slash
+      const urlParts = url.split("/") // split by slash
       const featureCollectionId = urlParts[urlParts.length - 1] // last part is always map ID?
       return featureCollectionId
     },
     getHashFromUrl: () => {
       // get this map's ID from the URL
       const hash = window.location.hash
-      if (hash.indexOf('#') == 0) {
+      if (hash.indexOf("#") == 0) {
         return hash.substr(1)
-      } else return ''
+      } else return ""
     },
     element: null,
-    htmlElementId: 'map',
-    htmlElementSelector: '#map', // the id of the map element in the html
-    mapType: 'geographic', // default type
-    title: '',
+    htmlElementId: "map",
+    htmlElementSelector: "#map", // the id of the map element in the html
+    mapType: "geographic", // default type
+    title: "",
     unsaved: true, // assume it's not a saved map
     geolocation: {
       // default geolocation at a random point
@@ -169,15 +169,15 @@ const app = {
       featurecreate: 17,
       featureview: 15,
       getDefault: () => {
-        let zoomLevel = app.localStorage.getItem('zoom')
-          ? parseInt(app.localStorage.getItem('zoom'))
+        let zoomLevel = app.localStorage.getItem("zoom")
+          ? parseInt(app.localStorage.getItem("zoom"))
           : 4
         if (zoomLevel < 1) zoomLevel = 1
         return zoomLevel
       },
       setDefault: (zoomLevel = 4) => {
         if (zoomLevel <= 1) zoomLevel = 1
-        app.localStorage.setItem('zoom', zoomLevel)
+        app.localStorage.setItem("zoom", zoomLevel)
       },
     },
     contributors: [],
@@ -186,23 +186,27 @@ const app = {
     limitViewers: false,
     forks: [],
     numForks: 0,
-    dateModified: '',
+    dateModified: "",
     dateLastFetched: null,
     currentlyFetching: false,
-    panTo: (coords) => {
+    panTo: coords => {
       app.featureCollection.element.panTo(coords)
       // store this position
       app.browserGeolocation.coords = coords
-      app.localStorage.setItem('coords', JSON.stringify(coords))
+      app.localStorage.setItem("coords", JSON.stringify(coords))
     },
-    flyTo: (marker) => {
+    flyTo: marker => {
       let zoom = marker.featureData.properties.zoom // check for this feature's zoom property
       if (!zoom && !zoom === 0) zoom = app.featureCollection.element.getZoom() // default zoom, if none present
       // check whether this marker is a regular leaflet point marker
       let coords
-      if (marker.featureData.geometry.type == 'Point') {
+      if (marker.featureData.geometry.type == "Point") {
         coords = marker.getLatLng() // marker's leaflet coords
-        app.featureCollection.element.flyTo(coords, zoom) // use leaflet's flyTo
+        // app.featureCollection.element.flyTo(coords, zoom) // use leaflet's flyTo
+        app.featureCollection.element.setView(coords, zoom, {
+          animate: true,
+          easeLinearity: 1,
+        })
       } else {
         // a non-Point geojson feature shape... should have a center point property
         if (
@@ -213,7 +217,11 @@ const app = {
             lat: marker.featureData.properties.center[1],
             lng: marker.featureData.properties.center[0],
           }
-          app.featureCollection.element.flyTo(coords, zoom) // use leaflet's flyTo
+          // app.featureCollection.element.flyTo(coords, zoom) // use leaflet's flyTo
+          app.featureCollection.element.setView(coords, zoom, {
+            animate: true,
+            easeLinearity: 1,
+          })
         } else {
           // no center point is stored in this feature... probably older data
           // use bounding box instead... hopefully this exists
@@ -227,9 +235,9 @@ const app = {
       }
       // store this position
       app.browserGeolocation.coords = coords
-      app.localStorage.setItem('coords', JSON.stringify(coords))
+      app.localStorage.setItem("coords", JSON.stringify(coords))
     },
-    fitBounds: (bbox) => {
+    fitBounds: bbox => {
       if (!bbox.length == 4) return // abort
       // convert the bbox to leaflet LatLngBounds format: [[lat,lng], [lat,lng]]
       bbox = [
@@ -242,79 +250,79 @@ const app = {
       // store this position
       const coords = app.featureCollection.element.getCenter()
       app.browserGeolocation.coords = coords
-      app.localStorage.setItem('coords', JSON.stringify(coords))
+      app.localStorage.setItem("coords", JSON.stringify(coords))
     },
   },
   controls: {
     newFeature: {
-      htmlElementSelector: '.control-add-feature img',
+      htmlElementSelector: ".control-add-feature img",
       icons: {
         enabled:
-          '/static/images/material_design_icons/add_circle_outline-24px.svg',
+          "/static/images/material_design_icons/add_circle_outline-24px.svg",
       },
     },
     newLine: {
-      htmlElementSelector: '.control-add-line img',
+      htmlElementSelector: ".control-add-line img",
       icons: {
-        enabled: '/static/images/material_design_icons/timeline-24px.svg',
+        enabled: "/static/images/material_design_icons/timeline-24px.svg",
       },
     },
     editFeature: {
-      htmlElementSelector: '.control-edit-feature img',
+      htmlElementSelector: ".control-edit-feature img",
       icons: {
-        active: '/static/images/material_design_icons/edit-24px.svg',
+        active: "/static/images/material_design_icons/edit-24px.svg",
       },
     },
     gps: {
-      htmlElementSelector: '.control-find-location img',
-      state: 'disabled',
+      htmlElementSelector: ".control-find-location img",
+      state: "disabled",
       icons: {
-        disabled: '/static/images/material_design_icons/gps_off-24px.svg',
+        disabled: "/static/images/material_design_icons/gps_off-24px.svg",
         // enabled: '/static/images/material_design_icons/gps_not_fixed-24px.svg',
-        enabled: '/static/images/material_design_icons/gps_fixed-24px.svg',
-        active: '/static/images/material_design_icons/gps_fixed-24px.svg',
+        enabled: "/static/images/material_design_icons/gps_fixed-24px.svg",
+        active: "/static/images/material_design_icons/gps_fixed-24px.svg",
       },
     },
     searchAddress: {
-      htmlElementSelector: '.control-search-address img',
+      htmlElementSelector: ".control-search-address img",
       icons: {
-        active: '/static/images/material_design_icons/search-24px.svg',
+        active: "/static/images/material_design_icons/search-24px.svg",
       },
       timer: null,
     },
     hideFeatureOptions: () => {
       app.controls.drawInstructionIndex = 0
-      $('.map-controls .add-subtract-feature-toggle.add-icon').removeClass(
-        'hide'
+      $(".map-controls .add-subtract-feature-toggle.add-icon").removeClass(
+        "hide"
       )
-      $('.map-controls .add-subtract-feature-toggle.subtract-icon').addClass(
-        'hide'
+      $(".map-controls .add-subtract-feature-toggle.subtract-icon").addClass(
+        "hide"
       )
-      $('.map-controls .feature-options').addClass('hide')
-      $('.map-controls .feature-options .map-control').removeClass('hide')
+      $(".map-controls .feature-options").addClass("hide")
+      $(".map-controls .feature-options .map-control").removeClass("hide")
     },
     drawInstructionIndex: 0, // which instructino to show
     showFeatureOptions: () => {
       app.controls.drawInstructionIndex = 0
-      $('.map-controls .add-subtract-feature-toggle.add-icon').addClass('hide')
-      $('.map-controls .add-subtract-feature-toggle.subtract-icon').removeClass(
-        'hide'
+      $(".map-controls .add-subtract-feature-toggle.add-icon").addClass("hide")
+      $(".map-controls .add-subtract-feature-toggle.subtract-icon").removeClass(
+        "hide"
       )
-      $('.map-controls .feature-options').removeClass('hide')
+      $(".map-controls .feature-options").removeClass("hide")
       // reset instructions
-      $('.map-controls .feature-options .map-control').removeClass('hide')
-      $('.map-controls .feature-options .pick-shape-msg').removeClass('hide')
-      $('.map-controls .feature-options .draw-message').addClass('hide')
+      $(".map-controls .feature-options .map-control").removeClass("hide")
+      $(".map-controls .feature-options .pick-shape-msg").removeClass("hide")
+      $(".map-controls .feature-options .draw-message").addClass("hide")
     },
     showDrawInstructions: (index = false) => {
       // optional param to control index
       if (index) app.controls.drawInstructionIndex = index
 
       const instructions = [
-        'Click map to start drawing',
-        'Keep clicking to draw...',
+        "Click map to start drawing",
+        "Keep clicking to draw...",
         '<a class="done-link" href="#">Click here</a> when done',
-        'Complete form to save',
+        "Complete form to save",
       ]
 
       // hide instructions if limit exceeded
@@ -323,18 +331,18 @@ const app = {
       }
 
       // show draw instructions for line/polygon
-      $('.map-controls .feature-options .map-control').addClass('hide')
-      $('.map-controls .feature-options .pick-shape-msg').addClass('hide')
-      $('.map-controls .feature-options .draw-message').html(
+      $(".map-controls .feature-options .map-control").addClass("hide")
+      $(".map-controls .feature-options .pick-shape-msg").addClass("hide")
+      $(".map-controls .feature-options .draw-message").html(
         instructions[app.controls.drawInstructionIndex]
       )
 
       if (app.controls.drawInstructionIndex != 2)
         app.controls.drawInstructionIndex++
 
-      $('.map-controls .feature-options .draw-message').removeClass('hide')
+      $(".map-controls .feature-options .draw-message").removeClass("hide")
       // enable done link
-      $('.map-controls .feature-options .done-link').on('click', (e) => {
+      $(".map-controls .feature-options .done-link").on("click", e => {
         // done drawing... open info panel
         e.preventDefault()
 
@@ -368,7 +376,7 @@ const app = {
       all: {
         default: {
           weight: 1,
-          color: 'black',
+          color: "black",
           opacity: 1,
           strokeOpacity: 1,
           // fillColor: 'blue',
@@ -376,7 +384,7 @@ const app = {
         },
         mouseover: {
           weight: 6,
-          color: 'red', //'#007bff',
+          color: "red", //'#007bff',
           opacity: 1,
           strokeOpacity: 1,
           // fillColor: 'white',
@@ -384,7 +392,7 @@ const app = {
         },
         active: {
           weight: 3,
-          color: 'red', //'#007bff',
+          color: "red", //'#007bff',
           opacity: 1,
           strokeOpacity: 1,
           // fillColor: 'orange',
@@ -420,37 +428,37 @@ const app = {
       photo: {
         // see exra markers style options:
         default: {
-          icon: 'fa-camera',
-          shape: 'square',
-          prefix: 'fa',
-          markerColor: 'black',
+          icon: "fa-camera",
+          shape: "square",
+          prefix: "fa",
+          markerColor: "black",
           svg: true,
         },
         mouseover: {},
         active: {
-          markerColor: 'red',
+          markerColor: "red",
         }, //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
       },
       text: {
         default: {
-          icon: 'fa-align-left',
-          shape: 'square',
-          prefix: 'fa',
-          markerColor: 'black',
+          icon: "fa-align-left",
+          shape: "square",
+          prefix: "fa",
+          markerColor: "black",
           svg: true,
         },
         mouseover: {},
         active: {
-          markerColor: 'red',
+          markerColor: "red",
         }, //{ imageUrl: '/static/images/material_design_icons/place-24px.svg' },
       },
       me: {
         default: {
-          icon: 'fa-walking',
-          shape: 'penta',
-          extraClasses: 'me-marker',
-          prefix: 'fa',
-          markerColor: 'black',
+          icon: "fa-walking",
+          shape: "penta",
+          extraClasses: "me-marker",
+          prefix: "fa",
+          markerColor: "black",
         }, //{ imageUrl: '/static/images/material_design_icons/directions_walk-24px.svg' }
       },
     },
@@ -463,29 +471,29 @@ const app = {
       active: 51,
       me: 100,
     },
-    getStyle: (marker, state = 'default') => {
+    getStyle: (marker, state = "default") => {
       const feature = marker.featureData
       let featureType = feature.geometry.type
       // handle geojson types that cana be imported that we don't fully support
-      if (!['Point', 'LineString', 'Polygon'].includes(featureType)) {
-        featureType = 'Polygon' // will use polygon styles for these
+      if (!["Point", "LineString", "Polygon"].includes(featureType)) {
+        featureType = "Polygon" // will use polygon styles for these
       }
       // handle Points, where we have two sub-featureTypes when it comes to styles
-      if (featureType == 'Point') {
+      if (featureType == "Point") {
         featureType = marker.featureType // either 'photo' or 'text' for Point features
       }
 
       let style =
-        feature.geometry.type != 'Point' ? app.markers.styles.all.default : {} // start with baseline generic styles
+        feature.geometry.type != "Point" ? app.markers.styles.all.default : {} // start with baseline generic styles
       // console.log(`1 ${JSON.stringify(style, null, 2)}`)
       // add generic global styles
       try {
-        if (feature.geometry.type != 'Point')
+        if (feature.geometry.type != "Point")
           style = objectMerge(style, app.markers.styles.all[state]) // add any state-specific but generic styles
         // console.log(`2 ${JSON.stringify(style, null, 2)}`)
       } catch (err) {}
       try {
-        style = objectMerge(style, app.markers.styles[featureType]['default']) // add any feature-type-specific default styles
+        style = objectMerge(style, app.markers.styles[featureType]["default"]) // add any feature-type-specific default styles
         // console.log(`3 ${JSON.stringify(style, null, 2)}`)
       } catch (err) {}
       // add shape-specific global styles
@@ -497,7 +505,7 @@ const app = {
       try {
         style = objectMerge(
           style,
-          feature.properties.body.data.styles['default']
+          feature.properties.body.data.styles["default"]
         ) // add any post-specific generic styles
         // console.log(`5 ${JSON.stringify(style, null, 2)}`)
       } catch (err) {}
@@ -513,7 +521,7 @@ const app = {
 
       return style
     },
-    getIcon: (marker, state = 'default') => {
+    getIcon: (marker, state = "default") => {
       // get the styles for this marker
       const style = app.markers.getStyle(marker, state)
 
@@ -527,14 +535,14 @@ const app = {
     isExpanded: false,
     hasAutoExpanded: false, // whether we've auto-expanded the info-panel once before
     style: {
-      height: '60', // percent
+      height: "60", // percent
     },
   },
 }
 // add methods
 
 // send request to the server with auth and featureCollectionId attached
-app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
+app.myFetch = async (url, requestType = "GET", data = {}, multipart = true) => {
   // get the current maps' id from the URL
   const featureCollectionId = app.featureCollection.getPublicIdFromUrl()
 
@@ -547,16 +555,16 @@ app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
   }
 
   // add body, if POST
-  if (requestType == 'POST') {
+  if (requestType == "POST") {
     // attach map ID to POST request body data (using FormData object's append method)
 
     // deal with multipart FormData differently from simple objects
     if (multipart) {
       // using the FormData object
-      if (!data.has('featureCollectionId'))
-        data.append('featureCollectionId', featureCollectionId)
-      if (!data.has('featureCollectionTitle'))
-        data.append('featureCollectionTitle', app.featureCollection.title)
+      if (!data.has("featureCollectionId"))
+        data.append("featureCollectionId", featureCollectionId)
+      if (!data.has("featureCollectionTitle"))
+        data.append("featureCollectionTitle", app.featureCollection.title)
     } else {
       // using a simple object
       if (!data.featureCollectionId)
@@ -565,7 +573,7 @@ app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
         data.featureCollectionTitle = app.featureCollection.title
     }
     options.body = data
-  } else if (requestType == 'GET') {
+  } else if (requestType == "GET") {
     // convert data object to query string params
     let queryParams = []
     queryParams.push(`featureCollectionId=${featureCollectionId}`) // add map id
@@ -578,22 +586,22 @@ app.myFetch = async (url, requestType = 'GET', data = {}, multipart = true) => {
       // console.log(`${key}: ${courses[key]}`)
     })
     // make sure map title is sent along, just in case it has changed in client
-    if (!queryParams.includes('featureCollectionTitle'))
-      queryParams.push('featureCollectionTitle', app.featureCollection.title)
+    if (!queryParams.includes("featureCollectionTitle"))
+      queryParams.push("featureCollectionTitle", app.featureCollection.title)
     // assemble the query and tack it on the URL
-    let query = queryParams.join('&')
+    let query = queryParams.join("&")
     url = url += `?${query}`
   }
 
   // fetch from server
-  const res = await fetch(url, options).then((response) => response.json()) // convert JSON response text to an object
+  const res = await fetch(url, options).then(response => response.json()) // convert JSON response text to an object
 
   // return json object
   return res
 }
 
 // convert a string to title case
-const toTitleCase = (str) => {
+const toTitleCase = str => {
   return str.replace(/\w\S*/g, function (txt) {
     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
   })
@@ -612,7 +620,7 @@ app.featureCollection.getTitle = (titlecase = false) => {
 app.featureCollection.setTitle = (title = false) => {
   if (title) {
     // unescape html entities from title
-    const elem = document.createElement('textarea')
+    const elem = document.createElement("textarea")
     elem.innerHTML = title
     title = elem.value
   }
@@ -657,12 +665,12 @@ app.browserGeolocation.getCoords = () => {
   return app.browserGeolocation.coords
 }
 
-app.controls.gps.setState = (state) => {
+app.controls.gps.setState = state => {
   // console.log(`setting state to ${state}.`)
   app.controls.gps.state = state
   // show the correct icon for the given state: disabled, enabled, or active
   $(app.controls.gps.htmlElementSelector).attr(
-    'src',
+    "src",
     app.controls.gps.icons[state]
   )
 }
@@ -670,21 +678,21 @@ app.controls.gps.setState = (state) => {
 app.browserGeolocation.update = async () => {
   // get the browser's geolocation
   return getBrowserGeolocation()
-    .then((coords) => {
+    .then(coords => {
       // store coords
       // console.log(`GPS available: ${coords.lat}, ${coords.lng}`);
       app.browserGeolocation.enabled = true
       app.browserGeolocation.setCoords(coords.lat, coords.lng)
       // update interface
-      app.controls.gps.setState('enabled')
+      app.controls.gps.setState("enabled")
       return coords
     })
-    .catch((err) => {
+    .catch(err => {
       // error getting GPS coordinates
       console.error(`GPS error: ${err}`)
       app.browserGeolocation.enabled = false
       // update interface
-      app.controls.gps.setState('disabled')
+      app.controls.gps.setState("disabled")
       throw err
     })
 }
@@ -714,25 +722,25 @@ app.markers.createCluster = () => {
   // return cluster
   return app.markers.cluster
 }
-app.markers.simulateClick = (marker) => {
+app.markers.simulateClick = marker => {
   if (!marker) return // ignore invalid markers
 
   // fire a click event in the browser-appropriate way
   if (marker.fireEvent) {
     // most browsers
-    marker.fireEvent('click')
+    marker.fireEvent("click")
   } else {
     // older browsers, i.e. 8?
-    var evObj = document.createEvent('Events')
-    evObj.initEvent('click', true, false)
+    var evObj = document.createEvent("Events")
+    evObj.initEvent("click", true, false)
     marker.dispatchEvent(evObj)
   }
 }
-app.markers.findById = (featureId) => {
+app.markers.findById = featureId => {
   // find an existing marker by its id
   featureId = `marker-${featureId}` // markers on the map have been given this prefix
   let match = false
-  app.markers.markers.forEach((data) => {
+  app.markers.markers.forEach(data => {
     // console.log(`${data._id} && ${featureId}`)
     if (data._id == featureId) {
       match = data
@@ -740,7 +748,7 @@ app.markers.findById = (featureId) => {
   })
   return match
 }
-app.featureCollection.unpackYAML = (feature) => {
+app.featureCollection.unpackYAML = feature => {
   // extract the YAML front matter data from the body content, if any
   if (feature.properties.body) {
     const orig = feature.properties.body // the full body including any YAML and content
@@ -763,8 +771,8 @@ app.featureCollection.unpackYAML = (feature) => {
     // add blank body
     feature.properties.body = {
       data: {},
-      content: '',
-      orig: '',
+      content: "",
+      orig: "",
     }
   }
   return feature
@@ -783,24 +791,24 @@ app.markers.place = async (features, cluster) => {
 
       // add some kind of address for polygons and lines
       switch (marker.featureData.geometry.type) {
-        case 'LineString':
-          marker.featureData.properties.address = 'this line'
+        case "LineString":
+          marker.featureData.properties.address = "this line"
           break
-        case 'Polygon':
-          marker.featureData.properties.address = 'this polygon'
+        case "Polygon":
+          marker.featureData.properties.address = "this polygon"
           break
       }
 
       // determine whether this marker has a photo or only text
       if (feature.properties.photos && feature.properties.photos.length) {
-        marker.featureType = 'photo'
+        marker.featureType = "photo"
       } else {
-        marker.featureType = 'text'
+        marker.featureType = "text"
       }
 
       // set pointer marker with correct icon
-      if (marker.featureData.geometry.type == 'Point') {
-        const icon = app.markers.getIcon(marker, 'default')
+      if (marker.featureData.geometry.type == "Point") {
+        const icon = app.markers.getIcon(marker, "default")
         marker.setIcon(icon)
       }
 
@@ -811,25 +819,25 @@ app.markers.place = async (features, cluster) => {
         try {
           switch (feature.geometry.type) {
             // update point marker positions in leaflet format
-            case 'Point':
+            case "Point":
               marker.setLatLng({
                 lat: feature.geometry.coordinates[1], //point.position.lat,
                 lng: feature.geometry.coordinates[0], //point.position.lng,
               }) // reposition it
               break
-            case 'LineString':
+            case "LineString":
               // set line coords in leaflet format
               let latlngs = []
-              feature.geometry.coordinates.forEach((lnglat) => {
+              feature.geometry.coordinates.forEach(lnglat => {
                 const latlng = [lnglat[1], lnglat[0]]
                 latlngs.push(latlng)
               })
               marker.setLatLngs(latlngs) // reposition it
               break
-            case 'Polygon':
+            case "Polygon":
               // set polygon coords in leaflet format
               latlngs = [[]]
-              feature.geometry.coordinates[0].forEach((lnglat) => {
+              feature.geometry.coordinates[0].forEach(lnglat => {
                 latlngs[0].push([lnglat[1], lnglat[0]])
               })
               marker.setLatLngs(latlngs)
@@ -845,14 +853,14 @@ app.markers.place = async (features, cluster) => {
         .length
       if (isBeingViewed) {
         // check for comments not yet on the page
-        feature.properties.comments.forEach((comment) => {
+        feature.properties.comments.forEach(comment => {
           const commentEl = $(`.comment[ws-comment-id="${comment._id}"]`)
           if (!commentEl.length) {
             // comment is not on the page... put it there
             const commentEl = createComment(comment, feature._id)
-            commentEl.appendTo($('.info-window-content .existing-comments'))
+            commentEl.appendTo($(".info-window-content .existing-comments"))
             // make sure the comments are showing
-            $('.info-window-content .existing-comments').show()
+            $(".info-window-content .existing-comments").show()
           }
         }) // foreach comment
       } // if featureEls.length
@@ -861,7 +869,7 @@ app.markers.place = async (features, cluster) => {
       let coords = null
       let marker = null
       // deal with Point features first
-      if (feature.geometry.type == 'Point') {
+      if (feature.geometry.type == "Point") {
         // console.log(point.geometry.coordinates)
         // points in leaflet have [lat,lng] format, whereas geojson has [lng,lat]
         coords = [
@@ -876,9 +884,9 @@ app.markers.place = async (features, cluster) => {
 
         // determine whether this marker has a photo or only text
         if (feature.properties.photos && feature.properties.photos.length) {
-          marker.featureType = 'photo'
+          marker.featureType = "photo"
         } else {
-          marker.featureType = 'text'
+          marker.featureType = "text"
         }
 
         // extract yaml metadata from body content
@@ -886,23 +894,23 @@ app.markers.place = async (features, cluster) => {
         marker.featureData = feature // save the data
 
         // set the marker with correct icon and z-index
-        const icon = app.markers.getIcon(marker, 'default')
+        const icon = app.markers.getIcon(marker, "default")
         marker.setIcon(icon)
         marker.setZIndexOffset(app.markers.zIndex.default)
       } else {
         // this is a non-point geojson shape
         let c
         switch (feature.geometry.type) {
-          case 'LineString':
+          case "LineString":
             c = []
-            feature.geometry.coordinates.forEach((lnglat) => {
+            feature.geometry.coordinates.forEach(lnglat => {
               c.push([lnglat[1], lnglat[0]])
             })
             marker = new L.Polyline(c)
             break
-          case 'Polygon':
+          case "Polygon":
             c = [[]]
-            feature.geometry.coordinates[0].forEach((lnglat) => {
+            feature.geometry.coordinates[0].forEach(lnglat => {
               c[0].push([lnglat[1], lnglat[0]])
             })
             marker = new L.Polygon(c)
@@ -916,16 +924,16 @@ app.markers.place = async (features, cluster) => {
         marker.featureData = feature // save the data
 
         // set the marker style and add it to the map
-        const style = app.markers.getStyle(marker, 'default')
+        const style = app.markers.getStyle(marker, "default")
         marker.setStyle(style).addTo(app.featureCollection.element)
 
         // add some kind of address for polygons and lines
         switch (marker.featureData.geometry.type) {
-          case 'LineString':
-            marker.featureData.properties.address = 'this line'
+          case "LineString":
+            marker.featureData.properties.address = "this line"
             break
-          case 'Polygon':
-            marker.featureData.properties.address = 'this polygon'
+          case "Polygon":
+            marker.featureData.properties.address = "this polygon"
             break
         }
 
@@ -941,7 +949,7 @@ app.markers.place = async (features, cluster) => {
         // attach a few userful functions for leaflet so these geojson markers behave more like point markers
         marker.getShapeCenter = () => {
           let center
-          if (marker.featureData.geometry.type == 'Point') {
+          if (marker.featureData.geometry.type == "Point") {
             center = marker.getLatLng() // official marker point
           } else {
             // use our saved center point for other shapes
@@ -971,51 +979,51 @@ app.markers.place = async (features, cluster) => {
       app.markers.markers.push(marker)
 
       // // detect click events
-      marker.on('click', (e) => {
+      marker.on("click", e => {
         // do nothing if currently editing/creating a feature
-        if (['featurecreate', 'featureedit'].indexOf(app.mode) >= 0) {
+        if (["featurecreate", "featureedit"].indexOf(app.mode) >= 0) {
           return
         }
 
         app.markers.activate(marker)
         showInfoWindow(marker)
         // hack to allow clicking on geojson leaflet layers to open up info window
-        if (marker.featureData.geometry.type != 'Point') {
+        if (marker.featureData.geometry.type != "Point") {
           // this triggers an error which somehow makes it work
           throw `click! stay calm`
         }
       })
 
       //   // detect mouseover and mouseout events
-      marker.on('mouseover', (e) => {
+      marker.on("mouseover", e => {
         // do nothing if currently editing/creating a feature
-        if (['featurecreate', 'featureedit'].indexOf(app.mode) >= 0) {
+        if (["featurecreate", "featureedit"].indexOf(app.mode) >= 0) {
           return
         }
         // console.log('mouseover')
-        if (marker.featureData.geometry.type == 'Point') {
-          const style = app.markers.getIcon(marker, 'mouseover')
+        if (marker.featureData.geometry.type == "Point") {
+          const style = app.markers.getIcon(marker, "mouseover")
           // marker.setIcon(style)
         } else {
-          const style = app.markers.getStyle(marker, 'mouseover')
+          const style = app.markers.getStyle(marker, "mouseover")
           marker.setStyle(style)
         }
       }) // marker mouseover
 
       //   // // detect mouseover and mouseout events
-      marker.on('mouseout', (e) => {
+      marker.on("mouseout", e => {
         // do nothing if currently editing/creating a feature
-        if (['featurecreate', 'featureedit'].indexOf(app.mode) >= 0) {
+        if (["featurecreate", "featureedit"].indexOf(app.mode) >= 0) {
           return
         }
         // console.log('mouseout')
-        if (marker.featureData.geometry.type == 'Point') {
-          const style = app.markers.getIcon(marker, 'default')
+        if (marker.featureData.geometry.type == "Point") {
+          const style = app.markers.getIcon(marker, "default")
           // marker.setIcon(style)
         } else {
           // revert to default style, unless marker is open
           if (!marker.isOpen) {
-            const style = app.markers.getStyle(marker, 'default')
+            const style = app.markers.getStyle(marker, "default")
             marker.setStyle(style)
           }
         }
@@ -1023,26 +1031,26 @@ app.markers.place = async (features, cluster) => {
     } // else if marker doesn't yet exist
 
     // if the feature list is currently being viewed, refresh it
-    if (app.mode == 'default') collapseInfoWindow()
+    if (app.mode == "default") collapseInfoWindow()
   }) // data.map
   return true
 }
 
-app.markers.activate = (marker) => {
+app.markers.activate = marker => {
   marker = marker ? marker : app.markers.current // default to current marker, if any
   if (!marker) return // no marker, no more activation
   app.markers.current = marker // save it for later
   // mark it as open
   marker.isOpen = true
   // change its icon color
-  if (marker.featureData.geometry.type == 'Point') {
-    const icon = app.markers.getIcon(marker, 'active')
+  if (marker.featureData.geometry.type == "Point") {
+    const icon = app.markers.getIcon(marker, "active")
     marker.setZIndexOffset(app.markers.zIndex.active)
     marker.setIcon(icon)
   } else {
     // it's another geojson shape
     // set the marker style and add it to the map
-    const style = app.markers.getStyle(marker, 'active')
+    const style = app.markers.getStyle(marker, "active")
     marker.setStyle(style)
   }
 }
@@ -1050,18 +1058,18 @@ app.markers.deactivate = (marker, exceptOpenMarkers = false) => {
   // return selected marker to default state
   const markerList = marker ? [marker] : app.markers.markers
   // loop through and mark all as closed
-  markerList.forEach((marker) => {
+  markerList.forEach(marker => {
     if (exceptOpenMarkers && marker.isOpen) return // skip open markers, if desired
     // console.log(`deactivating ${marker.featureData.properties.title}`)
     marker.isOpen = false
-    if (marker.featureData.geometry.type == 'Point') {
-      const icon = app.markers.getIcon(marker, 'default')
+    if (marker.featureData.geometry.type == "Point") {
+      const icon = app.markers.getIcon(marker, "default")
       marker.setZIndexOffset(app.markers.zIndex.default)
       marker.setIcon(icon)
     } else {
       // it's another geojson shape
       // set the marker style and add it to the map
-      const style = app.markers.getStyle(marker, 'default')
+      const style = app.markers.getStyle(marker, "default")
       marker.setStyle(style)
     }
   })
@@ -1070,7 +1078,7 @@ app.markers.deactivate = (marker, exceptOpenMarkers = false) => {
 }
 
 // go to the previous marker
-app.markers.previous = (marker) => {
+app.markers.previous = marker => {
   let targetMarker // the marker to show next
   // first check whether the marker's metadata includes a prev link.
   const body = marker.featureData.properties.body
@@ -1086,7 +1094,7 @@ app.markers.previous = (marker) => {
   app.markers.simulateClick(targetMarker)
 }
 // go to the next marker
-app.markers.next = (marker) => {
+app.markers.next = marker => {
   let targetMarker // the next marker to show
   const body = marker.featureData.properties.body
   // first check whether the marker's metadata includes a prev link.
@@ -1114,7 +1122,7 @@ app.fetchFeatureCollection = async (sinceDate = null) => {
   app.featureCollection.dateLastFetched = new Date()
 
   app.featureCollection.currentlyFetching = true // flag that we're fetching so we don't do more than one at a time
-  return app.myFetch(apiUrl, 'GET', options).then((data) => {
+  return app.myFetch(apiUrl, "GET", options).then(data => {
     app.featureCollection.currentlyFetching = false // flag that we're done fetching so we allow subsequent fetches
 
     // get markers
@@ -1129,7 +1137,7 @@ app.user.fetch = async () => {
   // fetch data from wikistreets api
   return app
     .myFetch(`${app.apis.wikistreets.getUserMe}`)
-    .then((data) => {
+    .then(data => {
       // save this user's id
       app.user.id = data._id
       app.user.handle = data.handle
@@ -1140,7 +1148,7 @@ app.user.fetch = async () => {
       // console.log(`RESPONSE: ${JSON.stringify(data, null, 2)}`)
       return data
     })
-    .catch((err) => {
+    .catch(err => {
       // console.log('Not logged in')
     })
 }
@@ -1210,7 +1218,7 @@ const populateMap = async (data, recenter = true) => {
 
 async function initMap() {
   // show loading icon
-  showSpinner($('.info-window'))
+  showSpinner($(".info-window"))
 
   let coords = app.browserGeolocation.getRandomCoords() // default coords
   // use last known coords, if any
@@ -1222,8 +1230,8 @@ async function initMap() {
   const data = await app.fetchFeatureCollection() // get the FeatureCollection data from server
 
   // load up the appropriate type of map: geographic or non-geographic
-  app.featureCollection.mapType = data.mapType ? data.mapType : 'geographic' // default to geographic
-  if (app.featureCollection.mapType == 'geographic') {
+  app.featureCollection.mapType = data.mapType ? data.mapType : "geographic" // default to geographic
+  if (app.featureCollection.mapType == "geographic") {
     // regular geographic map
     // set up the leaflet.js map view
     app.featureCollection.element = new L.map(
@@ -1244,14 +1252,14 @@ async function initMap() {
         '&copy; <a target="_new" href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a target="_new" href="https://www.openstreetmap.org/copyright">ODbL</a>, Imagery &copy; <a target="_new" href="https://www.mapbox.com/">Mapbox</a>',
       maxZoom: 21,
       minZoom: 1,
-      id: 'mapbox/streets-v11',
+      id: "mapbox/streets-v11",
       tileSize: 512,
       zoomOffset: -1,
       accessToken: app.apis.mapbox.apiKey,
     }).addTo(app.featureCollection.element)
-  } else if (app.featureCollection.mapType == 'image') {
+  } else if (app.featureCollection.mapType == "image") {
     // add special class to the body to help css changes
-    $('body').addClass('non-geographic')
+    $("body").addClass("non-geographic")
 
     // map on top of uploaded image
     app.featureCollection.element = L.map(app.featureCollection.htmlElementId, {
@@ -1267,7 +1275,7 @@ async function initMap() {
     let x = 0
     let y = 0
     let totalY = 0
-    data.underlyingImages.forEach((imageData) => {
+    data.underlyingImages.forEach(imageData => {
       // console.log(JSON.stringify(image, null, 2))
       const bounds = [
         [y, x],
@@ -1299,11 +1307,11 @@ async function initMap() {
     // app.featureCollection.element.zoomIn(1) // zoom in a bit
 
     // hide irrelevant controls to this map type
-    $('.control-search-address, .control-find-location').hide()
+    $(".control-search-address, .control-find-location").hide()
   }
 
   // remove leaflet prefix on copyright notice
-  app.featureCollection.element.attributionControl.setPrefix('')
+  app.featureCollection.element.attributionControl.setPrefix("")
 
   // fetch this user's info, if logged-in
   if (app.auth.getToken()) await app.user.fetch()
@@ -1345,39 +1353,39 @@ async function initMap() {
   /**** SET UP EVENT HANDLERS ****/
 
   // check that user is logged in when they try to expand the map selector
-  $('.control-map-selector').on('click', () => {
+  $(".control-map-selector").on("click", () => {
     app.auth.getToken()
       ? openMapSelectorPanel()
-      : openSigninPanel('Log in to view your maps')
+      : openSigninPanel("Log in to view your maps")
   })
 
-  $('.signin-link').on('click', (e) => {
+  $(".signin-link").on("click", e => {
     e.preventDefault()
     //$('.control-map-selector').dropdown('hide') // hide the dropdown
     openSigninPanel()
   })
 
   // pop open feature types when add-feature control clicked
-  $('.control-add-feature').on('click', (e) => {
+  $(".control-add-feature").on("click", e => {
     e.preventDefault()
-    if ($('.map-controls .feature-options').hasClass('hide'))
+    if ($(".map-controls .feature-options").hasClass("hide"))
       app.controls.showFeatureOptions()
     else app.controls.hideFeatureOptions()
   })
 
   // pop open feature form when control icon clicked
-  $('.control-add-point').on('click', () => {
+  $(".control-add-point").on("click", () => {
     // remove any temporary markers from the screen
     removeTemporaryMarkers()
 
     if (app.auth.getToken() && !app.auth.isEditor()) {
       // user is logged-in, but not a contributor on this private map
-      const errorString = $('.error-container').html()
-      $('.info-window-content').html(errorString)
-      $('.info-window-content .error-message').html(
-        'You do not have permission to modify this map.'
+      const errorString = $(".error-container").html()
+      $(".info-window-content").html(errorString)
+      $(".info-window-content .error-message").html(
+        "You do not have permission to modify this map."
       )
-      $('.info-window-content .ok-button').on('click', (e) => {
+      $(".info-window-content .ok-button").on("click", e => {
         collapseInfoWindow()
       })
       expandInfoWindow(30, 70)
@@ -1387,40 +1395,40 @@ async function initMap() {
   })
 
   // start drawing line when icon clicked
-  $('.control-add-line').on('click', () => {
+  $(".control-add-line").on("click", () => {
     removeTemporaryMarkers()
     if (!app.auth.getToken())
-      openSigninPanel('Sign in to add a line to this map')
+      openSigninPanel("Sign in to add a line to this map")
     else if (!app.auth.isEditor())
-      openErrorPanel('You do not have permission to modify this map.')
+      openErrorPanel("You do not have permission to modify this map.")
     else {
       // show instructions
       app.controls.showDrawInstructions()
-      createShape('LineString')
+      createShape("LineString")
     }
   })
   // start drawing polygon when icon clicked
-  $('.control-add-polygon').on('click', () => {
+  $(".control-add-polygon").on("click", () => {
     removeTemporaryMarkers()
     if (!app.auth.getToken())
-      openSigninPanel('Sign in to add a polygon to this map')
+      openSigninPanel("Sign in to add a polygon to this map")
     else if (!app.auth.isEditor())
-      openErrorPanel('You do not have permission to modify this map.')
+      openErrorPanel("You do not have permission to modify this map.")
     else {
       // show instructions
       app.controls.showDrawInstructions()
-      createShape('Polygon')
+      createShape("Polygon")
     }
   })
 
   // geolocate when icon clicked
-  $('.control-find-location').on('click', async () => {
+  $(".control-find-location").on("click", async () => {
     // center on browser's geoposition
     panToPersonalLocation()
-      .then((coords) => {
+      .then(coords => {
         // move the me marker, if available
         if (
-          app.mode == 'pointcreate' &&
+          app.mode == "pointcreate" &&
           app.markers.me &&
           app.markers.me.setLatLng
         ) {
@@ -1428,7 +1436,7 @@ async function initMap() {
         }
         return coords
       })
-      .then((coords) => {
+      .then(coords => {
         // if (!app.auth.getToken()) {
         //   // console.log('not logged in')
         //   app.featureCollection.panTo(coords)
@@ -1444,42 +1452,42 @@ async function initMap() {
         })
         // }
       })
-      .catch((err) => {
+      .catch(err => {
         openGeopositionUnavailableForm()
         throw err
       })
   })
 
   // pop open feature form when control icon clicked
-  $('.control-search-address').on('click', () => {
+  $(".control-search-address").on("click", () => {
     openSearchAddressForm()
   })
 
   // pop open about us when logo is clicked
-  $('.logo').on('click', () => {
+  $(".logo").on("click", () => {
     openAboutUsForm()
   })
 
   // handle map events...
 
-  app.featureCollection.element.on('zoom', (e) => {
+  app.featureCollection.element.on("zoom", e => {
     if (e.target && e.target._zoom) {
       // save this zoom level as new default
       app.featureCollection.zoom.setDefault(e.target._zoom)
     }
   })
 
-  app.featureCollection.element.on('dblclick', (e) => {
+  app.featureCollection.element.on("dblclick", e => {
     // create a new point, unless creating a shape already at the moment
-    if (app.mode != 'featurecreate' && app.mode != 'featureedit') {
+    if (app.mode != "featurecreate" && app.mode != "featureedit") {
       const point = e.latlng
       createPoint(point)
     }
   })
 
-  app.featureCollection.element.on('click', function (event) {
+  app.featureCollection.element.on("click", function (event) {
     // close any open infowindow unless creating a shape at the moment
-    if (app.mode != 'featurecreate' && app.mode != 'featureedit') {
+    if (app.mode != "featurecreate" && app.mode != "featureedit") {
       collapseInfoWindow()
       // deactivate any markers
       app.markers.deactivate()
@@ -1488,30 +1496,30 @@ async function initMap() {
     }
   })
 
-  app.featureCollection.element.on('moveend', async function (e) {
+  app.featureCollection.element.on("moveend", async function (e) {
     // // get the center address of the map
     const coords = app.featureCollection.getCenter()
     app.browserGeolocation.setCoords(coords.lat, coords.lng)
 
     // if we had previous been centered on user's personal location, change icon now
-    if (app.browserGeolocation.enabled) app.controls.gps.setState('enabled')
+    if (app.browserGeolocation.enabled) app.controls.gps.setState("enabled")
   })
 
   // minimize any open infowindow while dragging
-  app.featureCollection.element.on('dragstart', (e) => {
+  app.featureCollection.element.on("dragstart", e => {
     // deactivate any currently-selected markers
     app.markers.deactivate(null, true) // do not deactivate open markers
 
     // close any open infowindow for mobile users only
-    if (app.mode == 'featuredetails' && app.responsive.isMobile()) {
+    if (app.mode == "featuredetails" && app.responsive.isMobile()) {
       collapseInfoWindow()
     }
   })
 
-  app.featureCollection.element.on('dragend', (e) => {})
+  app.featureCollection.element.on("dragend", e => {})
 
   // handle browser back/forward button clicks
-  window.onpopstate = (e) => {
+  window.onpopstate = e => {
     const hash = app.featureCollection.getHashFromUrl()
     if (hash) {
       //if there is a marker id in the url
@@ -1525,13 +1533,13 @@ async function initMap() {
   }
 
   // hide loading icon when done
-  hideSpinner($('.info-window'))
+  hideSpinner($(".info-window"))
 } // initMap
 
 // handle safari bug with vh units
 const setVh = () => {
   const vh = window.innerHeight * 0.01
-  document.documentElement.style.setProperty('--vh', `${vh}px`)
+  document.documentElement.style.setProperty("--vh", `${vh}px`)
 }
 
 // end handle safari bug with vh units
@@ -1552,7 +1560,7 @@ const resizeMap = () => {
       }
       if (!app.responsive.isMobile()) {
         // show info window
-        $('.info-window').show()
+        $(".info-window").show()
         infoWindowHeight = 100
       }
       expandInfoWindow(infoWindowHeight, mapHeight).then(() => {
@@ -1573,9 +1581,9 @@ const handleResizeWindow = () => {
     resizeMap()
   }, 400)
 }
-window.addEventListener('load', handleResizeWindow)
-window.addEventListener('resize', handleResizeWindow)
-window.addEventListener('orientationchange', handleResizeWindow)
+window.addEventListener("load", handleResizeWindow)
+window.addEventListener("resize", handleResizeWindow)
+window.addEventListener("orientationchange", handleResizeWindow)
 // end handle map resize
 
 // init map on page load
@@ -1588,34 +1596,34 @@ $(function () {
  * @param {*} lat The latitude
  * @param {*} long The longitude
  */
-const reverseGeocode = async (coords) => {
+const reverseGeocode = async coords => {
   const apiFullUrl = `${app.apis.mapbox.geocodeUrl}/${coords.lng},${coords.lat}.json?access_token=${app.apis.mapbox.apiKey}`
   // console.log(apiFullUrl)
   return fetch(apiFullUrl)
-    .then((response) => response.json()) // convert JSON response text to an object
-    .then((data) => {
+    .then(response => response.json()) // convert JSON response text to an object
+    .then(data => {
       // console.log(JSON.stringify(data, null, 2))
-      let street = 'Anonymous location'
-      let address = 'Anonymous location'
+      let street = "Anonymous location"
+      let address = "Anonymous location"
       if (data.features.length && data.features[0].place_name) {
         // console.log(JSON.stringify(data.features, null, 2))
         address = data.features[0].place_name
-        street = address.substring(0, address.indexOf(',')) // up till the comma
+        street = address.substring(0, address.indexOf(",")) // up till the comma
         // console.log(address)
         // check if street is a number...
-        if (street != '' && !isNaN(street)) {
+        if (street != "" && !isNaN(street)) {
           // if so, get the second part of the address instead
-          const posFirstComma = address.indexOf(',')
+          const posFirstComma = address.indexOf(",")
           street = address.substring(
             posFirstComma + 1,
-            address.indexOf(',', posFirstComma + 1)
+            address.indexOf(",", posFirstComma + 1)
           )
         }
       }
       // return street
       return address
     })
-    .catch((err) => {
+    .catch(err => {
       console.error(err)
       throw err
     })
@@ -1627,18 +1635,18 @@ const reverseGeocode = async (coords) => {
  * @returns An array containing names and coordinates of the matching results
  */
 const forwardGeocode = async (searchterm, coords = false) => {
-  let proximityQuery = coords ? `&proximity=${coords.lng},${coords.lat}&` : ''
+  let proximityQuery = coords ? `&proximity=${coords.lng},${coords.lat}&` : ""
   const apiFullUrl = `${app.apis.mapbox.geocodeUrl}/${searchterm}.json?${proximityQuery}access_token=${app.apis.mapbox.apiKey}`
   // console.log(apiFullUrl)
   return fetch(apiFullUrl)
-    .then((response) => response.json()) // convert JSON response text to an object
-    .then((data) => {
+    .then(response => response.json()) // convert JSON response text to an object
+    .then(data => {
       // console.log(`Forward geocode: ${JSON.stringify(data, null, 2)}`)
       const features = data.features // get the results
       let results = []
       if (data.features && data.features.length) {
         // loop through each result
-        features.forEach((feature) => {
+        features.forEach(feature => {
           // extract the salient details
           const { place_name, center } = feature
           // repackage it our own way
@@ -1652,7 +1660,7 @@ const forwardGeocode = async (searchterm, coords = false) => {
       // return results
       return results
     })
-    .catch((err) => {
+    .catch(err => {
       console.error(err)
       throw err
     })
@@ -1660,15 +1668,15 @@ const forwardGeocode = async (searchterm, coords = false) => {
 
 async function updateAddress(coords) {
   const address = await reverseGeocode(coords)
-  if (address == '') address = 'Anonymous location'
+  if (address == "") address = "Anonymous location"
   // get just the street address for brevity
-  let street = address.indexOf(',')
-    ? address.substr(0, address.indexOf(','))
+  let street = address.indexOf(",")
+    ? address.substr(0, address.indexOf(","))
     : address
   app.browserGeolocation.address = address
-  $('.street-address').html(street)
-  $('input.address').val(address) // form fields
-  $('span.address').html(address) // other types
+  $(".street-address").html(street)
+  $("input.address").val(address) // form fields
+  $("span.address").html(address) // other types
   // $('.lat').val(coords.lat)
   // $('.lng').val(coords.lng)
   return address
@@ -1677,35 +1685,35 @@ async function updateAddress(coords) {
 // show details of the map from which this map was forked
 const showForkedFromInfo = (mapData, mapListing) => {}
 
-const addMapContextMenu = (selectedMapListItem) => {
+const addMapContextMenu = selectedMapListItem => {
   // generate the context menu
   // only show delete link to logged-in users who have permissions to edit this map
   // if this is an unsaved app, the only way to currently infer that is through no markers
   const copyLinkString = `<a class="copy-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Copy link</a>`
   const deleteLinkString = app.auth.isEditor()
     ? `<a class="delete-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Delete</a>`
-    : ''
+    : ""
   const forkLinkString = app.auth.getToken()
     ? `<a class="fork-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Fork</a>`
-    : ''
+    : ""
   const renameLinkString =
     app.auth.isEditor() && !app.featureCollection.unsaved
       ? `<a class="rename-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Rename...</a>`
-      : ''
+      : ""
   const styleLinkString = app.auth.isEditor()
     ? `<a class="style-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Map style...</a>`
-    : ''
+    : ""
   const collaborateLinkString =
     app.auth.isEditor() && !app.featureCollection.unsaved
       ? `<a class="collaborate-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Invite collaborators...</a>`
-      : ''
+      : ""
   const importLinkString = app.auth.isEditor()
     ? `<a class="import-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Import data...</a>`
-    : ''
+    : ""
   const exportLinkString =
     app.markers.markers.length > 0
       ? `<a class="export-map-link dropdown-item" ws-map-id="${app.featureCollection.getPublicIdFromUrl()}" href="#">Export data...</a>`
-      : ''
+      : ""
   let contextMenuString = `
     <div class="context-menu dropdown">
       <a href="#" class="expand-contract-button">
@@ -1730,9 +1738,9 @@ const addMapContextMenu = (selectedMapListItem) => {
   $(contextMenuString).prependTo(selectedMapListItem)
 
   // enable context menu links
-  $('.copy-map-link', selectedMapListItem).on('click', (e) => {
+  $(".copy-map-link", selectedMapListItem).on("click", e => {
     e.preventDefault()
-    const port = window.location.port ? `:${window.location.port}` : ''
+    const port = window.location.port ? `:${window.location.port}` : ""
     const text = `${window.location.protocol}://${
       window.location.hostname
     }${port}/map/${app.featureCollection.getPublicIdFromUrl()}`
@@ -1752,13 +1760,13 @@ const addMapContextMenu = (selectedMapListItem) => {
       },
       function (err) {
         console.error(
-          'Could not copy to clipboard.  Please use a different browser.'
+          "Could not copy to clipboard.  Please use a different browser."
         )
       }
     )
   })
 
-  $('.delete-map-link', selectedMapListItem).on('click', (e) => {
+  $(".delete-map-link", selectedMapListItem).on("click", e => {
     e.preventDefault()
     // put up one small barrier
     if (!window.confirm(`Delete this entire map?`)) return
@@ -1770,7 +1778,7 @@ const addMapContextMenu = (selectedMapListItem) => {
         }/${app.featureCollection.getPublicIdFromUrl()}`
       )
       // send delete request to server
-      .then((res) => {
+      .then(res => {
         // console.log(JSON.stringify(res, null, 2))
         if (res.status == true) {
           // take user to home page
@@ -1779,13 +1787,13 @@ const addMapContextMenu = (selectedMapListItem) => {
       })
   })
 
-  $('.collaborate-map-link', selectedMapListItem).on('click', (e) => {
+  $(".collaborate-map-link", selectedMapListItem).on("click", e => {
     e.preventDefault()
     openCollaborationSettings()
   }) // collaborate-map-link click
 
   // enable link to manage styles
-  $('.style-map-link', selectedMapListItem).on('click', (e) => {
+  $(".style-map-link", selectedMapListItem).on("click", e => {
     e.preventDefault()
     openStyleMapForm()
   })
@@ -1793,35 +1801,35 @@ const addMapContextMenu = (selectedMapListItem) => {
   // enable rename map link and style link, if authorized
   if (app.auth.isEditor()) {
     // $('.rename-map-link', selectedMapListItem).css('cursor', 'text')
-    $('.rename-map-link', selectedMapListItem).on('click', (e) => {
+    $(".rename-map-link", selectedMapListItem).on("click", e => {
       e.preventDefault()
       openRenameMapForm()
     })
   } else {
     // disable rename map link
-    $('.rename-map-link', selectedMapListItem).on('click', (e) => {
+    $(".rename-map-link", selectedMapListItem).on("click", e => {
       e.preventDefault()
     })
   }
 
   // enable fork map link
-  $('.fork-map-link', selectedMapListItem).on('click', (e) => {
+  $(".fork-map-link", selectedMapListItem).on("click", e => {
     e.preventDefault()
     app.auth.getToken() ? openForkPanel() : openSigninPanel()
   })
 
   // enable import data link
-  $('.import-map-link', selectedMapListItem).on('click', (e) => {
+  $(".import-map-link", selectedMapListItem).on("click", e => {
     e.preventDefault()
     app.auth.isEditor()
       ? openImportDataPanel()
       : openErrorPanel(
-          'You do not have permission to import data into this map.'
+          "You do not have permission to import data into this map."
         )
   })
 
   // enable export map link
-  $('.export-map-link', selectedMapListItem).on('click', (e) => {
+  $(".export-map-link", selectedMapListItem).on("click", e => {
     e.preventDefault()
     window.location.href = `${
       app.apis.wikistreets.exportFeatureCollectionUrl
@@ -1849,36 +1857,36 @@ const createMapListItem = (
   // console.log(JSON.stringify(data, null, 2))
   // start by cloning the template
   let mapListing = $(
-    '.map-list-item-template',
-    $('.select-map-container')
+    ".map-list-item-template",
+    $(".select-map-container")
   ).clone()
-  mapListing.removeClass('map-list-item-template')
+  mapListing.removeClass("map-list-item-template")
   if (isSelectedMap) {
-    mapListing.addClass('selected')
+    mapListing.addClass("selected")
   }
 
   // give selected class, if necessary
   if (isSelectedMap) {
-    $('h2 a', mapListing).addClass('selected-map')
+    $("h2 a", mapListing).addClass("selected-map")
     // show feature list when clicked
-    $('h2 a', mapListing).on('click', (e) => {
+    $("h2 a", mapListing).on("click", e => {
       e.preventDefault()
       openFeatureList()
     })
-  } else $('h2 a', mapListing).removeClass('selected-map')
+  } else $("h2 a", mapListing).removeClass("selected-map")
 
   // create new link to the map
   const featureCollectionTitle = data.title
     ? data.title
     : app.copy.anonymousfeaturecollectiontitle
-  $('.map-title', mapListing).html(featureCollectionTitle) // inject the map title
-  $('.map-title', mapListing).attr('href', `/map/${data.publicId}`) // activate link
+  $(".map-title", mapListing).html(featureCollectionTitle) // inject the map title
+  $(".map-title", mapListing).attr("href", `/map/${data.publicId}`) // activate link
   if (showForkedFrom && data.forkedFrom) showForkedFromInfo(data, mapListing) // show forked info if any
-  $('.num-markers', mapListing).html(data.numFeatures)
+  $(".num-markers", mapListing).html(data.numFeatures)
   // show link to view markers, if relevant
   if (isSelectedMap && app.markers.markers.length) {
-    $('.marker-map-link', mapListing).html(`<a href="#">posts</a>`)
-    $('.marker-map-link a', mapListing).on('click', (e) => {
+    $(".marker-map-link", mapListing).html(`<a href="#">posts</a>`)
+    $(".marker-map-link a", mapListing).on("click", e => {
       e.preventDefault()
       // app.markers.simulateClick(app.markers.markers[0])
       openFeatureList()
@@ -1886,46 +1894,46 @@ const createMapListItem = (
   }
   // show link to view contributors, if relevant
   if (isSelectedMap && app.featureCollection.contributors.length) {
-    $('.contributor-map-link', mapListing).html(`<a href="#">contributors</a>`)
-    $('.contributor-map-link a', mapListing).on('click', (e) => {
+    $(".contributor-map-link", mapListing).html(`<a href="#">contributors</a>`)
+    $(".contributor-map-link a", mapListing).on("click", e => {
       e.preventDefault()
       // app.markers.simulateClick(app.markers.markers[0])
       openContributorsList()
     })
   }
 
-  $('.num-contributors', mapListing).html(data.numContributors)
-  $('.num-forks', mapListing).html(data.numForks)
+  $(".num-contributors", mapListing).html(data.numContributors)
+  $(".num-forks", mapListing).html(data.numForks)
   if (!showForkLink) {
     // disable the fork link
-    $('.fork-map-link', mapListing).replaceWith('forks') // get rid of link
+    $(".fork-map-link", mapListing).replaceWith("forks") // get rid of link
   } else {
     // enable the fork link
   }
-  $('.createdat', mapListing).html(DateDiff.asAge(data.createdAt))
-  $('.updatedat', mapListing).html(DateDiff.asAge(data.updatedAt))
+  $(".createdat", mapListing).html(DateDiff.asAge(data.createdAt))
+  $(".updatedat", mapListing).html(DateDiff.asAge(data.updatedAt))
 
   if (showContextMenu) mapListing = addMapContextMenu(mapListing)
 
   // populate this user's maps content
   // show the user's name
-  $('.user-handle', mapListing).html(`${data.handle}'s`)
+  $(".user-handle", mapListing).html(`${data.handle}'s`)
 
   return mapListing
 }
 
-const createFeature = (data) => {
+const createFeature = data => {
   // create the HTML code for a post
-  let contentString = ''
+  let contentString = ""
 
   // format the date the marker was created
   // console.log(JSON.stringify(data, null, 2))
   const date = DateDiff.asAge(data.createdAt)
   const addressTruncated =
-    data.properties.address.indexOf(',') >= 0
+    data.properties.address.indexOf(",") >= 0
       ? data.properties.address.substr(
           0,
-          data.properties.address.lastIndexOf(',')
+          data.properties.address.lastIndexOf(",")
         )
       : data.properties.address
 
@@ -1940,17 +1948,17 @@ ${date}<span class="nearby-address"> near ${addressTruncated}</span>.
   const commentsLink =
     data.properties.comments && data.properties.comments.length
       ? `<br /><a class="comments-link" href="#">${data.properties.comments.length} comments</a>`
-      : ''
+      : ""
 
   // generate a photo carousel, if needed
   let imgString = createPhotoCarousel(data.properties.photos, data._id)
 
   // generate an embed iframe, if needed
-  let embedString = ''
+  let embedString = ""
   const body = data.properties.body
   if (body && body.data && body.data.embed) {
     // special allow attribute for youtube
-    let allow = ''
+    let allow = ""
     if (body.data.embed.match(/youtube/i)) {
       allow = `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"`
     }
@@ -1961,10 +1969,10 @@ ${date}<span class="nearby-address"> near ${addressTruncated}</span>.
   // only show delete link to logged-in users who have permissions to edit this map
   const deleteLinkString = app.auth.isEditor()
     ? `<a class="delete-feature-link dropdown-item" ws-feature-id="${data._id}" href="#">Delete</a>`
-    : ''
+    : ""
   const editLinkString = app.auth.isEditor()
     ? `<a class="edit-feature-link dropdown-item" ws-feature-id="${data._id}" href="#">Edit</a>`
-    : ''
+    : ""
   let contextMenuString = `
     <div class="context-menu dropdown">
       <a href="#" class="expand-contract-button">
@@ -1999,7 +2007,7 @@ ${date}<span class="nearby-address"> near ${addressTruncated}</span>.
     `
   contentString +=
     !data.properties.body || !data.properties.body.content
-      ? ''
+      ? ""
       : `
         <p>${marked(data.properties.body.content.trim())}</p>
     `
@@ -2011,7 +2019,7 @@ ${date}<span class="nearby-address"> near ${addressTruncated}</span>.
     `
 
   // add comments form
-  const commentsString = $('.comments-container').html()
+  const commentsString = $(".comments-container").html()
   contentString += commentsString
 
   return contentString
@@ -2019,7 +2027,7 @@ ${date}<span class="nearby-address"> near ${addressTruncated}</span>.
 
 const createComment = (data, featureId) => {
   // create the HTML code for a comment
-  let contentString = ''
+  let contentString = ""
 
   // format the date the marker was created
   // console.log(JSON.stringify(data, null, 2))
@@ -2037,7 +2045,7 @@ Posted by
   // only show delete link to logged-in users who have permissions to edit this map
   const deleteLinkString = app.auth.isEditor()
     ? `<a class="delete-comment-link dropdown-item" ws-comment-id="${data._id}" href="#">Delete</a>`
-    : ''
+    : ""
   let contextMenuString = app.auth.isEditor()
     ? `
     <div class="context-menu dropdown">
@@ -2049,7 +2057,7 @@ Posted by
       </div>
     </div>
   `
-    : ''
+    : ""
 
   contentString += `
 <div class="feature-detail comment" ws-comment-id="${data._id}">
@@ -2061,7 +2069,7 @@ Posted by
     ${imgString}
     `
   contentString += !data.body
-    ? ''
+    ? ""
     : `
         <p>${marked(data.body)}</p>
     `
@@ -2074,16 +2082,16 @@ Posted by
 
   const contentEl = $(contentString)
   // handle delete context menu clicks
-  $('.delete-comment-link', contentEl).on('click', (e) => {
+  $(".delete-comment-link", contentEl).on("click", e => {
     e.preventDefault()
     deleteComment(data._id, featureId)
   })
   // handle click on username
-  $('.user-link', contentEl).on('click', (e) => {
+  $(".user-link", contentEl).on("click", e => {
     e.preventDefault()
     // open user profile for this user
-    const userId = $(e.target).attr('ws-user-id')
-    const userHandle = $(e.target).attr('ws-user-handle')
+    const userId = $(e.target).attr("ws-user-id")
+    const userHandle = $(e.target).attr("ws-user-handle")
     openUserProfile(userHandle, userId)
   })
 
@@ -2098,36 +2106,36 @@ const deleteComment = (commentId, featureId) => {
   // console.log(`deleting comment: ${commentId} from feature ${featureId}`)
   // send delete request to server
   app
-    .myFetch(`${app.apis.wikistreets.deleteCommentUrl}/${commentId}`, 'GET', {
+    .myFetch(`${app.apis.wikistreets.deleteCommentUrl}/${commentId}`, "GET", {
       featureId: featureId,
     })
-    .then((res) => {
+    .then(res => {
       // console.log(JSON.stringify(res, null, 2))
       if (res.status == true) {
         // remove the comment from the page
         $(`.comment[ws-comment-id="${commentId}"]`).remove()
       } else {
-        throw 'Error deleting comment.'
+        throw "Error deleting comment."
       }
     }) // myFetch.then
-    .catch((err) => {
+    .catch(err => {
       console.log(err)
-      openErrorPanel('Error deleting comment.')
+      openErrorPanel("Error deleting comment.")
     })
 }
 
 const createPhotoCarousel = (photos, uniqueId) => {
   // abort if no photos
-  if (!photos || photos.length == 0) return ''
+  if (!photos || photos.length == 0) return ""
 
   // generate a unique carousel id
   const carouselId = `photo-carousel-${uniqueId}`
   // loop through photos
-  let slides = ''
-  let indicators = ''
+  let slides = ""
+  let indicators = ""
   photos.map((photo, i, arr) => {
     // generate a carousel slide and an indicator for each photo
-    let activeClass = i == 0 ? 'active' : '' // activate first slide only
+    let activeClass = i == 0 ? "active" : "" // activate first slide only
     let slide = `
       <div class="carousel-item ${activeClass}">
         <img src="/static/uploads/${photo.filename}" class="d-block w-100">
@@ -2141,25 +2149,25 @@ const createPhotoCarousel = (photos, uniqueId) => {
   })
   // remove indicators and previous/next buttons if only one photo
   if (photos.length == 1) {
-    indicators = ''
-    $('.carousel-control-prev, .carousel-control-next').hide()
+    indicators = ""
+    $(".carousel-control-prev, .carousel-control-next").hide()
   } else {
-    $('.carousel-control-prev, .carousel-control-next').show()
+    $(".carousel-control-prev, .carousel-control-next").show()
   }
   // place slides and indicators into the HTML carousel template
-  $('#carouselTemplate .carousel-indicators').html(indicators)
-  $('#carouselTemplate .carousel-inner').html(slides)
+  $("#carouselTemplate .carousel-indicators").html(indicators)
+  $("#carouselTemplate .carousel-inner").html(slides)
   // update with this carousel's unique id
-  $('#carouselTemplate > div.carousel').attr('id', carouselId)
-  $('#carouselTemplate .carousel-control-prev').attr('href', `#${carouselId}`)
-  $('#carouselTemplate .carousel-control-next').attr('href', `#${carouselId}`)
+  $("#carouselTemplate > div.carousel").attr("id", carouselId)
+  $("#carouselTemplate .carousel-control-prev").attr("href", `#${carouselId}`)
+  $("#carouselTemplate .carousel-control-next").attr("href", `#${carouselId}`)
 
   // return the update carousel html code
-  return $('#carouselTemplate').html()
+  return $("#carouselTemplate").html()
 }
 
-const showInfoWindow = (marker) => {
-  app.mode = 'featuredetails' // in case it was set previously
+const showInfoWindow = marker => {
+  app.mode = "featuredetails" // in case it was set previously
   // console.log(`mode=${app.mode}`);
 
   // remove me marker if present
@@ -2178,33 +2186,33 @@ const showInfoWindow = (marker) => {
   const contentString = createFeature(data)
 
   // update the infoWindow content
-  $('.info-window-content').html(contentString)
+  $(".info-window-content").html(contentString)
 
   // inject any comments
-  data.properties.comments.forEach((comment) => {
+  data.properties.comments.forEach(comment => {
     // console.log(`featureId: ${data._id}`)
     const commentEl = createComment(comment, data._id)
-    commentEl.appendTo($('.info-window-content .existing-comments'))
+    commentEl.appendTo($(".info-window-content .existing-comments"))
   })
   if (!data.properties.comments.length) {
     // hide comments section if none there
-    $('.info-window-content .existing-comments').hide()
+    $(".info-window-content .existing-comments").hide()
   }
 
   // activate link to view comments
-  $('.info-window-content .comments-link').on('click', (e) => {
+  $(".info-window-content .comments-link").on("click", e => {
     e.preventDefault()
-    const scrollValue = $('.info-window-content .existing-comments').offset()
+    const scrollValue = $(".info-window-content .existing-comments").offset()
       .top
-    $('.info-window').scrollTop(scrollValue)
+    $(".info-window").scrollTop(scrollValue)
   })
 
   // handle previous and next feature button clicks
-  $('.info-window-content .prev-feature-link').on('click', (e) => {
+  $(".info-window-content .prev-feature-link").on("click", e => {
     e.preventDefault()
     app.markers.previous(marker)
   })
-  $('.info-window-content .next-feature-link').on('click', (e) => {
+  $(".info-window-content .next-feature-link").on("click", e => {
     e.preventDefault()
     app.markers.next(marker)
   })
@@ -2223,13 +2231,13 @@ const showInfoWindow = (marker) => {
   // })
 
   // activate the carousel
-  $('.info-window-content .carousel').carousel()
+  $(".info-window-content .carousel").carousel()
 
   // update the page title
   app.setTitle(data.properties.title)
 
   // update the url hash tag
-  window.location.hash = marker._id.substr(marker._id.indexOf('-') + 1)
+  window.location.hash = marker._id.substr(marker._id.indexOf("-") + 1)
 
   let infoWindowHeight = 70
   let mapHeight = 30
@@ -2252,26 +2260,26 @@ const showInfoWindow = (marker) => {
     app.featureCollection.flyTo(marker) // fly to marker
 
     // handle click on username event
-    $('.info-window .user-link').on('click', (e) => {
+    $(".info-window .user-link").on("click", e => {
       e.preventDefault()
 
       // get target userid
-      const userId = $(e.target).attr('ws-user-id')
-      const userHandle = $(e.target).attr('ws-user-handle')
+      const userId = $(e.target).attr("ws-user-id")
+      const userHandle = $(e.target).attr("ws-user-handle")
 
       openUserProfile(userHandle, userId)
     })
   })
 
   // activate copy link button
-  $('.copy-feature-link').on('click', (e) => {
+  $(".copy-feature-link").on("click", e => {
     e.preventDefault()
     const text = window.location.href
     navigator.clipboard.writeText(text).then(
       function () {
         // show success message
         // console.log(`Copied ${text} to the clipboard!`)
-        const feedbackEl = $('.info-window-content .feedback')
+        const feedbackEl = $(".info-window-content .feedback")
         feedbackEl.html(app.copy.sharefeaturemessage)
         feedbackEl.show()
         setTimeout(() => {
@@ -2280,24 +2288,24 @@ const showInfoWindow = (marker) => {
       },
       function (err) {
         console.error(
-          'Could not copy to clipboard.  Please use a different browser.'
+          "Could not copy to clipboard.  Please use a different browser."
         )
       }
     )
   })
 
   // activate delete button
-  $('.delete-feature-link').on('click', (e) => {
+  $(".delete-feature-link").on("click", e => {
     e.preventDefault()
     // put up one small barrier
     if (!window.confirm(`Delete this post?`)) return
 
     // grab the id of the feature to delete
-    const featureId = $(e.target).attr('ws-feature-id')
+    const featureId = $(e.target).attr("ws-feature-id")
     // send delete request to server
     app
       .myFetch(`${app.apis.wikistreets.deleteFeatureUrl}/${featureId}`)
-      .then((res) => {
+      .then(res => {
         // console.log(JSON.stringify(res, null, 2))
         if (res.status == true) {
           // remove the marker from the map
@@ -2318,20 +2326,20 @@ const showInfoWindow = (marker) => {
   }) // if delete link clicked
 
   // activate edit button
-  $('.edit-feature-link').on('click', (e) => {
+  $(".edit-feature-link").on("click", e => {
     e.preventDefault()
     // grab the id of the feature to delete
-    const featureId = $(e.target).attr('ws-feature-id')
+    const featureId = $(e.target).attr("ws-feature-id")
     openEditFeatureForm(featureId)
   }) // if edit link clicked
 
   // handle situation where infoPanel is already expanded prior to showing this info
   if (app.infoPanel.isExpanded) {
-    const buttonEl = $('.expand-contract-button')
-    buttonEl.addClass('expanded')
-    $('.expand-contract-button img').attr(
-      'src',
-      '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
+    const buttonEl = $(".expand-contract-button")
+    buttonEl.addClass("expanded")
+    $(".expand-contract-button img").attr(
+      "src",
+      "/static/images/material_design_icons/close_fullscreen_white-24px.svg"
     )
   }
 
@@ -2340,73 +2348,70 @@ const showInfoWindow = (marker) => {
   // create a decent file uploader for photos
   const fuploader = new FUploader({
     container: {
-      el: document.querySelector('.info-window-content .file-upload-container'),
-      activeClassName: 'active',
+      el: document.querySelector(".info-window-content .file-upload-container"),
+      activeClassName: "active",
     },
     fileSelector: {
       el: document.querySelector('.info-window-content input[type="file"]'),
     },
     buttonContainer: {
-      el: document.querySelector('.info-window-content .button-container'),
+      el: document.querySelector(".info-window-content .button-container"),
     },
     thumbsContainer: {
-      el: document.querySelector('.info-window-content .thumbs-container'),
-      thumbClassName: 'thumb',
-      thumbImgClassName: 'thumb-img',
-      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
-      closeIconClassName: 'close-icon',
+      el: document.querySelector(".info-window-content .thumbs-container"),
+      thumbClassName: "thumb",
+      thumbImgClassName: "thumb-img",
+      closeIconImgSrc: "/static/images/material_design_icons/close-24px.svg",
+      closeIconClassName: "close-icon",
       // closeIconCallback: removeFeatureImage,
     },
     dropContainer: {
-      el: document.querySelector('.info-window-content .drop-container'),
-      activeClassName: 'active',
+      el: document.querySelector(".info-window-content .drop-container"),
+      activeClassName: "active",
     },
     form: {
-      el: document.querySelector('.info-window-content .feature-form'),
+      el: document.querySelector(".info-window-content .feature-form"),
       droppedFiles: [], // nothing yet
     },
   })
   fuploader.init() // initalize settings
 
   // activate add image link
-  $('.info-window-content .add-photos-link').on('click', (e) => {
+  $(".info-window-content .add-photos-link").on("click", e => {
     e.preventDefault()
-    $('.info-window-content input[type="file"]').trigger('click')
+    $('.info-window-content input[type="file"]').trigger("click")
   })
 
   // show comment form when button clicked
-  $('.info-window-content .show-comment-form-button button').on(
-    'click',
-    (e) => {
-      // leaving comments requires login
-      if (!app.auth.getToken()) {
-        return openSigninPanel('Please log in to leave a comment')
-      }
-      $('.info-window-content .comment-form-container').show() // show the form
-      // scroll to textarea field
-      $('.info-window').scrollTop(
-        $('.info-window-content .comment-form-container').offset().top
-      )
-      $('.info-window-content .comment-form-container textarea').focus() // focus on textarea
-      $('.info-window-content .show-comment-form-button').hide() // hide the button
+  $(".info-window-content .show-comment-form-button button").on("click", e => {
+    // leaving comments requires login
+    if (!app.auth.getToken()) {
+      return openSigninPanel("Please log in to leave a comment")
     }
-  )
+    $(".info-window-content .comment-form-container").show() // show the form
+    // scroll to textarea field
+    $(".info-window").scrollTop(
+      $(".info-window-content .comment-form-container").offset().top
+    )
+    $(".info-window-content .comment-form-container textarea").focus() // focus on textarea
+    $(".info-window-content .show-comment-form-button").hide() // hide the button
+  })
 
   // deal with form submissions
-  $('.info-window-content form.comment-form .featureId').val(
+  $(".info-window-content form.comment-form .featureId").val(
     marker.featureData._id
   )
-  $('.info-window-content form.comment-form').on('submit', async (e) => {
+  $(".info-window-content form.comment-form").on("submit", async e => {
     // prevent page reload
     e.preventDefault()
 
     // show the spinner till done
-    showSpinner($('.info-window'))
+    showSpinner($(".info-window"))
 
     // force user login before an feature can be submitted
     if (!app.auth.getToken()) {
       // open signin form
-      openSigninPanel('Log in to leave a comment.')
+      openSigninPanel("Log in to leave a comment.")
       return // exit function
     }
 
@@ -2414,7 +2419,7 @@ const showInfoWindow = (marker) => {
     let formData = new FormData(e.target)
 
     // remove the input type='file' data, since we don't need it
-    formData.delete('files-excuse')
+    formData.delete("files-excuse")
 
     // add any drag-and-dropped files to this
     const files = fuploader.getDroppedFiles()
@@ -2422,13 +2427,13 @@ const showInfoWindow = (marker) => {
 
     // add files from array to formdata
     $.each(files, function (i, file) {
-      formData.append('files', file)
+      formData.append("files", file)
     })
 
     // post to server
     app
-      .myFetch(app.apis.wikistreets.postCommentUrl, 'POST', formData)
-      .then((res) => {
+      .myFetch(app.apis.wikistreets.postCommentUrl, "POST", formData)
+      .then(res => {
         if (!res.status) {
           openErrorPanel(res.message)
           return
@@ -2441,31 +2446,31 @@ const showInfoWindow = (marker) => {
 
         // inject the new comment
         const commentEl = createComment(res.data, marker.featureData._id)
-        commentEl.appendTo($('.info-window-content .existing-comments'))
+        commentEl.appendTo($(".info-window-content .existing-comments"))
 
         // stick this new comment into the page
-        commentEl.appendTo($('.info-window-content .existing-comments'))
+        commentEl.appendTo($(".info-window-content .existing-comments"))
         // make sure comments are visible, now that there's at least one.
-        $('.info-window-content .existing-comments').show()
+        $(".info-window-content .existing-comments").show()
         // reset the form
-        $('.info-window-content form').get(0).reset()
+        $(".info-window-content form").get(0).reset()
         fuploader.reset()
 
         // hide comment form and show button again
-        $('.info-window-content .show-comment-form-button').show() // show the button
-        $('.info-window-content .comment-form-container').hide() // show the button
+        $(".info-window-content .show-comment-form-button").show() // show the button
+        $(".info-window-content .comment-form-container").hide() // show the button
 
         // hide spinner when done
-        hideSpinner($('.info-window'))
+        hideSpinner($(".info-window"))
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
         // boot user out of login
         // app.auth.setToken(''); // wipe out JWT token
         // openSigninPanel()
         // open error panel
         openErrorPanel(
-          'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
+          "Hmmm... something went wrong.  Please try posting again with up to 10 images."
         )
       })
   }) // comment-form submit
@@ -2474,16 +2479,16 @@ const showInfoWindow = (marker) => {
 // hack to close tooltips on mobile... bootstrap's tooltips are buggy on mobile
 const hideAllTooltips = () => {
   // trying every possible technique
-  $('[data-toggle="tooltip"]').tooltip('hide')
-  $('.map-control').tooltip('hide')
-  $('.map-control img').tooltip('hide')
-  $('.tooltip').hide() // trying another method
-  $('.tooltip').tooltip('hide') // trying another method
+  $('[data-toggle="tooltip"]').tooltip("hide")
+  $(".map-control").tooltip("hide")
+  $(".map-control img").tooltip("hide")
+  $(".tooltip").hide() // trying another method
+  $(".tooltip").tooltip("hide") // trying another method
 }
 
-const showSpinner = (containerEl) => {
+const showSpinner = containerEl => {
   // show the spinner
-  const spinner = $('.spinner-container .spinner-overlay').clone()
+  const spinner = $(".spinner-container .spinner-overlay").clone()
   spinner.appendTo($(containerEl)) // add to element
   // match width and height
   spinner.css({
@@ -2494,12 +2499,12 @@ const showSpinner = (containerEl) => {
   const topMargin =
     parseInt($(containerEl).scrollTop()) +
     parseInt($(containerEl).height() / 2) -
-    parseInt($('.spinner-overlay img', containerEl).height() / 2)
-  $('.spinner-overlay img', containerEl).css('margin-top', topMargin)
+    parseInt($(".spinner-overlay img", containerEl).height() / 2)
+  $(".spinner-overlay img", containerEl).css("margin-top", topMargin)
 }
-const hideSpinner = (containerEl) => {
+const hideSpinner = containerEl => {
   // hide the spinner
-  const spinner = $('.spinner-overlay', containerEl)
+  const spinner = $(".spinner-overlay", containerEl)
   spinner.hide()
 }
 
@@ -2509,8 +2514,8 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   app.infoPanel.isExpanded =
     infoWindowHeight == 100 || !app.responsive.isMobile() ? true : false
   // add the expanded class if the info window is tall
-  if (app.infoPanel.isExpanded) $('.info-window-content').addClass('expanded')
-  else $('.info-window-content').removeClass('expanded')
+  if (app.infoPanel.isExpanded) $(".info-window-content").addClass("expanded")
+  else $(".info-window-content").removeClass("expanded")
 
   // convert vh units to pixel units, since safari mobile is buggy in vh
   const vH = window.innerHeight // actual viewport height
@@ -2520,16 +2525,16 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   // console.log(`vh=${vH};iwh=${infoWindowHeightPx};mh=${mapHeightPx}`)
 
   // hide any existing spinners
-  hideSpinner($('.info-window'))
+  hideSpinner($(".info-window"))
 
   // scroll the info window to the top, in case it was previously scrolled down
-  $('.info-window').show() // just in case
-  $('.info-window').scrollTop(0)
+  $(".info-window").show() // just in case
+  $(".info-window").scrollTop(0)
 
   // do not do any size changes for desktop...
   if (app.responsive.isMobile()) {
-    $('.info-window').show()
-    $('.info-window')
+    $(".info-window").show()
+    $(".info-window")
       .stop()
       .animate(
         {
@@ -2543,7 +2548,7 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
       )
 
     // animate the map open
-    $('.feature-map, #map')
+    $(".feature-map, #map")
       .stop()
       .animate(
         {
@@ -2558,8 +2563,8 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
       )
   } else {
     // user is on a desktop-sized device... make sure it's full size
-    $('.info-window').height(window.innerHeight)
-    $('.feature-map, #map').height(window.innerHeight)
+    $(".info-window").height(window.innerHeight)
+    $(".feature-map, #map").height(window.innerHeight)
     setTimeout(() => {
       app.featureCollection.element.invalidateSize(true)
     }, 200)
@@ -2570,30 +2575,30 @@ const expandInfoWindow = async (infoWindowHeight = 50, mapHeight = 50) => {
   hideAllTooltips()
 
   // resolve the promise once the animation is complete
-  return $('.feature-map, #map, .info-window').promise()
+  return $(".feature-map, #map, .info-window").promise()
 }
 
 const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
   // activate expand/contract button
-  $('.info-window .expand-contract-button').on('click', (e) => {
+  $(".info-window .expand-contract-button").on("click", e => {
     e.preventDefault()
-    const buttonEl = $('.info-window .expand-contract-button')
-    if (buttonEl.hasClass('expanded')) {
+    const buttonEl = $(".info-window .expand-contract-button")
+    if (buttonEl.hasClass("expanded")) {
       // console.log(`contracting to ${infoWindowHeight} and ${mapHeight}`)
       // contract info window
-      $('.info-window .expand-contract-button img').attr(
-        'src',
-        '/static/images/material_design_icons/open_in_full_white-24px.svg'
+      $(".info-window .expand-contract-button img").attr(
+        "src",
+        "/static/images/material_design_icons/open_in_full_white-24px.svg"
       )
-      buttonEl.removeClass('expanded')
+      buttonEl.removeClass("expanded")
       expandInfoWindow(infoWindowHeight, mapHeight)
     } else {
       // expand info window
-      $('.info-window .expand-contract-button img').attr(
-        'src',
-        '/static/images/material_design_icons/close_fullscreen_white-24px.svg'
+      $(".info-window .expand-contract-button img").attr(
+        "src",
+        "/static/images/material_design_icons/close_fullscreen_white-24px.svg"
       )
-      buttonEl.addClass('expanded')
+      buttonEl.addClass("expanded")
       expandInfoWindow(100, 0)
     }
   }) // if expand/contract button clicked
@@ -2601,13 +2606,13 @@ const enableExpandContractButtons = (infoWindowHeight = 50, mapHeight = 50) => {
 
 const removeTemporaryMarkers = () => {
   // remove any temporary markers from the screen
-  app.markers.temporaryMarkers.forEach((tempMarker) => {
+  app.markers.temporaryMarkers.forEach(tempMarker => {
     app.featureCollection.element.removeLayer(tempMarker)
   })
 }
 
-const collapseInfoWindow = async (e) => {
-  app.mode = 'default'
+const collapseInfoWindow = async e => {
+  app.mode = "default"
 
   app.controls.hideFeatureOptions()
   // remove any temporary markers from the screen
@@ -2621,15 +2626,15 @@ const collapseInfoWindow = async (e) => {
   app.infoPanel.hasAutoExpanded = false
 
   // remove the hash from the url
-  window.history.pushState('', document.title, window.location.pathname)
+  window.history.pushState("", document.title, window.location.pathname)
 
   const vH = window.innerHeight // actual viewport height
 
   // hide the info window on mobile
   if (app.responsive.isMobile()) {
-    $('.info-window').css({
-      display: 'none',
-      height: '0',
+    $(".info-window").css({
+      display: "none",
+      height: "0",
     })
   } else {
     // desktop mode... show list of markers
@@ -2637,7 +2642,7 @@ const collapseInfoWindow = async (e) => {
   }
 
   // animate the map to take up full screen
-  $('.feature-map, #map')
+  $(".feature-map, #map")
     .stop()
     .animate(
       {
@@ -2645,12 +2650,12 @@ const collapseInfoWindow = async (e) => {
       },
       () => {
         // update mode
-        app.mode = 'default'
+        app.mode = "default"
 
         // re-center on current marker, if any
         if (app.markers.current && app.markers.current != null) {
           setTimeout(() => {
-            if (app.markers.current.featureData.geometry.type == 'Point') {
+            if (app.markers.current.featureData.geometry.type == "Point") {
               const newCenter = app.markers.current.getLatLng()
               app.featureCollection.panTo(newCenter)
             } else {
@@ -2673,23 +2678,23 @@ const collapseInfoWindow = async (e) => {
   // $('.control-add-point').css('top', y - 50)
 
   // resolve the promise once the animation is complete
-  return $('.feature-map, #map').promise()
+  return $(".feature-map, #map").promise()
 }
 
 const attachMeMarkerPopup = (marker, address) => {
-  let myPopup = $('.map-popup-container .popup-content').clone()
-  let street = address.indexOf(',')
-    ? address.substr(0, address.indexOf(','))
+  let myPopup = $(".map-popup-container .popup-content").clone()
+  let street = address.indexOf(",")
+    ? address.substr(0, address.indexOf(","))
     : address
-  street = street ? street : 'an unnamed location'
+  street = street ? street : "an unnamed location"
 
-  $('.street-address', myPopup).html(street)
+  $(".street-address", myPopup).html(street)
   // console.log(`address: ${address}`)
   myPopup = myPopup.get(0)
   marker.bindPopup(myPopup)
-  $('.me-marker-go-button', myPopup).on('click', (e) => {
+  $(".me-marker-go-button", myPopup).on("click", e => {
     // check whether this user is authenticated and is allowed to contribute to this map
-    if (!app.auth.getToken()) openSigninPanel('Log in to create a post')
+    if (!app.auth.getToken()) openSigninPanel("Log in to create a post")
     else {
       // hide popup
       // open the info window
@@ -2702,36 +2707,36 @@ const attachMeMarkerPopup = (marker, address) => {
 
 const openRenameMapForm = () => {
   // remove anything currently in the info window
-  $('.info-window-content').html('')
+  $(".info-window-content").html("")
 
   // inject a copy of the rename map form into info window
-  const renameMapEl = $('.rename-map-container').clone()
-  renameMapEl.appendTo('.info-window-content')
-  renameMapEl.removeClass('hide')
+  const renameMapEl = $(".rename-map-container").clone()
+  renameMapEl.appendTo(".info-window-content")
+  renameMapEl.removeClass("hide")
   renameMapEl.show()
 
   // populate title field with current title
-  $('#featureCollectionTitle', renameMapEl).val(app.featureCollection.title)
-  $('#featureCollectionTitle', renameMapEl).focus()
+  $("#featureCollectionTitle", renameMapEl).val(app.featureCollection.title)
+  $("#featureCollectionTitle", renameMapEl).focus()
 
   // handle cancel button
-  $('.cancel-link', renameMapEl).on('click', (e) => {
+  $(".cancel-link", renameMapEl).on("click", e => {
     e.preventDefault()
     collapseInfoWindow()
   })
 
   // populate rename map content
   // update visible map title when user renames it
-  $('.rename-map-form', renameMapEl).on('submit', (e) => {
+  $(".rename-map-form", renameMapEl).on("submit", e => {
     e.preventDefault()
     const featureCollectionTitle = $(
-      '#featureCollectionTitle',
+      "#featureCollectionTitle",
       renameMapEl
     ).val()
     if (!featureCollectionTitle) return
 
     app.featureCollection.setTitle(featureCollectionTitle)
-    $('#featureCollectionTitle', renameMapEl).val('') // clear the field
+    $("#featureCollectionTitle", renameMapEl).val("") // clear the field
 
     // send new title to server, if user logged in and map already has markers
     if (app.auth.getToken() && app.markers.markers.length) {
@@ -2740,10 +2745,10 @@ const openRenameMapForm = () => {
       }/${app.featureCollection.getPublicIdFromUrl()}`
       // console.log(`sending data to: ${apiUrl}`)
       let formData = new FormData(e.target)
-      formData.set('featureCollectionTitle', featureCollectionTitle) // hacking it.. don't know why this is necessary
-      app.myFetch(apiUrl, 'POST', formData)
+      formData.set("featureCollectionTitle", featureCollectionTitle) // hacking it.. don't know why this is necessary
+      app.myFetch(apiUrl, "POST", formData)
     } else {
-      console.log('not sending to server')
+      console.log("not sending to server")
     }
 
     // close the infowindow
@@ -2753,38 +2758,38 @@ const openRenameMapForm = () => {
 
 const openStyleMapForm = () => {
   // remove anything currently in the info window
-  $('.info-window-content').html('')
+  $(".info-window-content").html("")
   // inject a copy of the style settings into info window
-  const panelEl = $('.map-styles-container').clone()
-  panelEl.appendTo('.info-window-content')
-  panelEl.removeClass('hide')
+  const panelEl = $(".map-styles-container").clone()
+  panelEl.appendTo(".info-window-content")
+  panelEl.removeClass("hide")
   panelEl.show()
 
   // get this map's type
   let mapType = app.featureCollection.mapType
     ? app.featureCollection.mapType
-    : 'geographic' // default to geographic
+    : "geographic" // default to geographic
   // pre-select the appropriate thumbnail
-  $(`.basemap-selector .basemap-option.${mapType}`, panelEl).addClass('active')
-  $('.mapType', panelEl).val(mapType) // set map type in form
-  if (mapType == 'image') $('.file-upload-container').removeClass('hide') // show image upload options, if relevant
+  $(`.basemap-selector .basemap-option.${mapType}`, panelEl).addClass("active")
+  $(".mapType", panelEl).val(mapType) // set map type in form
+  if (mapType == "image") $(".file-upload-container").removeClass("hide") // show image upload options, if relevant
 
   // handle clicks on basemap style options
-  $('.basemap-option', panelEl).on('click', (e) => {
+  $(".basemap-option", panelEl).on("click", e => {
     // add active class to selected type
-    $('.basemap-option', panelEl).removeClass('active') // dehighlight all
-    $(e.target).addClass('active') // highlight selected
+    $(".basemap-option", panelEl).removeClass("active") // dehighlight all
+    $(e.target).addClass("active") // highlight selected
     // show image upload options, if selected
-    if ($(e.target).hasClass('image')) {
-      $('.mapType', panelEl).val('image') // set map type in form
+    if ($(e.target).hasClass("image")) {
+      $(".mapType", panelEl).val("image") // set map type in form
       // show image map options, if that is selected
-      $('.file-upload-container', panelEl).removeClass('hide')
-      $('.file-upload-container', panelEl).show()
+      $(".file-upload-container", panelEl).removeClass("hide")
+      $(".file-upload-container", panelEl).show()
     } else {
-      $('.mapType', panelEl).val('geographic') // set map type in form
+      $(".mapType", panelEl).val("geographic") // set map type in form
       // hide image map options if geographic map selected
-      $('.file-upload-container', panelEl).addClass('hide')
-      $('.file-upload-container', panelEl).hide()
+      $(".file-upload-container", panelEl).addClass("hide")
+      $(".file-upload-container", panelEl).hide()
     }
   }) // handle basemap style click
 
@@ -2793,9 +2798,9 @@ const openStyleMapForm = () => {
   if (app.featureCollection && app.featureCollection.underlyingImages) {
     console.log(app.featureCollection.underlyingImages.length)
     const existingImagesEl = $(
-      '.info-window-content .existing-thumbs-container'
+      ".info-window-content .existing-thumbs-container"
     )
-    app.featureCollection.underlyingImages.forEach((photo) => {
+    app.featureCollection.underlyingImages.forEach(photo => {
       // create a thumbnail
       const thumb = $(
         `<div class="thumb" ws-image-filename="${photo.filename}" >
@@ -2804,8 +2809,8 @@ const openStyleMapForm = () => {
       </div>`
       )
       // handle removing it
-      $('.close-icon', thumb).on('click', (e) => {
-        const filename = $(e.target).attr('ws-image-filename') // get the image title, which contains the filename
+      $(".close-icon", thumb).on("click", e => {
+        const filename = $(e.target).attr("ws-image-filename") // get the image title, which contains the filename
         $(
           `.info-window-content .thumb[ws-image-filename="${filename}"]`
         ).remove() // remove it from screen
@@ -2820,51 +2825,51 @@ const openStyleMapForm = () => {
   // create a decent file uploader for photos
   const fuploader = new FUploader({
     container: {
-      el: document.querySelector('.info-window-content .file-upload-container'),
-      activeClassName: 'active',
+      el: document.querySelector(".info-window-content .file-upload-container"),
+      activeClassName: "active",
     },
     fileSelector: {
       el: document.querySelector('.info-window-content input[type="file"]'),
     },
     buttonContainer: {
-      el: document.querySelector('.info-window-content .button-container'),
+      el: document.querySelector(".info-window-content .button-container"),
     },
     thumbsContainer: {
-      el: document.querySelector('.info-window-content .thumbs-container'),
-      thumbClassName: 'thumb',
-      thumbImgClassName: 'thumb-img',
-      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
-      closeIconClassName: 'close-icon',
+      el: document.querySelector(".info-window-content .thumbs-container"),
+      thumbClassName: "thumb",
+      thumbImgClassName: "thumb-img",
+      closeIconImgSrc: "/static/images/material_design_icons/close-24px.svg",
+      closeIconClassName: "close-icon",
       closeIconCallback: () => {},
     },
     dropContainer: {
-      el: document.querySelector('.info-window-content .drop-container'),
-      activeClassName: 'active',
+      el: document.querySelector(".info-window-content .drop-container"),
+      activeClassName: "active",
     },
     form: {
-      el: document.querySelector('.info-window-content .import-data-form'),
+      el: document.querySelector(".info-window-content .import-data-form"),
       droppedFiles: [], // nothing yet
     },
   })
   fuploader.init() // initalize settings
 
   // activate add image link
-  $('.add-photos-link', panelEl).on('click', (e) => {
+  $(".add-photos-link", panelEl).on("click", e => {
     e.preventDefault()
-    $('input[type="file"]', panelEl).trigger('click')
+    $('input[type="file"]', panelEl).trigger("click")
   })
 
   // handle cancel button click
-  $('.cancel-link', panelEl).on('click', (e) => {
+  $(".cancel-link", panelEl).on("click", e => {
     e.preventDefault()
     collapseInfoWindow()
   })
 
   // handle form submission
-  $('.map-style-form').on('submit', (e) => {
+  $(".map-style-form").on("submit", e => {
     e.preventDefault()
     // show the spinner till done
-    showSpinner($('.info-window'))
+    showSpinner($(".info-window"))
 
     // ask user to confirm if there are markers on the map already
     const confirmed = confirm(app.copy.confirmmapstylechange)
@@ -2874,11 +2879,11 @@ const openStyleMapForm = () => {
       let formData = new FormData(e.target)
 
       // remove the input type='file' data, since we don't need it
-      formData.delete('files-excuse')
+      formData.delete("files-excuse")
 
       // add any existing files to delete
       if (filesToRemove.length) {
-        formData.append('files_to_delete', filesToRemove.join(','))
+        formData.append("files_to_delete", filesToRemove.join(","))
       }
 
       // add any drag-and-dropped files to this
@@ -2887,15 +2892,15 @@ const openStyleMapForm = () => {
 
       // add files from array to formdata
       $.each(files, function (i, file) {
-        formData.append('files', file)
+        formData.append("files", file)
       })
 
       // post to server
       app
-        .myFetch(app.apis.wikistreets.mapStyleUrl, 'POST', formData)
-        .then((res) => {
+        .myFetch(app.apis.wikistreets.mapStyleUrl, "POST", formData)
+        .then(res => {
           // hide the spinner
-          hideSpinner($('.info-window'))
+          hideSpinner($(".info-window"))
 
           if (!res.status) {
             openErrorPanel(res.message)
@@ -2912,7 +2917,7 @@ const openStyleMapForm = () => {
     } // if confirmed
     else {
       // not confirmed
-      hideSpinner($('.info-window'))
+      hideSpinner($(".info-window"))
       collapseInfoWindow()
     }
   })
@@ -2920,48 +2925,48 @@ const openStyleMapForm = () => {
 
 const openCollaborationSettings = () => {
   // remove anything currently in the info window
-  $('.info-window-content').html('')
+  $(".info-window-content").html("")
 
   // inject a copy of the collaboration settings into info window
-  const settingsEl = $('.settings-map-container').clone()
-  settingsEl.appendTo('.info-window-content')
-  settingsEl.removeClass('hide')
+  const settingsEl = $(".settings-map-container").clone()
+  settingsEl.appendTo(".info-window-content")
+  settingsEl.removeClass("hide")
   settingsEl.show()
 
   // pre-select the correct contributor settings
   if (app.featureCollection.limitContributors) {
-    $('input#limit_contributors_public', settingsEl).removeAttr('checked')
-    $('input#limit_contributors_private', settingsEl).attr('checked', 'checked')
+    $("input#limit_contributors_public", settingsEl).removeAttr("checked")
+    $("input#limit_contributors_private", settingsEl).attr("checked", "checked")
   } else {
-    $('input#limit_contributors_public', settingsEl).attr('checked', 'checked')
-    $('input#limit_contributors_private', settingsEl).removeAttr('checked')
+    $("input#limit_contributors_public", settingsEl).attr("checked", "checked")
+    $("input#limit_contributors_private", settingsEl).removeAttr("checked")
   }
 
   // add collaborators behavior
-  $('.add-collaborator-button', settingsEl).on('click', (e) => {
+  $(".add-collaborator-button", settingsEl).on("click", e => {
     e.preventDefault()
-    const email = $('.collaborator-email', settingsEl).val()
+    const email = $(".collaborator-email", settingsEl).val()
     const listItem = $(`<li class="list-group-item">${email}</li>`)
     // add to visible collaborators list
-    listItem.appendTo('.info-window-content .collaborators-list')
+    listItem.appendTo(".info-window-content .collaborators-list")
     // add to hidden collaborators list field
-    let addedCollaborators = $('form #add_collaborators', settingsEl).val()
+    let addedCollaborators = $("form #add_collaborators", settingsEl).val()
     addedCollaborators =
-      addedCollaborators == '' ? email : addedCollaborators + `,${email}`
-    $('form #add_collaborators', settingsEl).val(addedCollaborators)
+      addedCollaborators == "" ? email : addedCollaborators + `,${email}`
+    $("form #add_collaborators", settingsEl).val(addedCollaborators)
 
-    $('.collaborator-email', settingsEl).val('')
+    $(".collaborator-email", settingsEl).val("")
   })
 
   // add cancel collaborate settings link behavior
-  $('.cancel-link', settingsEl).on('click', (e) => {
+  $(".cancel-link", settingsEl).on("click", e => {
     e.preventDefault()
     // revert to the map list view
     collapseInfoWindow()
   }) // cancel link click
 
   // handle form submission
-  $('.settings-map-form').on('submit', (e) => {
+  $(".settings-map-form").on("submit", e => {
     e.preventDefault()
 
     // send settings changes to server
@@ -2970,21 +2975,21 @@ const openCollaborationSettings = () => {
       let formData = new FormData(e.target)
       app.myFetch(
         app.apis.wikistreets.collaborationSettingsUrl,
-        'POST',
+        "POST",
         formData
       )
     } else {
-      console.log('not sending to server')
+      console.log("not sending to server")
     }
 
     // wipe the form for next time
-    $('.settings-map-form', settingsEl).get(0).reset()
-    $('.collaborators-list', settingsEl).html('') // wipe out visual list
+    $(".settings-map-form", settingsEl).get(0).reset()
+    $(".collaborators-list", settingsEl).html("") // wipe out visual list
 
     // close the infowindow
     collapseInfoWindow()
-    const feedbackEl = $('.info-window-content .feedback-message')
-    feedbackEl.html('Collaboration settings saved.')
+    const feedbackEl = $(".info-window-content .feedback-message")
+    feedbackEl.html("Collaboration settings saved.")
     feedbackEl.show()
     setTimeout(() => {
       feedbackEl.fadeOut()
@@ -2999,17 +3004,17 @@ const updateShapeCoords = (layer, geometryType) => {
 
   let coords = []
   switch (geometryType) {
-    case 'LineString':
+    case "LineString":
       // add [lng,lat] for each node of the line
-      layer._latlngs.forEach((latlng) => {
+      layer._latlngs.forEach(latlng => {
         const node = [latlng.lng, latlng.lat]
         coords.push(node)
       })
       break
-    case 'Polygon':
+    case "Polygon":
       const innerCoords = []
       // add [lng,lat] for each node of the line
-      layer._latlngs[0].forEach((latlng) => {
+      layer._latlngs[0].forEach(latlng => {
         const node = [latlng.lng, latlng.lat]
         innerCoords.push(node)
       })
@@ -3017,15 +3022,15 @@ const updateShapeCoords = (layer, geometryType) => {
       break
   }
 
-  $('.info-window-content .geometryCoordinates').val(JSON.stringify(coords))
+  $(".info-window-content .geometryCoordinates").val(JSON.stringify(coords))
   return coords
 }
 
-const createShape = (geometryType) => {
+const createShape = geometryType => {
   // zoom into map
-  if (app.mode != 'featurecreate') {
+  if (app.mode != "featurecreate") {
     // keep track
-    app.mode = 'featurecreate'
+    app.mode = "featurecreate"
 
     //deactivate all markers
     app.markers.deactivate()
@@ -3038,7 +3043,7 @@ const createShape = (geometryType) => {
 
   // get a user-friendly name of this geometry type
   let gType = geometryType.toLowerCase()
-  if (gType == 'linestring') gType = 'line'
+  if (gType == "linestring") gType = "line"
 
   // pop open the form
   openNewFeatureForm(
@@ -3050,22 +3055,22 @@ const createShape = (geometryType) => {
   // handle shape drawing events
   let shape
   switch (geometryType) {
-    case 'LineString':
+    case "LineString":
       shape = app.featureCollection.element.editTools.startPolyline()
       break
-    case 'Polygon':
+    case "Polygon":
       shape = app.featureCollection.element.editTools.startPolygon()
       break
   }
-  shape.on('editable:editing', function (e) {
+  shape.on("editable:editing", function (e) {
     e.layer.setStyle(app.markers.styles.LineString.active) // active style
     updateShapeCoords(e.layer, geometryType)
     app.markers.temporaryMarkers.push(e.layer) // save temporarily so we remove it later
   })
-  shape.on('editable:drawing:click', (e) => {
+  shape.on("editable:drawing:click", e => {
     app.controls.showDrawInstructions()
   })
-  shape.on('editable:drawing:commit', function (e) {
+  shape.on("editable:drawing:commit", function (e) {
     updateShapeCoords(e.layer, geometryType)
     app.markers.temporaryMarkers.push(e.layer) // save temporarily so we remove it later
     expandInfoWindow(60, 40).then(async () => {
@@ -3084,9 +3089,9 @@ const createPoint = async (point = false) => {
   app.controls.hideFeatureOptions()
 
   // zoom into map
-  if (app.mode != 'pointcreate') {
+  if (app.mode != "pointcreate") {
     // keep track
-    app.mode = 'pointcreate'
+    app.mode = "pointcreate"
 
     //deactivate all markers
     app.markers.deactivate()
@@ -3134,17 +3139,17 @@ const createPoint = async (point = false) => {
   // show post form if user is logged in
   if (!app.auth.getToken()) {
     // show login form for other users
-    return openSigninPanel('Log in to create a post', false, false)
+    return openSigninPanel("Log in to create a post", false, false)
   }
 
   // detect dragstart events on me marker
-  marker.on('dragstart', async () => {
+  marker.on("dragstart", async () => {
     // close the marker popup
     marker.closePopup()
   })
 
   // detect dragend events on me marker
-  marker.on('dragend', async () => {
+  marker.on("dragend", async () => {
     // get the coordinates of the new location
     const coords = {
       lat: marker.getLatLng().lat,
@@ -3154,7 +3159,7 @@ const createPoint = async (point = false) => {
     app.browserGeolocation.setCoords(coords.lat, coords.lng)
 
     // update the form's coordinates
-    $('.info-window-content .geometryCoordinates').val(
+    $(".info-window-content .geometryCoordinates").val(
       JSON.stringify([coords.lng, coords.lat])
     )
     // center map on the new position of this marker
@@ -3169,86 +3174,86 @@ const createPoint = async (point = false) => {
     marker.openPopup()
   })
 
-  openNewFeatureForm('Point', point, address)
+  openNewFeatureForm("Point", point, address)
 } // createPoint()
 
 const openNewFeatureForm = (
-  geometryType = 'Point',
+  geometryType = "Point",
   point = false,
   address = false
 ) => {
   // copy the feature form into the infowindow
-  $('.info-window-content').html('') // remove anything from the info window
-  const formEl = $('.new-feature-form-container').clone() // get the form
-  formEl.removeClass('hide')
+  $(".info-window-content").html("") // remove anything from the info window
+  const formEl = $(".new-feature-form-container").clone() // get the form
+  formEl.removeClass("hide")
   formEl.show()
-  formEl.appendTo($('.info-window-content'))
+  formEl.appendTo($(".info-window-content"))
 
   // insert address, if any
-  if (address) $('.address', formEl).html(address)
+  if (address) $(".address", formEl).html(address)
 
   // update the form's gemoetry type and coordinates, if any
-  $('.geometryType', formEl).val(geometryType)
+  $(".geometryType", formEl).val(geometryType)
   if (point)
-    $('.geometryCoordinates', formEl).val(
+    $(".geometryCoordinates", formEl).val(
       JSON.stringify([point.lng, point.lat])
     )
 
   // create a decent file uploader for photos
   const fuploader = new FUploader({
     container: {
-      el: document.querySelector('.info-window-content .file-upload-container'),
-      activeClassName: 'active',
+      el: document.querySelector(".info-window-content .file-upload-container"),
+      activeClassName: "active",
     },
     fileSelector: {
       el: document.querySelector('.info-window-content input[type="file"]'),
     },
     buttonContainer: {
-      el: document.querySelector('.info-window-content .button-container'),
+      el: document.querySelector(".info-window-content .button-container"),
     },
     thumbsContainer: {
-      el: document.querySelector('.info-window-content .thumbs-container'),
-      thumbClassName: 'thumb',
-      thumbImgClassName: 'thumb-img',
-      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
-      closeIconClassName: 'close-icon',
+      el: document.querySelector(".info-window-content .thumbs-container"),
+      thumbClassName: "thumb",
+      thumbImgClassName: "thumb-img",
+      closeIconImgSrc: "/static/images/material_design_icons/close-24px.svg",
+      closeIconClassName: "close-icon",
       closeIconCallback: () => {},
     },
     dropContainer: {
-      el: document.querySelector('.info-window-content .drop-container'),
-      activeClassName: 'active',
+      el: document.querySelector(".info-window-content .drop-container"),
+      activeClassName: "active",
     },
     form: {
-      el: document.querySelector('.info-window-content .feature-form'),
+      el: document.querySelector(".info-window-content .feature-form"),
       droppedFiles: [], // nothing yet
     },
   })
   fuploader.init() // initalize settings
 
   // activate add image link
-  $('.add-photos-link', formEl).on('click', (e) => {
+  $(".add-photos-link", formEl).on("click", e => {
     e.preventDefault()
-    $('input[type="file"]', formEl).trigger('click')
+    $('input[type="file"]', formEl).trigger("click")
   })
 
   // handle cancel button click
-  $('.cancel-link', formEl).on('click', (e) => {
+  $(".cancel-link", formEl).on("click", e => {
     e.preventDefault()
     collapseInfoWindow()
   })
 
   // deal with form submissions
-  $('form.feature-form', formEl).on('submit', async (e) => {
+  $("form.feature-form", formEl).on("submit", async e => {
     // prevent page reload
     e.preventDefault()
 
     // show the spinner till done
-    showSpinner($('.info-window'))
+    showSpinner($(".info-window"))
 
     // force user login before an feature can be submitted
     if (!app.auth.getToken()) {
       // open signin form
-      openSigninPanel('Log in to create a post')
+      openSigninPanel("Log in to create a post")
       return // exit function
     }
 
@@ -3256,10 +3261,10 @@ const openNewFeatureForm = (
     let formData = new FormData(e.target)
 
     // add map's current zoom level to data
-    formData.append('zoom', app.featureCollection.element.getZoom())
+    formData.append("zoom", app.featureCollection.element.getZoom())
 
     // remove the input type='file' data, since we don't need it
-    formData.delete('files-excuse')
+    formData.delete("files-excuse")
 
     // add any drag-and-dropped files to this
     const files = fuploader.getDroppedFiles()
@@ -3267,13 +3272,13 @@ const openNewFeatureForm = (
 
     // add files from array to formdata
     $.each(files, function (i, file) {
-      formData.append('files', file)
+      formData.append("files", file)
     })
 
     // post to server
     app
-      .myFetch(app.apis.wikistreets.postFeatureUrl, 'POST', formData)
-      .then((res) => {
+      .myFetch(app.apis.wikistreets.postFeatureUrl, "POST", formData)
+      .then(res => {
         // remove any temporary markers from the screen
         removeTemporaryMarkers()
 
@@ -3284,7 +3289,7 @@ const openNewFeatureForm = (
         }
 
         // prepare for feature view that will happen after timeout
-        app.mode = 'featuredetails'
+        app.mode = "featuredetails"
 
         // get a marker cluster
         const cluster = app.markers.cluster
@@ -3314,22 +3319,22 @@ const openNewFeatureForm = (
           }
         }, 100)
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
         // boot user out of login
         // app.auth.setToken(''); // wipe out JWT token
         // openSigninPanel()
         // open error panel
         openErrorPanel(
-          'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
+          "Hmmm... something went wrong.  Please try posting again with up to 10 images."
         )
       })
   }) // feature-form submit
 }
 
-const openEditFeatureForm = async (featureId) => {
+const openEditFeatureForm = async featureId => {
   // keep track
-  app.mode = 'featureedit'
+  app.mode = "featureedit"
 
   // get marker from id
   const marker = app.markers.findById(featureId)
@@ -3337,14 +3342,14 @@ const openEditFeatureForm = async (featureId) => {
 
   const data = marker.featureData // extract the data
   // allow dragging of point markers
-  if (marker.featureData.geometry.type == 'Point') {
+  if (marker.featureData.geometry.type == "Point") {
     marker.dragging.enable() // make it draggable
   } else {
     // it's another geojson shape... allow leaflet-editable editing
     try {
       marker.enableEdit() // doesn't work for some types
 
-      marker.on('editable:editing', function (e) {
+      marker.on("editable:editing", function (e) {
         updateShapeCoords(e.layer, marker.featureData.geometry.type)
       })
     } catch (err) {
@@ -3356,37 +3361,37 @@ const openEditFeatureForm = async (featureId) => {
   app.featureCollection.flyTo(marker) // pan to marker
 
   // copy the edit feature form into the infowindow
-  const infoWindowHTML = $('.edit-feature-form-container').html()
-  $('.info-window-content').html(infoWindowHTML)
+  const infoWindowHTML = $(".edit-feature-form-container").html()
+  $(".info-window-content").html(infoWindowHTML)
 
   // unescape html entities from title and address
-  const elem = document.createElement('textarea')
+  const elem = document.createElement("textarea")
   elem.innerHTML = data.properties.title
   data.properties.title = elem.value
   elem.innerHTML = data.properties.address
   data.properties.address = elem.value
 
   // inject the data to the form
-  $('.info-window-content .feature-form').attr('ws-feature-id', data._id)
-  $('.info-window-content .featureId').val(data._id)
-  $('.info-window-content .feature-title').val(data.properties.title)
-  $('.info-window-content .feature-body').val(data.properties.body.orig)
-  $('.info-window-content .address').html(data.properties.address)
-  $('.info-window-content .geometryType').val(data.geometry.type)
-  $('.info-window-content .geometryCoordinates').val(
+  $(".info-window-content .feature-form").attr("ws-feature-id", data._id)
+  $(".info-window-content .featureId").val(data._id)
+  $(".info-window-content .feature-title").val(data.properties.title)
+  $(".info-window-content .feature-body").val(data.properties.body.orig)
+  $(".info-window-content .address").html(data.properties.address)
+  $(".info-window-content .geometryType").val(data.geometry.type)
+  $(".info-window-content .geometryCoordinates").val(
     JSON.stringify(data.geometry.coordinates)
   )
   $('.info-window-content input[name="address"]').val(data.properties.address)
 
   // don't say to drag around the marker for geojson shapes that can't currently be repositioned
-  if (data.geometry.type != 'Point') {
-    $('.info-window-content .drag-message').hide()
+  if (data.geometry.type != "Point") {
+    $(".info-window-content .drag-message").hide()
   }
 
   // inject images that already exist for this post
   let filesToRemove = [] // we'll fill it up later
-  const existingImagesEl = $('.info-window-content .existing-thumbs-container')
-  data.properties.photos.forEach((photo) => {
+  const existingImagesEl = $(".info-window-content .existing-thumbs-container")
+  data.properties.photos.forEach(photo => {
     // create a thumbnail
     const thumb = $(
       `<div class="thumb" ws-image-filename="${photo.filename}" >
@@ -3395,8 +3400,8 @@ const openEditFeatureForm = async (featureId) => {
       </div>`
     )
     // handle removing it
-    $('.close-icon', thumb).on('click', (e) => {
-      const filename = $(e.target).attr('ws-image-filename') // get the image title, which contains the filename
+    $(".close-icon", thumb).on("click", e => {
+      const filename = $(e.target).attr("ws-image-filename") // get the image title, which contains the filename
       $(`.info-window-content .thumb[ws-image-filename="${filename}"]`).remove() // remove it from screen
       filesToRemove.push(filename) // add it to list of those to remove
       console.log(`removing ${filename}`)
@@ -3407,7 +3412,7 @@ const openEditFeatureForm = async (featureId) => {
 
   // handle marker dragging
   // detect dragend events on me marker
-  marker.on('dragend', async () => {
+  marker.on("dragend", async () => {
     // get the coordinates of the new location
     const coords = {
       lat: marker.getLatLng().lat,
@@ -3415,7 +3420,7 @@ const openEditFeatureForm = async (featureId) => {
     }
 
     // update the form's coordinates
-    $('.info-window-content .geometryCoordinates').val(
+    $(".info-window-content .geometryCoordinates").val(
       JSON.stringify([coords.lng, coords.lat])
     )
 
@@ -3432,43 +3437,43 @@ const openEditFeatureForm = async (featureId) => {
   // create a decent file uploader for photos
   const fuploader = new FUploader({
     container: {
-      el: document.querySelector('.info-window-content .file-upload-container'),
-      activeClassName: 'active',
+      el: document.querySelector(".info-window-content .file-upload-container"),
+      activeClassName: "active",
     },
     fileSelector: {
       el: document.querySelector('.info-window-content input[type="file"]'),
     },
     buttonContainer: {
-      el: document.querySelector('.info-window-content .button-container'),
+      el: document.querySelector(".info-window-content .button-container"),
     },
     thumbsContainer: {
-      el: document.querySelector('.info-window-content .thumbs-container'),
-      thumbClassName: 'thumb',
-      thumbImgClassName: 'thumb-img',
-      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
-      closeIconClassName: 'close-icon',
+      el: document.querySelector(".info-window-content .thumbs-container"),
+      thumbClassName: "thumb",
+      thumbImgClassName: "thumb-img",
+      closeIconImgSrc: "/static/images/material_design_icons/close-24px.svg",
+      closeIconClassName: "close-icon",
     },
     dropContainer: {
-      el: document.querySelector('.info-window-content .drop-container'),
-      activeClassName: 'active',
+      el: document.querySelector(".info-window-content .drop-container"),
+      activeClassName: "active",
     },
     form: {
-      el: document.querySelector('.info-window-content .feature-form'),
+      el: document.querySelector(".info-window-content .feature-form"),
       droppedFiles: [], // nothing yet
     },
   })
   fuploader.init() // initalize settings
 
   // activate add image link
-  $('.info-window-content .add-photos-link').on('click', (e) => {
+  $(".info-window-content .add-photos-link").on("click", e => {
     e.preventDefault()
-    $('.info-window-content input[type="file"]').trigger('click')
+    $('.info-window-content input[type="file"]').trigger("click")
   })
 
   // activate cancel button
-  $('.info-window .cancel-link').on('click', async (e) => {
+  $(".info-window .cancel-link").on("click", async e => {
     e.preventDefault()
-    if (marker.featureData.geometry.type != 'Point') {
+    if (marker.featureData.geometry.type != "Point") {
       try {
         marker.disableEdit() // don't allow moving the shape
       } catch (err) {
@@ -3479,11 +3484,11 @@ const openEditFeatureForm = async (featureId) => {
   })
 
   // deal with form submissions
-  $('.info-window-content form.feature-form').on('submit', async (e) => {
+  $(".info-window-content form.feature-form").on("submit", async e => {
     // prevent page reload
     e.preventDefault()
 
-    if (marker.featureData.geometry.type != 'Point') {
+    if (marker.featureData.geometry.type != "Point") {
       try {
         marker.disableEdit() // don't allow moving the shape
       } catch (err) {
@@ -3492,12 +3497,12 @@ const openEditFeatureForm = async (featureId) => {
     }
 
     // show the spinner till done
-    showSpinner($('.info-window'))
+    showSpinner($(".info-window"))
 
     // force user login before an feature can be submitted
     if (!app.auth.getToken()) {
       // open signin form
-      openSigninPanel('Log in to edit a post')
+      openSigninPanel("Log in to edit a post")
       return // exit function
     }
 
@@ -3505,15 +3510,15 @@ const openEditFeatureForm = async (featureId) => {
     let formData = new FormData(e.target)
 
     // add map's current zoom level to data
-    formData.append('zoom', app.featureCollection.element.getZoom())
+    formData.append("zoom", app.featureCollection.element.getZoom())
 
     // add any existing files to delete
     if (filesToRemove.length) {
-      formData.append('files_to_delete', filesToRemove.join(','))
+      formData.append("files_to_delete", filesToRemove.join(","))
     }
 
     // remove the input type='file' data, since we don't need it
-    formData.delete('files-excuse')
+    formData.delete("files-excuse")
 
     // add any drag-and-dropped files to this
     const files = fuploader.getDroppedFiles()
@@ -3521,13 +3526,13 @@ const openEditFeatureForm = async (featureId) => {
 
     // add files from array to formdata
     $.each(files, function (i, file) {
-      formData.append('files', file)
+      formData.append("files", file)
     })
 
     // post to server
     app
-      .myFetch(app.apis.wikistreets.editFeatureUrl, 'POST', formData)
-      .then((res) => {
+      .myFetch(app.apis.wikistreets.editFeatureUrl, "POST", formData)
+      .then(res => {
         if (!res.status) {
           // console.log(`ERROR: ${res}`)
           openErrorPanel(res.message)
@@ -3535,10 +3540,10 @@ const openEditFeatureForm = async (featureId) => {
         }
 
         // prepare for feature view that will happen after timeout
-        app.mode = 'featuredetails'
+        app.mode = "featuredetails"
 
         // disable dragging of point markers
-        if (marker.featureData.geometry.type == 'Point') {
+        if (marker.featureData.geometry.type == "Point") {
           marker.dragging.disable() // make it non-draggable
         }
 
@@ -3562,14 +3567,14 @@ const openEditFeatureForm = async (featureId) => {
           app.markers.simulateClick(marker)
         }, 100)
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
         // boot user out of login
         // app.auth.setToken(''); // wipe out JWT token
         // openSigninPanel()
         // open error panel
         openErrorPanel(
-          'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
+          "Hmmm... something went wrong.  Please try posting again with up to 10 images."
         )
       })
   }) // edit-feature-form submit
@@ -3577,7 +3582,7 @@ const openEditFeatureForm = async (featureId) => {
 
 const openSearchAddressForm = () => {
   // keep track
-  app.mode = 'searchaddress'
+  app.mode = "searchaddress"
   // console.log(`mode=${app.mode}`);
 
   //deactivate all markers
@@ -3589,16 +3594,16 @@ const openSearchAddressForm = () => {
   }
 
   // copy the search address form into the infowindow
-  const infoWindowHTML = $('.search-address-form-container').html()
-  $('.info-window-content').html(infoWindowHTML)
+  const infoWindowHTML = $(".search-address-form-container").html()
+  $(".info-window-content").html(infoWindowHTML)
 
   // disable form
-  $('.search-address-form').submit((e) => {
+  $(".search-address-form").submit(e => {
     e.preventDefault()
   })
 
   // perform search after a pause in input
-  $('#searchterm').keyup((e) => {
+  $("#searchterm").keyup(e => {
     // cancel any existing timeout
     if (app.controls.searchAddress.timer) {
       clearTimeout(app.controls.searchAddress.timer)
@@ -3607,12 +3612,12 @@ const openSearchAddressForm = () => {
 
     // create a new timeout
     app.controls.searchAddress.timer = setTimeout(async () => {
-      const searchTerm = $('#searchterm').val()
+      const searchTerm = $("#searchterm").val()
       const coords = app.browserGeolocation.coords
       const results = await forwardGeocode(searchTerm, coords)
 
       // create a list item for each result
-      $('.info-window .matching-addresses').html('') // start from scratch
+      $(".info-window .matching-addresses").html("") // start from scratch
       results.map((data, i, arr) => {
         const item = $(
           `<a class="address-link list-group-item list-group-item-action" href="#" ws-coords="${JSON.stringify(
@@ -3621,7 +3626,7 @@ const openSearchAddressForm = () => {
             2
           )}">${data.name}</a>`
         )
-        item.on('click', (e) => {
+        item.on("click", e => {
           e.preventDefault()
           // what to do after clicking this address
           // app.featureCollection.panTo(data.coords)
@@ -3634,7 +3639,7 @@ const openSearchAddressForm = () => {
             })
           }
         })
-        item.appendTo('.info-window .matching-addresses')
+        item.appendTo(".info-window .matching-addresses")
       })
     }, 1000)
   })
@@ -3642,13 +3647,13 @@ const openSearchAddressForm = () => {
   // open the info window
   expandInfoWindow(50, 50).then(async () => {
     // focus in text field
-    $('.info-window-content #searchterm').focus()
+    $(".info-window-content #searchterm").focus()
   })
 }
 
 const openGeopositionUnavailableForm = () => {
   // keep track
-  app.mode = 'errorgeoposition'
+  app.mode = "errorgeoposition"
   // console.log(`mode=${app.mode}`);
 
   //deactivate all markers
@@ -3660,9 +3665,9 @@ const openGeopositionUnavailableForm = () => {
   }
 
   // copy the search address form into the infowindow
-  const infoWindowHTML = $('.geoposition-error-container').html()
-  $('.info-window-content').html(infoWindowHTML)
-  $('.info-window-content .ok-button').on('click', (e) => {
+  const infoWindowHTML = $(".geoposition-error-container").html()
+  $(".info-window-content").html(infoWindowHTML)
+  $(".info-window-content .ok-button").on("click", e => {
     collapseInfoWindow()
   })
 
@@ -3673,13 +3678,13 @@ const openGeopositionUnavailableForm = () => {
 const panToPersonalLocation = () => {
   return app.browserGeolocation
     .update()
-    .then((coords) => {
+    .then(coords => {
       // console.log(`panning to ${coords}`)
       app.featureCollection.panTo(coords) // pan map to personal location
-      app.controls.gps.setState('active')
+      app.controls.gps.setState("active")
       return coords
     })
-    .catch((err) => {
+    .catch(err => {
       // console.error(err);
       throw err
     })
@@ -3688,12 +3693,12 @@ const panToPersonalLocation = () => {
 /**
  * Retrieve browser geolocation... or not.
  */
-const getBrowserGeolocation = (options) => {
+const getBrowserGeolocation = options => {
   // set default options, if necessary
   if (!options) options = app.browserGeolocation.options
   return new Promise(function (resolve, reject) {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         // clean up coordinates
         const coords = {
           lat: position.coords.latitude,
@@ -3709,27 +3714,27 @@ const getBrowserGeolocation = (options) => {
 
 // authorize the current user
 const openSigninPanel = async (title = false, expand = true) => {
-  app.mode = 'signin'
+  app.mode = "signin"
 
   // copy the search address form into the infowindow
-  const infoWindowHTML = $('.signin-form-container').html()
-  $('.info-window-content').html(infoWindowHTML)
+  const infoWindowHTML = $(".signin-form-container").html()
+  $(".info-window-content").html(infoWindowHTML)
 
   // add title, if any
-  if (title) $('.info-window-content h2.panel-title').html(title)
+  if (title) $(".info-window-content h2.panel-title").html(title)
   // activate link to switch to signup panel
-  $('.info-window .signup-link').on('click', (e) => {
+  $(".info-window .signup-link").on("click", e => {
     e.preventDefault()
     openSignupPanel()
   })
 
   // activate link to reset password
-  $('.info-window .reset-password-link').on('click', (e) => {
+  $(".info-window .reset-password-link").on("click", e => {
     e.preventDefault()
     openResetPasswordPanel()
   })
 
-  $('.info-window-content form.signin-form').submit((e) => {
+  $(".info-window-content form.signin-form").submit(e => {
     // prevent page reload
     e.preventDefault()
 
@@ -3743,21 +3748,21 @@ const openSigninPanel = async (title = false, expand = true) => {
 
     // post to server
     app
-      .myFetch(app.apis.wikistreets.userSignin, 'POST', formData)
-      .then((res) => {
+      .myFetch(app.apis.wikistreets.userSignin, "POST", formData)
+      .then(res => {
         // console.log(`SUCCESS: ${res}`)
         app.auth.setToken(res.token)
         app.user.handle = res.handle
         app.user.id = res._id
-        $('.handle').text(res.handle)
+        $(".handle").text(res.handle)
         collapseInfoWindow()
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(`ERROR: ${err}`)
 
         // show instructions
-        $('.info-window .feedback-message').html(app.copy.signinerror)
-        $('.info-window .feedback-message').removeClass('hide')
+        $(".info-window .feedback-message").html(app.copy.signinerror)
+        $(".info-window .feedback-message").removeClass("hide")
       })
   })
 
@@ -3767,19 +3772,19 @@ const openSigninPanel = async (title = false, expand = true) => {
 
 // create a new user account
 const openSignupPanel = async () => {
-  app.mode = 'signup'
+  app.mode = "signup"
 
   // copy the search address form into the infowindow
-  const infoWindowHTML = $('.signup-form-container').html()
-  $('.info-window-content').html(infoWindowHTML)
+  const infoWindowHTML = $(".signup-form-container").html()
+  $(".info-window-content").html(infoWindowHTML)
 
   // activate link to switch to signup panel
-  $('.info-window .signin-link').on('click', (e) => {
+  $(".info-window .signin-link").on("click", e => {
     e.preventDefault()
     openSigninPanel()
   })
 
-  $('.info-window-content form.signup-form').submit((e) => {
+  $(".info-window-content form.signup-form").submit(e => {
     // prevent page reload
     e.preventDefault()
 
@@ -3788,15 +3793,15 @@ const openSignupPanel = async () => {
 
     // post to server
     return app
-      .myFetch(app.apis.wikistreets.userSignup, 'POST', formData)
-      .then(async (res) => {
+      .myFetch(app.apis.wikistreets.userSignup, "POST", formData)
+      .then(async res => {
         // check for error
         if (res.error) {
           console.error(`ERROR: ${JSON.stringify(res.error, null, 2)}`)
 
           // show instructions
-          $('.info-window .feedback-message').html(res.error)
-          $('.info-window .feedback-message').removeClass('hide')
+          $(".info-window .feedback-message").html(res.error)
+          $(".info-window .feedback-message").removeClass("hide")
           return
         }
 
@@ -3804,20 +3809,20 @@ const openSignupPanel = async () => {
         app.auth.setToken(res.token)
         app.user.handle = res.handle
         app.user.id = res._id
-        $('.handle').text(res.handle)
+        $(".handle").text(res.handle)
         collapseInfoWindow()
 
         // load the map again, in case this user has been added as an invited contributor
         const data = await app.fetchFeatureCollection() // get the FeatureCollection data from server
         populateMap(data)
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
 
         // show instructions
-        $('.info-window .feedback-message').html(app.copy.signuperror)
-        $('.info-window .feedback-message').removeClass('hide')
-        $('.info-window .feedback-message').show()
+        $(".info-window .feedback-message").html(app.copy.signuperror)
+        $(".info-window .feedback-message").removeClass("hide")
+        $(".info-window .feedback-message").show()
       })
   })
 
@@ -3827,13 +3832,13 @@ const openSignupPanel = async () => {
 
 // create a new user account
 const openResetPasswordPanel = async () => {
-  app.mode = 'resetpassword'
+  app.mode = "resetpassword"
 
   // copy the search address form into the infowindow
-  const infoWindowHTML = $('.reset-password-form-container').html()
-  $('.info-window-content').html(infoWindowHTML)
+  const infoWindowHTML = $(".reset-password-form-container").html()
+  $(".info-window-content").html(infoWindowHTML)
 
-  $('.info-window-content form.reset-password-form').submit((e) => {
+  $(".info-window-content form.reset-password-form").submit(e => {
     // prevent page reload
     e.preventDefault()
 
@@ -3842,28 +3847,28 @@ const openResetPasswordPanel = async () => {
 
     // post to server
     return app
-      .myFetch(app.apis.wikistreets.userResetPassword, 'POST', formData)
-      .then((res) => {
+      .myFetch(app.apis.wikistreets.userResetPassword, "POST", formData)
+      .then(res => {
         // check for error
         if (res.error) {
           console.error(`ERROR: ${JSON.stringify(res.error, null, 2)}`)
 
           // show instructions
-          $('.info-window .feedback-message').html(res.error)
-          $('.info-window .feedback-message').removeClass('hide')
+          $(".info-window .feedback-message").html(res.error)
+          $(".info-window .feedback-message").removeClass("hide")
           return
         }
 
         // console.log(`SUCCESS: ${JSON.stringify(res, null, 2)}`)
-        openSigninPanel('Log in with the new password we just sent you')
+        openSigninPanel("Log in with the new password we just sent you")
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
 
         // show instructions
-        $('.info-window .feedback-message').html(app.copy.signuperror)
-        $('.info-window .feedback-message').removeClass('hide')
-        $('.info-window .feedback-message').show()
+        $(".info-window .feedback-message").html(app.copy.signuperror)
+        $(".info-window .feedback-message").removeClass("hide")
+        $(".info-window .feedback-message").show()
       })
   })
 
@@ -3873,11 +3878,11 @@ const openResetPasswordPanel = async () => {
 
 // create a new user account
 const openAboutUsForm = async () => {
-  app.mode = 'aboutus'
+  app.mode = "aboutus"
 
   // copy the search address form into the infowindow
-  const infoWindowHTML = $('.about-us-container').html()
-  $('.info-window-content').html(infoWindowHTML)
+  const infoWindowHTML = $(".about-us-container").html()
+  $(".info-window-content").html(infoWindowHTML)
 
   // open the info window
   expandInfoWindow(50, 50).then()
@@ -3885,24 +3890,24 @@ const openAboutUsForm = async () => {
 
 // show a particular user's profile
 const openUserProfile = async (handle, userId) => {
-  app.mode = 'userprofile'
+  app.mode = "userprofile"
 
   // fetch data from wikistreets api
   app
     .myFetch(`${app.apis.wikistreets.getUserUrl}/${userId}`)
-    .then((data) => {
+    .then(data => {
       // copy the user profile html into the infowindow
-      const infoWindowHTML = $('.user-profile-container').html()
-      $('.info-window-content').html(infoWindowHTML)
+      const infoWindowHTML = $(".user-profile-container").html()
+      $(".info-window-content").html(infoWindowHTML)
 
       // populate the details
-      $('.info-window-content .handle').text(handle)
-      $('.info-window-content .member-since').text(
+      $(".info-window-content .handle").text(handle)
+      $(".info-window-content .member-since").text(
         DateDiff.asAge(data.createdAt)
       )
-      $('.info-window-content .num-posts').text(data.numPosts)
-      $('.info-window-content .num-comments').text(data.numComments)
-      $('.info-window-content .num-maps').text(data.featureCollections.length)
+      $(".info-window-content .num-posts").text(data.numPosts)
+      $(".info-window-content .num-comments").text(data.numComments)
+      $(".info-window-content .num-maps").text(data.featureCollections.length)
 
       // fill out the user profile's list of maps
       // extract the maps
@@ -3910,11 +3915,11 @@ const openUserProfile = async (handle, userId) => {
       featureCollections.reverse() // reverse order with most recent first
 
       // place links to the maps into the map selector
-      $('.info-window-content .more-maps').html('') // wipe out any previously-generated list
-      let mapListTemporaryContainer = $('<div>')
+      $(".info-window-content .more-maps").html("") // wipe out any previously-generated list
+      let mapListTemporaryContainer = $("<div>")
       featureCollections.map((data, i, arr) => {
         // remove any previous message that there are no maps
-        $('.no-maps-message').hide()
+        $(".no-maps-message").hide()
         // console.log(JSON.stringify(data, null, 2))
 
         // prepare some metadata about the map
@@ -3929,7 +3934,7 @@ const openUserProfile = async (handle, userId) => {
         mapListing.appendTo(mapListTemporaryContainer)
       })
       // append entire map list to page
-      mapListTemporaryContainer.appendTo('.info-window-content .more-maps')
+      mapListTemporaryContainer.appendTo(".info-window-content .more-maps")
 
       // if there are no maps
       if (!featureCollections.length) {
@@ -3937,20 +3942,20 @@ const openUserProfile = async (handle, userId) => {
         const el = $(
           `<li class="list-group-item no-maps-message">${handle} has no saved maps... yet.</li>`
         )
-        el.appendTo('.info-window-content .more-maps')
+        el.appendTo(".info-window-content .more-maps")
       }
 
       // open the info window
       expandInfoWindow(50, 50)
     })
-    .catch((err) => {
+    .catch(err => {
       console.error(JSON.stringify(err, null, 2))
     })
 }
 
 // show a list of markers on the map
 const openFeatureList = async () => {
-  app.mode = 'default'
+  app.mode = "default"
   const markers = app.markers.markers
 
   // create stats of this map
@@ -3980,25 +3985,25 @@ const openFeatureList = async () => {
 
   // add map summary stats to this
   const selectedMapListItem = createMapListItem(mapData, true, true, true, true)
-  const summary = $('.map-summary-stats', contentEl)
+  const summary = $(".map-summary-stats", contentEl)
   selectedMapListItem.appendTo(summary)
 
   // rename map when title clicked
-  $('h2 a', selectedMapListItem).addClass('rename-map-link')
-  $('h2 a', selectedMapListItem).attr('alt', 'Rename map')
-  $('h2 a', selectedMapListItem).attr('title', 'Rename map')
-  $('h2 a', selectedMapListItem).css('cursor', 'text')
-  $('h2 a', selectedMapListItem).on('click', (e) => {
+  $("h2 a", selectedMapListItem).addClass("rename-map-link")
+  $("h2 a", selectedMapListItem).attr("alt", "Rename map")
+  $("h2 a", selectedMapListItem).attr("title", "Rename map")
+  $("h2 a", selectedMapListItem).css("cursor", "text")
+  $("h2 a", selectedMapListItem).on("click", e => {
     e.preventDefault()
     openRenameMapForm()
   })
 
   // position and activate the first/last feature links
-  $('.first-feature-link', contentEl).on('click', (e) => {
+  $(".first-feature-link", contentEl).on("click", e => {
     e.preventDefault()
     app.markers.simulateClick(app.markers.markers[0])
   })
-  $('.last-feature-link', contentEl).on('click', (e) => {
+  $(".last-feature-link", contentEl).on("click", e => {
     e.preventDefault()
     app.markers.simulateClick(
       app.markers.markers[app.markers.markers.length - 1]
@@ -4006,14 +4011,14 @@ const openFeatureList = async () => {
   })
 
   const listEl = $('<ul class="feature-list list-group"></ul>')
-  markers.forEach((marker) => {
+  markers.forEach(marker => {
     const data = marker.featureData
     const date = DateDiff.asAge(data.createdAt)
     const addressTruncated =
-      data.properties.address.indexOf(',') >= 0
+      data.properties.address.indexOf(",") >= 0
         ? data.properties.address.substr(
             0,
-            data.properties.address.lastIndexOf(',')
+            data.properties.address.lastIndexOf(",")
           )
         : data.properties.address
     const attribution = `
@@ -4023,9 +4028,9 @@ ${date}<span class="nearby-address"> near ${addressTruncated}</span>.
 `
     const commentsString = data.properties.comments.length
       ? `<br />${data.properties.comments.length} comment${
-          data.properties.comments.length > 1 ? 's' : ''
+          data.properties.comments.length > 1 ? "s" : ""
         }`
-      : ''
+      : ""
 
     const item = $(
       `<li class="feature-list-item list-group-item" ws-feature-id="${data._id}">
@@ -4036,7 +4041,7 @@ ${date}<span class="nearby-address"> near ${addressTruncated}</span>.
     )
 
     // handle feature list item click
-    item.on('click', (e) => {
+    item.on("click", e => {
       const marker = app.markers.findById(data._id)
       app.markers.simulateClick(marker)
     })
@@ -4045,9 +4050,9 @@ ${date}<span class="nearby-address"> near ${addressTruncated}</span>.
   })
 
   // handle mouseover feature in list
-  $('.feature-list-item', listEl).on('mouseenter', (e) => {
+  $(".feature-list-item", listEl).on("mouseenter", e => {
     // pan to the relevant marker for this feature
-    const featureId = $(e.target).attr('ws-feature-id')
+    const featureId = $(e.target).attr("ws-feature-id")
     const marker = app.markers.findById(featureId)
     try {
       // deselect all
@@ -4068,40 +4073,40 @@ ${date}<span class="nearby-address"> near ${addressTruncated}</span>.
   })
 
   // handle click on username
-  $('.user-link', listEl).on('click', (e) => {
+  $(".user-link", listEl).on("click", e => {
     e.preventDefault()
     e.stopPropagation() // prevent list item click event from being triggered
     // open user profile for this user
-    const userId = $(e.target).attr('ws-user-id')
-    const userHandle = $(e.target).attr('ws-user-handle')
+    const userId = $(e.target).attr("ws-user-id")
+    const userHandle = $(e.target).attr("ws-user-handle")
     openUserProfile(userHandle, userId)
   })
 
   // handle mouseout from entire list
-  listEl.on('mouseleave', (e) => {
+  listEl.on("mouseleave", e => {
     // deselect all
     app.markers.deactivate()
   })
 
   // special message if no markers exist on this map
   if (!app.markers.markers.length) {
-    contentEl = $('.no-posts-container.hide').clone().removeClass('hide')
-    $('.map-select-link', contentEl).on('click', (e) => {
+    contentEl = $(".no-posts-container.hide").clone().removeClass("hide")
+    $(".map-select-link", contentEl).on("click", e => {
       e.preventDefault()
       if (app.auth.getToken()) openMapSelectorPanel()
-      else openSigninPanel('Log in to view your maps')
+      else openSigninPanel("Log in to view your maps")
     })
   }
 
   // add to page
-  $('.info-window-content').html('')
+  $(".info-window-content").html("")
   listEl.appendTo(contentEl)
-  contentEl.appendTo('.info-window-content')
+  contentEl.appendTo(".info-window-content")
 } // openFeatureList
 
 // show a list of markers on the map
 const openContributorsList = async () => {
-  app.mode = 'showcontributors'
+  app.mode = "showcontributors"
   const contributors = app.featureCollection.contributors
 
   // populate this map's details
@@ -4117,21 +4122,21 @@ const openContributorsList = async () => {
     updatedAt: app.featureCollection.timestamps.updatedAt,
   }
 
-  let contentEl = $('.contributor-list-container').clone()
-  contentEl.removeClass('hide')
+  let contentEl = $(".contributor-list-container").clone()
+  contentEl.removeClass("hide")
   contentEl.show()
 
   // add map summary stats to this
   const selectedMapListItem = createMapListItem(mapData, true, true, true, true)
-  const summary = $('.map-summary-stats', contentEl)
+  const summary = $(".map-summary-stats", contentEl)
   selectedMapListItem.appendTo(summary)
 
   // position and activate the first/last feature links
-  $('.first-feature-link', contentEl).on('click', (e) => {
+  $(".first-feature-link", contentEl).on("click", e => {
     e.preventDefault()
     app.markers.simulateClick(app.markers.markers[0])
   })
-  $('.last-feature-link', contentEl).on('click', (e) => {
+  $(".last-feature-link", contentEl).on("click", e => {
     e.preventDefault()
     app.markers.simulateClick(
       app.markers.markers[app.markers.markers.length - 1]
@@ -4139,8 +4144,8 @@ const openContributorsList = async () => {
   })
 
   // assemble the list
-  const listEl = $('.contributors-list', contentEl)
-  contributors.forEach((contributor) => {
+  const listEl = $(".contributors-list", contentEl)
+  contributors.forEach(contributor => {
     const item = $(`
 <li class="feature-list-item list-group-item">
   <a class="user-link"
@@ -4152,7 +4157,7 @@ const openContributorsList = async () => {
 `)
 
     // handle contributor list item click
-    item.on('click', (e) => {
+    item.on("click", e => {
       e.preventDefault()
       openUserProfile(contributor.handle, contributor._id)
     })
@@ -4161,20 +4166,20 @@ const openContributorsList = async () => {
   })
 
   // add to page
-  $('.info-window-content').html('')
+  $(".info-window-content").html("")
   listEl.appendTo(contentEl)
-  contentEl.appendTo('.info-window-content')
+  contentEl.appendTo(".info-window-content")
 } // openContributorsList
 
 // show a generic error message
-const openErrorPanel = (message) => {
-  app.mode = 'errorgeneric'
+const openErrorPanel = message => {
+  app.mode = "errorgeneric"
 
   // copy the user profile html into the infowindow
-  const infoWindowHTML = $('.error-container').html()
-  $('.info-window-content').html(infoWindowHTML)
-  $('.error-message').html(message)
-  $('.info-window-content .ok-button').on('click', (e) => {
+  const infoWindowHTML = $(".error-container").html()
+  $(".info-window-content").html(infoWindowHTML)
+  $(".error-message").html(message)
+  $(".info-window-content .ok-button").on("click", e => {
     collapseInfoWindow()
   })
 
@@ -4183,7 +4188,7 @@ const openErrorPanel = (message) => {
 }
 
 const activateForkButton = () => {
-  $('.info-window .fork-button').on('click', async (e) => {
+  $(".info-window .fork-button").on("click", async e => {
     e.preventDefault()
     const mapData = await app.myFetch(
       `${
@@ -4194,7 +4199,7 @@ const activateForkButton = () => {
     window.location.href = `${app.apis.wikistreets.staticMapUrl}/${mapData.publicId}`
   })
 
-  $('.info-window .cancel-link').on('click', async (e) => {
+  $(".info-window .cancel-link").on("click", async e => {
     e.preventDefault()
     collapseInfoWindow()
   })
@@ -4202,11 +4207,11 @@ const activateForkButton = () => {
 
 // show a particular user's profile
 const openForkPanel = () => {
-  app.mode = 'fork'
+  app.mode = "fork"
 
   // copy the user profile html into the infowindow
-  const infoWindowHTML = $('.fork-map-container').html()
-  $('.info-window-content').html(infoWindowHTML)
+  const infoWindowHTML = $(".fork-map-container").html()
+  $(".info-window-content").html(infoWindowHTML)
 
   // activate fork links
   activateForkButton()
@@ -4217,65 +4222,65 @@ const openForkPanel = () => {
 
 // show import data form
 const openImportDataPanel = () => {
-  app.mode = 'importdata'
+  app.mode = "importdata"
 
   // copy the user profile html into the infowindow
-  const contentEl = $('.import-data-container').clone()
-  contentEl.removeClass('hide')
+  const contentEl = $(".import-data-container").clone()
+  contentEl.removeClass("hide")
   contentEl.show()
-  $('.info-window-content').html('')
-  contentEl.appendTo('.info-window-content')
+  $(".info-window-content").html("")
+  contentEl.appendTo(".info-window-content")
 
   // create a decent file uploader for data files
   const fuploader = new FUploader({
     container: {
-      el: document.querySelector('.info-window-content .file-upload-container'),
-      activeClassName: 'active',
+      el: document.querySelector(".info-window-content .file-upload-container"),
+      activeClassName: "active",
     },
     fileSelector: {
       el: document.querySelector('.info-window-content input[type="file"]'),
     },
     buttonContainer: {
-      el: document.querySelector('.info-window-content .button-container'),
+      el: document.querySelector(".info-window-content .button-container"),
     },
     thumbsContainer: {
-      el: document.querySelector('.info-window-content .thumbs-container'),
-      thumbClassName: 'thumb',
-      thumbImgClassName: 'thumb-img',
-      closeIconImgSrc: '/static/images/material_design_icons/close-24px.svg',
-      closeIconClassName: 'close-icon',
-      defaultThumbImg: '/static/images/material_design_icons/map_white-24.svg',
+      el: document.querySelector(".info-window-content .thumbs-container"),
+      thumbClassName: "thumb",
+      thumbImgClassName: "thumb-img",
+      closeIconImgSrc: "/static/images/material_design_icons/close-24px.svg",
+      closeIconClassName: "close-icon",
+      defaultThumbImg: "/static/images/material_design_icons/map_white-24.svg",
       // closeIconCallback: removeFeatureImage,
     },
     dropContainer: {
-      el: document.querySelector('.info-window-content .drop-container'),
-      activeClassName: 'active',
+      el: document.querySelector(".info-window-content .drop-container"),
+      activeClassName: "active",
     },
     form: {
-      el: document.querySelector('.info-window-content .feature-form'),
+      el: document.querySelector(".info-window-content .feature-form"),
       droppedFiles: [], // nothing yet
     },
   })
   fuploader.init() // initalize settings
 
   //handle cancel button
-  $('.cancel-link', contentEl).on('click', (e) => {
+  $(".cancel-link", contentEl).on("click", e => {
     e.preventDefault()
     collapseInfoWindow()
   })
 
   // handle form submission
-  $('form.import-data-form', contentEl).on('submit', async (e) => {
+  $("form.import-data-form", contentEl).on("submit", async e => {
     // prevent page reload
     e.preventDefault()
 
     // show the spinner till done
-    showSpinner($('.info-window'))
+    showSpinner($(".info-window"))
 
     // force user login before anything can be submitted
     if (!app.auth.getToken()) {
       // open signin form
-      openSigninPanel('Log in to import data.')
+      openSigninPanel("Log in to import data.")
       return // exit function
     }
 
@@ -4283,7 +4288,7 @@ const openImportDataPanel = () => {
     let formData = new FormData(e.target)
 
     // remove the input type='file' data, since we don't need it
-    formData.delete('files-excuse')
+    formData.delete("files-excuse")
 
     // add any drag-and-dropped files to this
     const files = fuploader.getDroppedFiles()
@@ -4291,17 +4296,17 @@ const openImportDataPanel = () => {
 
     // add files from array to formdata
     $.each(files, function (i, file) {
-      formData.append('files', file)
+      formData.append("files", file)
     })
 
     // post to server
     app
       .myFetch(
         app.apis.wikistreets.importFeatureCollectionUrl,
-        'POST',
+        "POST",
         formData
       )
-      .then((res) => {
+      .then(res => {
         if (!res.status) {
           openErrorPanel(res.message)
           return
@@ -4322,21 +4327,21 @@ const openImportDataPanel = () => {
         collapseInfoWindow()
 
         // hide spinner when done
-        hideSpinner($('.info-window'))
+        hideSpinner($(".info-window"))
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(`ERROR: ${JSON.stringify(err, null, 2)}`)
         // open error panel
         openErrorPanel(
-          'Hmmm... something went wrong.  Please try posting again with up to 10 images.'
+          "Hmmm... something went wrong.  Please try posting again with up to 10 images."
         )
       })
   }) // import-data-form submit
 
   // activate add image link
-  $('.info-window-content .add-photos-link').on('click', (e) => {
+  $(".info-window-content .add-photos-link").on("click", e => {
     e.preventDefault()
-    $('.info-window-content input[type="file"]').trigger('click')
+    $('.info-window-content input[type="file"]').trigger("click")
   })
 
   // open the info window
@@ -4344,7 +4349,7 @@ const openImportDataPanel = () => {
 }
 // show the list of this user's maps and option to rename this map
 const openMapSelectorPanel = async () => {
-  app.mode = 'selectmap'
+  app.mode = "selectmap"
 
   // update list of maps when user expands map selector dropdown
 
@@ -4358,8 +4363,8 @@ const openMapSelectorPanel = async () => {
   const data = await app.user.fetch()
 
   // copy the user map selector html into the infowindow
-  const infoWindowHTML = $('.select-map-container').html()
-  $('.info-window-content').html(infoWindowHTML)
+  const infoWindowHTML = $(".select-map-container").html()
+  $(".info-window-content").html(infoWindowHTML)
 
   // populate this map's details
   const mapData = {
@@ -4378,7 +4383,7 @@ const openMapSelectorPanel = async () => {
   const selectedMapListItem = createMapListItem(mapData, true, true, true, true)
 
   // show the updated map data
-  $('.info-window .map-list-item-template').replaceWith(selectedMapListItem)
+  $(".info-window .map-list-item-template").replaceWith(selectedMapListItem)
 
   // create first/last feature button links
   if (app.markers.markers.length) {
@@ -4388,13 +4393,13 @@ const openMapSelectorPanel = async () => {
         <button class="navigate-features-link first-feature-link btn btn-secondary col-6">First post</button>
         <button class="navigate-features-link last-feature-link btn btn-secondary col-6">Latest post</button>
       </div>
-    `).prependTo('.info-window-content')
+    `).prependTo(".info-window-content")
     // position and activate the first/last feature links
-    $('.first-feature-link').on('click', (e) => {
+    $(".first-feature-link").on("click", e => {
       e.preventDefault()
       app.markers.simulateClick(app.markers.markers[0])
     })
-    $('.last-feature-link').on('click', (e) => {
+    $(".last-feature-link").on("click", e => {
       e.preventDefault()
       app.markers.simulateClick(
         app.markers.markers[app.markers.markers.length - 1]
@@ -4406,8 +4411,8 @@ const openMapSelectorPanel = async () => {
   const featureCollections = data.featureCollections
 
   // place links to the maps into the map selector
-  $('.info-window-content .more-maps').html('') // wipe out any previously-generated list
-  let mapListTemporaryContainer = $('<div>')
+  $(".info-window-content .more-maps").html("") // wipe out any previously-generated list
+  let mapListTemporaryContainer = $("<div>")
   let numMoreMaps = 0
   featureCollections.map((data, i, arr) => {
     // skip the map already displaying
@@ -4415,7 +4420,7 @@ const openMapSelectorPanel = async () => {
     numMoreMaps++
 
     // remove any previous message that there are no maps
-    $('.no-maps-message').hide()
+    $(".no-maps-message").hide()
 
     // prepare some metadata about the map
     data.numForks = data.forks ? data.forks.length : 0
@@ -4429,14 +4434,14 @@ const openMapSelectorPanel = async () => {
     mapListing.appendTo(mapListTemporaryContainer)
   })
   // append entire map list to page
-  mapListTemporaryContainer.appendTo('.info-window-content .more-maps')
+  mapListTemporaryContainer.appendTo(".info-window-content .more-maps")
 
   if (!numMoreMaps) {
     // create new link
     const el = $(
       `<p class="no-maps-message">You have no other maps... yet.</p>`
     )
-    el.appendTo('.info-window-content .more-maps')
+    el.appendTo(".info-window-content .more-maps")
   }
 
   // open the info window
