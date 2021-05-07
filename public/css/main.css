@@ -162,7 +162,7 @@ ul {
     "DDG_ProximaNova_UI_5", "DDG_ProximaNova_UI_6", "Proxima Nova",
     "Helvetica Neue", "Helvetica", "Segoe UI", "Nimbus Sans L",
     "Liberation Sans", "Open Sans", FreeSans, Arial, sans-serif;
-  background-color: #fff; /* #ffffe1; */
+  background-color:  #fffffa; /* transparent; /* #ffffe1; */
   color: #33332c;
   width: 240px;
   margin-left: -120px;
@@ -174,7 +174,7 @@ ul {
 .btn-secondary:not(:disabled):not(.disabled):active:focus {
   /* override bootstrap garbage */
   color: #33332c;
-  background-color: #fff; /* #ffffe1; */
+  background-color: #fffffa; /* #ffffe1; */
   border: none;
   box-shadow: none;
 }
@@ -269,7 +269,7 @@ ul {
   bottom: 0;
   width: 100vw;
   height: 50px;
-  background-color: transparent; /* #ffffe1; */
+  background-color: #fffffa; /* transparent; /* #ffffe1; */
   /* border-top: 1px solid #FFFFE1; */
   padding: 0px 20px 0 20px;
   margin-bottom: 0px;
