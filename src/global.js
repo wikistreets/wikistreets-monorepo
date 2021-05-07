@@ -4059,7 +4059,7 @@ ${date}<span class="nearby-address"> near ${addressTruncated}</span>.
       app.markers.deactivate()
       // select the target marker
       app.markers.activate(marker)
-      app.featureCollection.element.panTo(marker.getShapeCenter()) // all markers should have this implemented by us
+      // app.featureCollection.element.panTo(marker.getShapeCenter()) // all markers should have this implemented by us
 
       // if (marker.featureData.geometry.type == 'Point') {
       //   app.featureCollection.element.panTo(marker.getLatLng())

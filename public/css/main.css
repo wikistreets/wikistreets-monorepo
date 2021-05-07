@@ -359,7 +359,8 @@ button.dropdown-toggle img {
 /* map selector */
 .more-maps article {
   border: 1px solid rgba(0, 0, 0, 0.125);
-  border-bottom-width: 0px;
+  /* border-bottom-width: 0px; */
+  border-width: 0 0 1px 0;
   margin-bottom: 0px;
   padding: 10px;
   padding-bottom: 0px;
@@ -738,6 +739,8 @@ button.dropdown-toggle img {
 
 .feature-list-item {
   padding-top: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-width: 0 0 1px 0;
 }
 
 /** desktop version **/
