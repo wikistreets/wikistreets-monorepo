@@ -166,7 +166,8 @@ ul {
   color: #33332c;
   width: 240px;
   margin-left: -120px;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: 0;
   box-shadow: none;
 }
 .btn-secondary:not(:disabled):not(.disabled):active,
@@ -279,7 +280,7 @@ ul {
 /* info-window context dropdown menu */
 .info-window .dropdown-menu {
   border: 1px solid #cccccc;
-  background-color: inherit /* #ffffe1; */
+  background-color: #fffffa; /* #ffffe1; */
   color: #33332c;
 }
 .info-window .dropdown-item {
