@@ -810,7 +810,7 @@ button.dropdown-toggle img {
   }
   .map-summary-stats,
   .user-stats {
-    border-bottom: 1px solid #ffffe1;
+    border-bottom: 1px solid transparent;
     margin-bottom: 20px;
   }
   .feature-list-container .map-summary-stats {
