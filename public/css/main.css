@@ -40,7 +40,7 @@ h1.logo {
   top: -10px;
   left: 50%;
   margin-left: -55px; /* half the width */
-  background-color: #fff; /* #ffffe1; */
+  background-color:  #f5f5ff; /* #ffffe1; */
   border: 1px solid #fff; /* #ffffe1; */
   color: #33332c;
   cursor: pointer;
