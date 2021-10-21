@@ -1,10 +1,10 @@
-const sharp = require('sharp')
-const jo = require('jpeg-autorotate')
-const uuidv4 = require('uuid/v4')
-const util = require('util')
-const path = require('path')
-const fs = require('fs')
-const { resolve } = require('path')
+const sharp = require("sharp")
+const jo = require("jpeg-autorotate")
+const uuidv4 = require("uuid/v4")
+const util = require("util")
+const path = require("path")
+const fs = require("fs")
+const { resolve } = require("path")
 
 // create a promisified version of fs.unlink
 const fsunlink = util.promisify(fs.unlink)
@@ -26,7 +26,7 @@ const reorientJpeg = async (buffer, quality = 100) => {
       }
       return data
     })
-    .catch((error) => {
+    .catch(error => {
       // console.log('An error occurred when rotating the file: ' + error.message)
       return buffer
     })
@@ -35,12 +35,12 @@ const reorientJpeg = async (buffer, quality = 100) => {
 
 // the image resizing, reorienting class
 function ImageService({ config }) {
-  this.store = async (buffer) => {
+  this.store = async buffer => {
     // store buffer to image file
     // auto-rotate jpegs
-    reoriented = await reorientJpeg(buffer) // returns false if messed up
-    if (!reoriented) console.log('no buffer from jpeg-autorotate')
-    buffer = reoriented ? reoriented : buffer
+    // reoriented = await reorientJpeg(buffer) // returns false if messed up
+    // if (!reoriented) console.log('no buffer from jpeg-autorotate')
+    // buffer = reoriented ? reoriented : buffer
 
     // will hold filename and dimensions
     const filename = this.filename()
@@ -56,9 +56,9 @@ function ImageService({ config }) {
         fit: sharp.fit.inside,
         withoutEnlargement: true,
       })
-      .toFormat('jpg')
+      .toFormat("jpg")
       .toFile(filepath)
-      .then((info) => {
+      .then(info => {
         // store dimensions
         image.dimensions = {
           width: info.width,
@@ -71,7 +71,7 @@ function ImageService({ config }) {
     return image
   } // store
 
-  this.delete = async (filename) => {
+  this.delete = async filename => {
     // remove this image
     return fsunlink(this.filepath(filename))
   }
@@ -81,7 +81,7 @@ function ImageService({ config }) {
     return `${uuidv4()}.jpg`
   }
 
-  this.filepath = (filename) => {
+  this.filepath = filename => {
     // get full path and filename
     return path.resolve(`${config.uploadDirectory}/${filename}`)
   }

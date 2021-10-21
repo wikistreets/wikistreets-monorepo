@@ -1,35 +1,35 @@
 // express
-const express = require('express')
-const { body, param, query, validationResult } = require('express-validator')
-const jwt = require('jsonwebtoken')
-const passport = require('passport')
-const passportConfig = require('../passportConfig')
+const express = require("express")
+const { body, param, query, validationResult } = require("express-validator")
+const jwt = require("jsonwebtoken")
+const passport = require("passport")
+const passportConfig = require("../passportConfig")
 
 // middleware
 // const _ = require('lodash') // utility functions for arrays, numbers, objects, strings, etc.
-const multer = require('multer') // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
+const multer = require("multer") // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
 // const path = require('path')
 
 // database schemas and models
-const { FeatureCollection } = require('../models/feature-collection')
-const { Feature } = require('../models/feature')
+const { FeatureCollection } = require("../models/feature-collection")
+const { Feature } = require("../models/feature")
 // const { File } = require('../models/file')
-const { Comment } = require('../models/comment')
-const { User } = require('../models/user')
+const { Comment } = require("../models/comment")
+const { User } = require("../models/user")
 
 // image editing service
-const { ImageService } = require('../services/ImageService')
-const handleImages = require('../middlewares/handle-images.js') // our own image handler
-const user = require('../models/user')
+const { ImageService } = require("../services/ImageService")
+const handleImages = require("../middlewares/handle-images.js") // our own image handler
+const user = require("../models/user")
 
 // map-related middleware
-const turf = require('@turf/turf')
-const geojsonCrunch = require('../middlewares/geojson-crunch.js') // our own geojson data middleware
+const turf = require("@turf/turf")
+const geojsonCrunch = require("../middlewares/geojson-crunch.js") // our own geojson data middleware
 
 // email service
-const { EmailService } = require('../services/EmailService')
-const { database } = require('faker')
-const { geometry } = require('@turf/turf')
+const { EmailService } = require("../services/EmailService")
+const { database } = require("faker")
+const { geometry } = require("@turf/turf")
 
 const featureRouter = ({ config }) => {
   // create an express router
@@ -39,7 +39,7 @@ const featureRouter = ({ config }) => {
   passportConfig({ config: config.jwt })
 
   // our passport strategies in action
-  const passportJWT = passport.authenticate('jwt', { session: false })
+  const passportJWT = passport.authenticate("jwt", { session: false })
 
   // set up our image editing service
   const markerImageService = new ImageService({ config: config.markers })
@@ -61,10 +61,10 @@ const featureRouter = ({ config }) => {
 
   // filter out non-images
   const multerFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image')) {
+    if (file.mimetype.startsWith("image")) {
       cb(null, true)
     } else {
-      cb('Please upload only images.', false)
+      cb("Please upload only images.", false)
     }
   }
 
@@ -72,18 +72,18 @@ const featureRouter = ({ config }) => {
     storage: storage,
     fileFilter: multerFilter,
     limits: {
-      fileSize: config.markers.maxImageFileSize,
+      fileSize: config.markers.maxImageFileSize * 1000000, // in bytes
     },
     onError: function (err, next) {
-      console.log('error', err)
+      console.log("error", err)
       next(err)
     },
   })
 
   // route for HTTP GET requests to an feature's JSON data
   router.get(
-    '/json',
-    [query('featureCollectionId').not().isEmpty().trim()],
+    "/json",
+    [query("featureCollectionId").not().isEmpty().trim()],
     (req, res) => {
       let errors = validationResult(req)
       const featureCollectionId = req.query.featureCollectionId // get featureCollectionId from query string
@@ -95,7 +95,7 @@ const featureRouter = ({ config }) => {
           } else {
             throw err
           }
-        }).populate('user', 'handle') // populate each doc with the user's handle
+        }).populate("user", "handle") // populate each doc with the user's handle
       } else {
         // validation error
         const err = JSON.stringify(errors)
@@ -131,8 +131,8 @@ const featureRouter = ({ config }) => {
 
   // get a given user's markers
   router.get(
-    '/user/:userId',
-    [param('userId').not().isEmpty().trim()],
+    "/user/:userId",
+    [param("userId").not().isEmpty().trim()],
     (req, res) => {
       let errors = validationResult(req)
       const userId = req.params.userId
@@ -158,16 +158,16 @@ const featureRouter = ({ config }) => {
 
   // route for HTTP GET requests to delete a marker
   router.get(
-    '/delete/:featureId',
+    "/delete/:featureId",
     passportJWT, // jwt authentication
     [
-      query('featureCollectionId').not().isEmpty().trim(),
-      param('featureId').not().isEmpty().trim(),
+      query("featureCollectionId").not().isEmpty().trim(),
+      param("featureId").not().isEmpty().trim(),
     ],
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map or feature identifier'
+        throw "Invalid map or feature identifier"
       }
 
       // extract necessary info
@@ -189,19 +189,19 @@ const featureRouter = ({ config }) => {
           },
           { new: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         )
-          .then((featureCollection) => {
+          .then(featureCollection => {
             if (!featureCollection)
-              throw 'You do not have permission to modify this map'
+              throw "You do not have permission to modify this map"
             // console.log(JSON.stringify(map, null, 2))
             // save changes
             // featureCollection.save()
             // return the response to client
             res.json({
               status: true,
-              message: 'success',
+              message: "success",
             })
           })
-          .catch((err) => {
+          .catch(err => {
             // invalid map or feature id
             return res.status(400).json({
               status: false,
@@ -211,7 +211,7 @@ const featureRouter = ({ config }) => {
           })
       } else {
         // invalid map or feature id
-        const err = 'Invalid map or feature identifiers.'
+        const err = "Invalid map or feature identifiers."
         return res.status(400).json({
           status: false,
           message: err,
@@ -223,18 +223,18 @@ const featureRouter = ({ config }) => {
 
   // route for HTTP POST requests to create a new marker
   router.post(
-    '/create',
+    "/create",
     passportJWT, // jwt authentication
-    upload.array('files', config.markers.maxFiles), // multer file upload
+    upload.array("files", config.markers.maxFiles), // multer file upload
     handleImages(markerImageService), // sharp file editing
     [
-      body('geometryType').not().isEmpty().trim(),
-      body('geometryCoordinates').not().isEmpty().trim(),
-      body('title').not().isEmpty().trim().escape(),
-      body('address').trim().escape(),
-      body('zoom').not().isEmpty().trim(),
-      body('body').trim(),
-      body('featureCollectionTitle').trim().escape(),
+      body("geometryType").not().isEmpty().trim(),
+      body("geometryCoordinates").not().isEmpty().trim(),
+      body("title").not().isEmpty().trim().escape(),
+      body("address").trim().escape(),
+      body("zoom").not().isEmpty().trim(),
+      body("body").trim(),
+      body("featureCollectionTitle").trim().escape(),
     ],
     geojsonCrunch.parseCoords(), // convert coordinate string to proper array
     geojsonCrunch.addCenter(), // add a center point, based on geojson coords
@@ -242,13 +242,13 @@ const featureRouter = ({ config }) => {
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map or feature identifier'
+        throw "Invalid map or feature identifier"
       }
 
       const featureCollectionId = req.body.featureCollectionId
       const featureCollectionTitle = req.body.featureCollectionTitle
       const data = {
-        type: 'Feature',
+        type: "Feature",
         geometry: {
           type: req.body.geometryType,
           coordinates: req.body.geometryCoordinates,
@@ -269,7 +269,7 @@ const featureRouter = ({ config }) => {
 
       // reject posts with no map
       if (!featureCollectionId) {
-        const err = 'No map specified.'
+        const err = "No map specified."
         return res.status(400).json({
           status: false,
           message: err,
@@ -278,7 +278,7 @@ const featureRouter = ({ config }) => {
       }
       // reject posts with no useful data
       else if (!data.properties.photos.length && !data.properties.body) {
-        const err = 'You submitted an empty post.... please be reasonable.'
+        const err = "You submitted an empty post.... please be reasonable."
         return res.status(400).json({
           status: false,
           message: err,
@@ -287,7 +287,7 @@ const featureRouter = ({ config }) => {
       }
       // reject posts with no address or lat/lng
       else if (!(data.geometry.coordinates && data.geometry.type)) {
-        const err = 'Please include an address with your post'
+        const err = "Please include an address with your post"
         return res.status(400).json({
           status: false,
           message: err,
@@ -327,20 +327,20 @@ const featureRouter = ({ config }) => {
           updates,
           { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         )
-          .populate('contributors', ['_id', 'handle'])
-          .populate('features.user', ['_id', 'handle'])
-          .populate('features.properties.comments.user', ['_id', 'handle'])
-          .populate('subscribers', [
-            '_id',
-            'handle',
-            'email',
-            'notifications.email',
+          .populate("contributors", ["_id", "handle"])
+          .populate("features.user", ["_id", "handle"])
+          .populate("features.properties.comments.user", ["_id", "handle"])
+          .populate("subscribers", [
+            "_id",
+            "handle",
+            "email",
+            "notifications.email",
           ])
-          .catch((err) => {
+          .catch(err => {
             console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
           })
 
-        if (!featureCollection) throw 'No map found.'
+        if (!featureCollection) throw "No map found."
         // console.log(`MAP: ${JSON.stringify(featureCollection, null, 2)}`)
 
         // tack on the current user to the feature so its sent back to client
@@ -379,7 +379,7 @@ const featureRouter = ({ config }) => {
         if (featureCollection && featureCollection.subscribers) {
           const featureCollectionTitle = decodeURI(featureCollection.title)
           const featureTitle = decodeURI(targetFeature.properties.title)
-          featureCollection.subscribers.forEach((subscriber) => {
+          featureCollection.subscribers.forEach(subscriber => {
             // don't send email to the person who commented
             if (subscriber._id != posterId) {
               const recipient = subscriber
@@ -388,10 +388,10 @@ const featureRouter = ({ config }) => {
               if (recipient.notifications.email) {
                 const featureCollectionPhrase = featureCollection.title
                   ? `, on the map, '${featureCollectionTitle}'`
-                  : ' on an unnamed map'
+                  : " on an unnamed map"
                 const imagesPhrase = data.properties.photos.length
-                  ? '[images not displayed]'
-                  : ''
+                  ? "[images not displayed]"
+                  : ""
                 const bodyPhrase = `\n\n"""\n${data.properties.body.substr(
                   0,
                   100
@@ -416,7 +416,7 @@ const featureRouter = ({ config }) => {
         // return the response to client
         res.json({
           status: true,
-          message: 'success',
+          message: "success",
           data: feature,
         })
       } catch (err) {
@@ -435,7 +435,7 @@ const featureRouter = ({ config }) => {
         //return failure response
         return res.status(500).json({
           status: false,
-          message: 'An error occurred trying to save this feature',
+          message: "An error occurred trying to save this feature",
           err: err,
         })
       }
@@ -444,20 +444,20 @@ const featureRouter = ({ config }) => {
 
   // route for HTTP POST requests to create a new marker
   router.post(
-    '/edit',
+    "/edit",
     passportJWT, // jwt authentication
-    upload.array('files', config.markers.maxFiles), // multer file upload
+    upload.array("files", config.markers.maxFiles), // multer file upload
     handleImages(markerImageService), // sharp file editing
     [
-      body('featureCollectionId').not().isEmpty().trim(),
-      body('featureId').not().isEmpty().trim(),
-      body('geometryType').not().isEmpty().trim(),
-      body('geometryCoordinates').not().isEmpty().trim(),
-      body('title').not().isEmpty().trim().escape(),
-      body('address').trim().escape(),
-      body('zoom').not().isEmpty().trim(),
-      body('body').trim(),
-      body('files_to_delete').trim().escape(),
+      body("featureCollectionId").not().isEmpty().trim(),
+      body("featureId").not().isEmpty().trim(),
+      body("geometryType").not().isEmpty().trim(),
+      body("geometryCoordinates").not().isEmpty().trim(),
+      body("title").not().isEmpty().trim().escape(),
+      body("address").trim().escape(),
+      body("zoom").not().isEmpty().trim(),
+      body("body").trim(),
+      body("files_to_delete").trim().escape(),
     ],
     geojsonCrunch.parseCoords(), // convert coordinate string to proper array
     geojsonCrunch.addCenter(), // add a center point, based on geojson coords
@@ -465,7 +465,7 @@ const featureRouter = ({ config }) => {
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map or feature details'
+        throw "Invalid map or feature details"
       }
 
       const featureCollectionId = req.body.featureCollectionId
@@ -473,12 +473,12 @@ const featureRouter = ({ config }) => {
 
       // files to delete
       const filesToDelete = req.body.files_to_delete
-        ? req.body.files_to_delete.split(',')
+        ? req.body.files_to_delete.split(",")
         : []
 
       const data = {
         _id: featureId,
-        type: 'Feature',
+        type: "Feature",
         geometry: {
           type: req.body.geometryType,
           coordinates: req.body.geometryCoordinates,
@@ -498,7 +498,7 @@ const featureRouter = ({ config }) => {
 
       // reject posts with no map
       if (!featureCollectionId || !featureId) {
-        const err = 'Map or marker not specified.'
+        const err = "Map or marker not specified."
         return res.status(400).json({
           status: false,
           message: err,
@@ -514,34 +514,34 @@ const featureRouter = ({ config }) => {
           {
             publicId: featureCollectionId,
             $or: [{ limitContributors: false }, { contributors: req.user }],
-            'features._id': featureId,
+            "features._id": featureId,
           },
           {
             $set: {
               updatedAt: new Date(),
-              'features.$.updatedAt': new Date(),
+              "features.$.updatedAt": new Date(),
               // centerPoint: data.position, // map's center point
-              'features.$.user': data.user,
-              'features.$.geometry.type': data.geometry.type,
-              'features.$.geometry.coordinates': data.geometry.coordinates,
-              'features.$.properties.title': data.properties.title,
-              'features.$.properties.body': data.properties.body,
-              'features.$.properties.address': data.properties.address,
-              'features.$.properties.center': data.properties.center,
-              'features.$.properties.bbox': data.properties.bbox,
-              'features.$.properties.zoom': data.properties.zoom,
+              "features.$.user": data.user,
+              "features.$.geometry.type": data.geometry.type,
+              "features.$.geometry.coordinates": data.geometry.coordinates,
+              "features.$.properties.title": data.properties.title,
+              "features.$.properties.body": data.properties.body,
+              "features.$.properties.address": data.properties.address,
+              "features.$.properties.center": data.properties.center,
+              "features.$.properties.bbox": data.properties.bbox,
+              "features.$.properties.zoom": data.properties.zoom,
             },
             $addToSet: {
-              'features.$.subscribers': req.user, // subscribe to this feature's notifications
+              "features.$.subscribers": req.user, // subscribe to this feature's notifications
               contributors: req.user, // add as contributor to this map
             },
           },
           { new: true }
         )
-          .populate('contributors', ['_id', 'handle'])
-          .populate('features.user', ['_id', 'handle'])
-          .populate('features.properties.comments.user', ['_id', 'handle'])
-          .catch((err) => {
+          .populate("contributors", ["_id", "handle"])
+          .populate("features.user", ["_id", "handle"])
+          .populate("features.properties.comments.user", ["_id", "handle"])
+          .catch(err => {
             console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
           })
 
@@ -551,11 +551,11 @@ const featureRouter = ({ config }) => {
             {
               publicId: featureCollectionId,
               $or: [{ limitContributors: false }, { contributors: req.user }],
-              'features._id': featureId,
+              "features._id": featureId,
             },
             {
               $pull: {
-                'features.$.properties.photos': {
+                "features.$.properties.photos": {
                   filename: {
                     $in: filesToDelete,
                   },
@@ -564,10 +564,10 @@ const featureRouter = ({ config }) => {
             },
             { new: true }
           )
-            .populate('contributors', ['_id', 'handle'])
-            .populate('features.user', ['_id', 'handle'])
-            .populate('features.properties.comments.user', ['_id', 'handle'])
-            .catch((err) => {
+            .populate("contributors", ["_id", "handle"])
+            .populate("features.user", ["_id", "handle"])
+            .populate("features.properties.comments.user", ["_id", "handle"])
+            .catch(err => {
               console.log(`ERROR DELETING: ${err}`)
             })
         }
@@ -579,21 +579,21 @@ const featureRouter = ({ config }) => {
             {
               publicId: featureCollectionId,
               $or: [{ limitContributors: false }, { contributors: req.user }],
-              'features._id': featureId,
+              "features._id": featureId,
             },
             {
               $push: {
-                'features.$.properties.photos': {
+                "features.$.properties.photos": {
                   $each: filesToAdd,
                 },
               },
             },
             { new: true }
           )
-            .populate('contributors', ['_id', 'handle'])
-            .populate('features.user', ['_id', 'handle'])
-            .populate('features.properties.comments.user', ['_id', 'handle'])
-            .catch((err) => {
+            .populate("contributors", ["_id", "handle"])
+            .populate("features.user", ["_id", "handle"])
+            .populate("features.properties.comments.user", ["_id", "handle"])
+            .catch(err => {
               console.log(`ERROR ADDING: ${err}`)
             })
         }
@@ -627,7 +627,7 @@ const featureRouter = ({ config }) => {
         // return the response to client
         res.json({
           status: true,
-          message: 'success',
+          message: "success",
           data: featureCollection, // return full map for now, rather than just the updated feature because it's easier
         })
       } catch (err) {
@@ -646,7 +646,7 @@ const featureRouter = ({ config }) => {
         //return failure response
         return res.status(500).json({
           status: false,
-          message: 'An error occurred trying to save this feature',
+          message: "An error occurred trying to save this feature",
           err: err,
         })
       }
@@ -655,19 +655,19 @@ const featureRouter = ({ config }) => {
 
   // route for HTTP POST requests to create a new comment
   router.post(
-    '/comments/create',
+    "/comments/create",
     passportJWT, // jwt authentication
-    upload.array('files', config.markers.maxFiles), // multer file upload
+    upload.array("files", config.markers.maxFiles), // multer file upload
     handleImages(markerImageService), // sharp file editing
     [
-      body('body').trim(),
-      body('featureCollectionId').not().isEmpty().trim(),
-      body('featureId').not().isEmpty().trim(),
+      body("body").trim(),
+      body("featureCollectionId").not().isEmpty().trim(),
+      body("featureId").not().isEmpty().trim(),
     ],
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map or feature identifier'
+        throw "Invalid map or feature identifier"
       }
 
       const featureCollectionId = req.body.featureCollectionId
@@ -681,7 +681,7 @@ const featureRouter = ({ config }) => {
       // reject posts with no map or no feature
       if (!data.photos.length && !data.body) {
         console.log(`ERRORS: ${JSON.stringify(errors, null, 2)}`)
-        const err = 'Invalid map data.... please be reconsider your choices.'
+        const err = "Invalid map data.... please be reconsider your choices."
         return res.status(400).json({
           status: false,
           message: err,
@@ -702,44 +702,44 @@ const featureRouter = ({ config }) => {
           {
             publicId: featureCollectionId,
             // $or: [{ limitContributors: false }, { contributors: req.user }], // currently allowing any users to comment... uncommemnt this to only allow listed contributors
-            'features._id': featureId,
+            "features._id": featureId,
           },
           {
             $set: {
               // update timestamps
               updatedAt: new Date(),
-              'features.$.updatedAt': new Date(),
+              "features.$.updatedAt": new Date(),
             },
             // add the comment
             $push: {
-              'features.$.properties.comments': comment,
+              "features.$.properties.comments": comment,
             },
             // add this user as a subscriber to this feature
             $addToSet: {
-              'features.$.subscribers': req.user,
+              "features.$.subscribers": req.user,
             },
           },
           { new: true }
         )
-          .populate('contributors', ['_id', 'handle', 'email'])
-          .populate('features.subscribers', [
-            '_id',
-            'handle',
-            'email',
-            'notifications.email',
+          .populate("contributors", ["_id", "handle", "email"])
+          .populate("features.subscribers", [
+            "_id",
+            "handle",
+            "email",
+            "notifications.email",
           ])
-          .populate('features.properties.comments.user', ['_id', 'handle'])
-          .populate('features.user', ['_id', 'handle'])
-          .catch((err) => {
+          .populate("features.properties.comments.user", ["_id", "handle"])
+          .populate("features.user", ["_id", "handle"])
+          .catch(err => {
             errors = err
             console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
           })
 
-        if (!featureCollection) throw 'No map found'
+        if (!featureCollection) throw "No map found"
 
         // find the feature that has just been commented on
         let targetFeature = false
-        featureCollection.features.forEach(async (feature) => {
+        featureCollection.features.forEach(async feature => {
           // only send emails if it's not the user themselves who commented
           if (feature._id == featureId) {
             targetFeature = feature
@@ -751,7 +751,7 @@ const featureRouter = ({ config }) => {
         if (targetFeature && targetFeature.subscribers) {
           const featureCollectionTitle = decodeURI(featureCollection.title)
           const featureTitle = decodeURI(targetFeature.properties.title)
-          targetFeature.subscribers.forEach((subscriber) => {
+          targetFeature.subscribers.forEach(subscriber => {
             // don't send email to the person who commented
             if (subscriber._id != commenterId) {
               const recipient = subscriber
@@ -760,10 +760,10 @@ const featureRouter = ({ config }) => {
               if (recipient.notifications.email) {
                 const mapPhrase = featureCollection.title
                   ? `, on the map, '${featureCollectionTitle}'`
-                  : ''
+                  : ""
                 const imagesPhrase = data.photos.length
-                  ? '[images not displayed]'
-                  : ''
+                  ? "[images not displayed]"
+                  : ""
                 const bodyPhrase = `\n\n"""\n${data.body.substr(
                   0,
                   100
@@ -793,14 +793,14 @@ const featureRouter = ({ config }) => {
             $inc: { numComments: 1 },
           },
           { new: true }
-        ).catch((err) => {
+        ).catch(err => {
           errors = err
           console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
         })
 
         // return the comment data to client
         let foundIt = false
-        featureCollection.features.forEach((feature) => {
+        featureCollection.features.forEach(feature => {
           // find the feature at hand
           if (feature._id == featureId) {
             const targetFeature = feature
@@ -809,7 +809,7 @@ const featureRouter = ({ config }) => {
             const commentData = feature.properties.comments[lastCommentIndex]
             return res.json({
               status: true,
-              message: 'success',
+              message: "success",
               data: commentData, // return just the comment in question
             })
           }
@@ -832,7 +832,7 @@ const featureRouter = ({ config }) => {
         //return failure response
         return res.status(500).json({
           status: false,
-          message: 'An error occurred trying to save this feature',
+          message: "An error occurred trying to save this feature",
           err: err,
         })
       }
@@ -841,17 +841,17 @@ const featureRouter = ({ config }) => {
 
   // route for HTTP POST requests to delete a marker
   router.get(
-    '/comments/delete/:commentId',
+    "/comments/delete/:commentId",
     passportJWT, // jwt authentication
     [
-      param('commentId').not().isEmpty().trim(),
-      query('featureCollectionId').not().isEmpty().trim(),
-      query('featureId').not().isEmpty().trim(),
+      param("commentId").not().isEmpty().trim(),
+      query("featureCollectionId").not().isEmpty().trim(),
+      query("featureId").not().isEmpty().trim(),
     ],
     async (req, res, next) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map, feature, or comment identifier'
+        throw "Invalid map, feature, or comment identifier"
       }
 
       // extract necessary info
@@ -867,25 +867,25 @@ const featureRouter = ({ config }) => {
           {
             publicId: featureCollectionId,
             $or: [{ limitContributors: false }, { contributors: req.user }],
-            'features._id': featureId,
+            "features._id": featureId,
           },
           {
             $set: {
               // update timestamps
               updatedAt: new Date(),
             },
-            $pull: { 'features.$.properties.comments': { _id: commentId } }, // remove the comment from the feature
+            $pull: { "features.$.properties.comments": { _id: commentId } }, // remove the comment from the feature
           },
           { new: true } // new = return doc as it is after update, upsert = insert new doc if none exists
         )
-          .then((featureCollection) => {
+          .then(featureCollection => {
             // return the response to client
             res.json({
               status: true,
-              message: 'success',
+              message: "success",
             })
           })
-          .catch((err) => {
+          .catch(err => {
             // invalid map or feature id
             return res.status(400).json({
               status: false,
@@ -895,7 +895,7 @@ const featureRouter = ({ config }) => {
           })
       } else {
         // invalid map or feature id
-        const err = 'Invalid map, feature, or comment identifiers.'
+        const err = "Invalid map, feature, or comment identifiers."
         return res.status(400).json({
           status: false,
           message: err,

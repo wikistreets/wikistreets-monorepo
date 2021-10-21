@@ -33,7 +33,7 @@ const config = {
     maxFiles: 10, // underlying images
     maxImageWidth: 4000,
     maxImageHeight: 4000,
-    maxImageFileSize: 50 * 1024 * 1024, // 50MB
+    maxImageFileSize: 100 * 1024 * 1024, // 100MB
   },
   imports: {
     maxFiles: 10, // imported geojson files

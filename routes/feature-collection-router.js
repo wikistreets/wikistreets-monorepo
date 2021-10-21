@@ -1,34 +1,34 @@
 // express
-const express = require('express')
-const { body, param, query, validationResult } = require('express-validator')
-const uuidv4 = require('uuid/v4')
-const path = require('path')
-const multer = require('multer') // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
-const fs = require('fs') // for reading imported json files
+const express = require("express")
+const { body, param, query, validationResult } = require("express-validator")
+const uuidv4 = require("uuid/v4")
+const path = require("path")
+const multer = require("multer") // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
+const fs = require("fs") // for reading imported json files
 
 // authentication
-const jwt = require('jsonwebtoken')
-const passport = require('passport')
-const passportConfig = require('../passportConfig')
+const jwt = require("jsonwebtoken")
+const passport = require("passport")
+const passportConfig = require("../passportConfig")
 
 // map-specific stuff
-const turf = require('@turf/turf')
+const turf = require("@turf/turf")
 
 // database schemas and models
-const mongoose = require('mongoose')
-const ObjectId = require('mongoose').Types.ObjectId
-const { FeatureCollection } = require('../models/feature-collection')
-const { Feature } = require('../models/feature')
-const { User } = require('../models/user')
+const mongoose = require("mongoose")
+const ObjectId = require("mongoose").Types.ObjectId
+const { FeatureCollection } = require("../models/feature-collection")
+const { Feature } = require("../models/feature")
+const { User } = require("../models/user")
 
 // image editing service
-const { ImageService } = require('../services/ImageService')
-const handleImages = require('../middlewares/handle-images.js') // our own image handler
+const { ImageService } = require("../services/ImageService")
+const handleImages = require("../middlewares/handle-images.js") // our own image handler
 
 // emailer
-const { EmailService } = require('../services/EmailService')
-const { Invitation } = require('../models/invitation')
-const { geojsonType } = require('@turf/turf')
+const { EmailService } = require("../services/EmailService")
+const { Invitation } = require("../models/invitation")
+const { geojsonType } = require("@turf/turf")
 
 const featureCollectionRouter = ({ config }) => {
   // create an express router
@@ -38,7 +38,7 @@ const featureCollectionRouter = ({ config }) => {
   passportConfig({ config: config.jwt })
 
   // our passport strategies in action
-  const passportJWT = passport.authenticate('jwt', { session: false })
+  const passportJWT = passport.authenticate("jwt", { session: false })
 
   // set up our image editing service
   const mapImageService = new ImageService({ config: config.map })
@@ -60,22 +60,22 @@ const featureCollectionRouter = ({ config }) => {
     storage: storage,
     fileFilter: multerFilter,
     limits: {
-      fileSize: config.markers.maxImageFileSize, // currently using same max upload size for all upload types: map underlying images, marker images, and geojson import files
+      fileSize: config.markers.maxImageFileSize * 1000000, // in bytes; currently using same max upload size for all upload types: map underlying images, marker images, and geojson import files
     },
     onError: function (err, next) {
-      console.log('error', err)
+      console.log("error", err)
       next(err)
     },
   })
 
   // route to rename a map
   router.post(
-    '/map/title/:featureCollectionId',
+    "/map/title/:featureCollectionId",
     passportJWT,
     upload.none(),
     [
-      body('featureCollectionId').not().isEmpty().trim(),
-      body('featureCollectionTitle').not().isEmpty().trim().escape(),
+      body("featureCollectionId").not().isEmpty().trim(),
+      body("featureCollectionTitle").not().isEmpty().trim().escape(),
     ],
     async (req, res) => {
       const featureCollectionId = req.body.featureCollectionId
@@ -85,7 +85,7 @@ const featureCollectionRouter = ({ config }) => {
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
         return res.status(400).json({
-          error: 'Please enter a more reasonable map title.',
+          error: "Please enter a more reasonable map title.",
         })
       }
 
@@ -94,12 +94,12 @@ const featureCollectionRouter = ({ config }) => {
         { publicId: featureCollectionId },
         { title: featureCollectionTitle },
         { upsert: true }
-      ).catch((err) => {
+      ).catch(err => {
         return res.status(500).json({
           status: false,
           message:
-            'Sorry... something bad happened on our end!  Please try again.',
-          error: 'Sorry... something bad happened on our end!  ',
+            "Sorry... something bad happened on our end!  Please try again.",
+          error: "Sorry... something bad happened on our end!  ",
         })
       })
 
@@ -108,22 +108,22 @@ const featureCollectionRouter = ({ config }) => {
 
       res.json({
         status: true,
-        message: 'success',
+        message: "success",
         data: featureCollection,
       })
     }
   )
 
   router.get(
-    '/map/remove/:publicId',
+    "/map/remove/:publicId",
     passportJWT,
-    [param('publicId').not().isEmpty().trim()],
+    [param("publicId").not().isEmpty().trim()],
     async (req, res) => {
       try {
         // check for validation errors
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
-          throw 'No map specified'
+          throw "No map specified"
         }
 
         // find the map in question
@@ -137,7 +137,7 @@ const featureCollectionRouter = ({ config }) => {
         if (!featureCollection) {
           res.json({
             status: true,
-            message: 'success',
+            message: "success",
           })
         }
 
@@ -153,7 +153,7 @@ const featureCollectionRouter = ({ config }) => {
 
         // check whether this user is an official contributor to this map
         const isContributor = featureCollection.contributors.some(
-          (contributor) => {
+          contributor => {
             return contributor.equals(req.user._id)
           }
         )
@@ -178,7 +178,7 @@ const featureCollectionRouter = ({ config }) => {
         // all worked well... tell the client
         res.json({
           status: true,
-          message: 'success',
+          message: "success",
         })
       } catch (err) {
         // for all errors...
@@ -194,19 +194,19 @@ const featureCollectionRouter = ({ config }) => {
 
   // route to set the map style
   router.post(
-    '/map/style',
+    "/map/style",
     passportJWT,
-    upload.array('files', config.map.maxFiles), // multer file upload
+    upload.array("files", config.map.maxFiles), // multer file upload
     handleImages(mapImageService), // sharp file editing
     [
-      body('mapType').not().isEmpty().trim(),
-      body('featureCollectionId').not().isEmpty().trim(),
+      body("mapType").not().isEmpty().trim(),
+      body("featureCollectionId").not().isEmpty().trim(),
     ],
     async (req, res) => {
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
         console.log(errors)
-        throw 'Invalid map type or feature collection identifier'
+        throw "Invalid map type or feature collection identifier"
       }
 
       const featureCollectionId = req.body.featureCollectionId
@@ -222,7 +222,7 @@ const featureCollectionRouter = ({ config }) => {
       }
 
       // add any underlying images
-      if (mapType == 'image' && req.files && req.files.length) {
+      if (mapType == "image" && req.files && req.files.length) {
         const filesToAdd = req.files
         updates.$push = {
           underlyingImages: {
@@ -243,7 +243,7 @@ const featureCollectionRouter = ({ config }) => {
 
       // pull deleted images
       const filesToDelete = req.body.files_to_delete
-        ? req.body.files_to_delete.split(',')
+        ? req.body.files_to_delete.split(",")
         : []
       if (filesToDelete.length) {
         featureCollection = await FeatureCollection.findOneAndUpdate(
@@ -261,7 +261,7 @@ const featureCollectionRouter = ({ config }) => {
             },
           },
           { new: true }
-        ).catch((err) => {
+        ).catch(err => {
           console.log(`ERROR DELETING: ${err}`)
         })
       }
@@ -279,11 +279,11 @@ const featureCollectionRouter = ({ config }) => {
       if (featureCollection) {
         return res.json({
           status: true,
-          message: 'Updated map style',
+          message: "Updated map style",
         })
       } else {
         return res.status(400).json({
-          error: 'Invalid map style',
+          error: "Invalid map style",
         })
       }
     }
@@ -291,12 +291,12 @@ const featureCollectionRouter = ({ config }) => {
 
   // route to change collaboration settings
   router.post(
-    '/map/collaboration',
+    "/map/collaboration",
     passportJWT,
     upload.none(),
     [
-      body('add_collaborators').trim().escape(),
-      body('featureCollectionId').not().isEmpty().trim(),
+      body("add_collaborators").trim().escape(),
+      body("featureCollectionId").not().isEmpty().trim(),
     ],
     async (req, res) => {
       // the map to adjust
@@ -306,7 +306,7 @@ const featureCollectionRouter = ({ config }) => {
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
         return res.status(400).json({
-          error: 'Invalid input',
+          error: "Invalid input",
         })
       }
 
@@ -316,22 +316,22 @@ const featureCollectionRouter = ({ config }) => {
         $or: [{ limitContributors: false }, { contributors: req.user }],
       })
       if (!featureCollection)
-        throw 'You do not have permission to modify collaboration settings'
+        throw "You do not have permission to modify collaboration settings"
 
       // console.log(JSON.stringify(req.body, null, 2))
 
       // extract any new collaborators
-      let newContributorEmails = req.body.add_collaborators.split(',')
+      let newContributorEmails = req.body.add_collaborators.split(",")
       let nonUserContributorEmails = [...newContributorEmails] // assume none are users right now
       // clean up user lists... some kind of bug where the array has a blank string if none specified
       if (
         nonUserContributorEmails.length == 1 &&
-        nonUserContributorEmails[0] == ''
+        nonUserContributorEmails[0] == ""
       ) {
         // make it a proper blank string
         nonUserContributorEmails = []
       }
-      if (newContributorEmails.length == 1 && newContributorEmails[0] == '') {
+      if (newContributorEmails.length == 1 && newContributorEmails[0] == "") {
         // make it a proper blank string
         newContributorEmails = []
       }
@@ -364,7 +364,7 @@ const featureCollectionRouter = ({ config }) => {
       // console.log(`adding: ${newContributorIds}`)
       const updates = {
         limitContributors:
-          req.body.limit_contributors == 'private' ? true : false,
+          req.body.limit_contributors == "private" ? true : false,
         // limitViewers:
         //   req.body.limit_viewers == 'private' ? true : false,
         // $addToSet: {
@@ -379,12 +379,12 @@ const featureCollectionRouter = ({ config }) => {
         { publicId: req.body.featureCollectionId },
         updates,
         { new: true } // return updated document
-      ).catch((err) => {
+      ).catch(err => {
         return res.status(500).json({
           status: false,
           message:
-            'Sorry... something bad happened on our end!  Please try again.',
-          error: 'Sorry... something bad happened on our end!  ',
+            "Sorry... something bad happened on our end!  Please try again.",
+          error: "Sorry... something bad happened on our end!  ",
         })
       })
 
@@ -400,11 +400,11 @@ const featureCollectionRouter = ({ config }) => {
           return res.status(500).json({
             status: false,
             message:
-              'Sorry... something bad happened on our end!  Please try again.',
-            error: 'Sorry... something bad happened on our end!  ',
+              "Sorry... something bad happened on our end!  Please try again.",
+            error: "Sorry... something bad happened on our end!  ",
           })
         } else {
-          console.log('updated map')
+          console.log("updated map")
         }
       })
 
@@ -416,7 +416,7 @@ const featureCollectionRouter = ({ config }) => {
         // send a welcome email
         const featureCollectionTitle = featureCollection.title
           ? featureCollection.title
-          : 'anonymous map'
+          : "anonymous map"
         const mapLink = `https://wikistreets.io/map/${featureCollection.publicId}`
         emailService.send(
           email,
@@ -440,16 +440,16 @@ const featureCollectionRouter = ({ config }) => {
 
       res.json({
         status: true,
-        message: 'success',
+        message: "success",
       })
     }
   )
 
   // route to fork a map
   router.get(
-    '/map/fork/:featureCollectionId',
+    "/map/fork/:featureCollectionId",
     passportJWT,
-    [param('featureCollectionId').not().isEmpty().trim()],
+    [param("featureCollectionId").not().isEmpty().trim()],
     async (req, res) => {
       // retrieve the map to be forked
       const featureCollectionId = req.params.featureCollectionId
@@ -461,7 +461,7 @@ const featureCollectionRouter = ({ config }) => {
           console.log(`FAILED TO FIND MAP: ${featureCollection}`)
           return res.status(400).json({
             status: false,
-            message: 'Invalid map identifier',
+            message: "Invalid map identifier",
             error: err,
           })
         }
@@ -485,7 +485,7 @@ const featureCollectionRouter = ({ config }) => {
             return res.status(500).json({
               status: false,
               message:
-                'Sorry... something bad happened on our end!  Please try again.',
+                "Sorry... something bad happened on our end!  Please try again.",
               error: err,
             })
           } else {
@@ -508,8 +508,8 @@ const featureCollectionRouter = ({ config }) => {
 
   // route for HTTP GET requests to the map JSON data
   router.get(
-    '/map/data/:publicId',
-    [param('publicId').not().isEmpty()],
+    "/map/data/:publicId",
+    [param("publicId").not().isEmpty()],
     async (req, res) => {
       const publicId = req.params.publicId
       const sinceDate = req.query.since // optional param to retrieve only features since a given date
@@ -517,16 +517,16 @@ const featureCollectionRouter = ({ config }) => {
       let featureCollection = await FeatureCollection.findOne({
         publicId: publicId,
       })
-        .populate('contributors', ['_id', 'handle'])
-        .populate('forkedFrom', ['title', 'publicId'])
-        .populate('features.user', ['_id', 'handle'])
-        .populate('features.properties.comments.user', ['_id', 'handle'])
-        .catch((err) => {
+        .populate("contributors", ["_id", "handle"])
+        .populate("forkedFrom", ["title", "publicId"])
+        .populate("features.user", ["_id", "handle"])
+        .populate("features.properties.comments.user", ["_id", "handle"])
+        .catch(err => {
           return res.status(500).json({
             status: false,
             message:
-              'Sorry... something bad happened on our end!  Please try again.',
-            error: 'Sorry... something bad happened on our end!  ',
+              "Sorry... something bad happened on our end!  Please try again.",
+            error: "Sorry... something bad happened on our end!  ",
           })
         })
       // console.log(JSON.stringify(featureCollection, null, 2))
@@ -544,7 +544,7 @@ const featureCollectionRouter = ({ config }) => {
               simpleObject,
               config.map.boundingBoxBuffer,
               {
-                units: 'kilometers',
+                units: "kilometers",
               }
             ) // buffer around the points
             featureCollection.bbox = turf.bbox(buffered)
@@ -556,7 +556,7 @@ const featureCollectionRouter = ({ config }) => {
         // there is no featureCollection... make a starter object
         featureCollection = {
           publicId: publicId,
-          description: 'A blank starter map',
+          description: "A blank starter map",
           features: [],
           bbox: [],
           unsaved: true, // not a real featureCollection
@@ -583,21 +583,21 @@ const featureCollectionRouter = ({ config }) => {
 
   // route for importing a geojson file
   router.post(
-    '/map/import',
+    "/map/import",
     passportJWT, // jwt authentication
-    upload.array('files', config.imports.maxFiles), // multer file upload
-    [body('featureCollectionId').trim().escape()],
+    upload.array("files", config.imports.maxFiles), // multer file upload
+    [body("featureCollectionId").trim().escape()],
     async (req, res, next) => {
       // check for validation errors
       let errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw 'Invalid map or feature identifier'
+        throw "Invalid map or feature identifier"
       }
 
       const featureCollectionId = req.body.featureCollectionId
       // reject posts with no map
       if (!featureCollectionId) {
-        const err = 'No map specified.'
+        const err = "No map specified."
         return res.status(400).json({
           status: false,
           message: err,
@@ -607,18 +607,18 @@ const featureCollectionRouter = ({ config }) => {
 
       // loop through each file
       let newFeatures = [] // new features to add to the map
-      req.files.forEach((file) => {
+      req.files.forEach(file => {
         // get the data from this file
-        req.files.map((file) => {
+        req.files.map(file => {
           const data = file.buffer.toString()
           const geojsonObj = JSON.parse(data)
 
           // check to see what kind of geojson obj we have
-          if (geojsonObj.type == 'FeatureCollection') {
+          if (geojsonObj.type == "FeatureCollection") {
             // it's a collection of features
             // add the features in this file to the list of new features
             newFeatures = newFeatures.concat(geojsonObj.features)
-          } else if (geojsonOjb == 'Feature') {
+          } else if (geojsonOjb == "Feature") {
             // it's a feature, add it to the list
             newFeatures.concat(geojsonObj)
           }
@@ -627,7 +627,7 @@ const featureCollectionRouter = ({ config }) => {
 
       // create these objects into proper Feature objects
       let featureObjs = []
-      newFeatures.forEach((feature) => {
+      newFeatures.forEach(feature => {
         // do a bit of cleanup
 
         // function toLowerCaseKeys(obj) {
@@ -677,26 +677,26 @@ const featureCollectionRouter = ({ config }) => {
             let shape
             // leaflet needs to know the center point... calculate and store it
             switch (feature.geometry.type) {
-              case 'LineString':
+              case "LineString":
                 point = turf.center(feature)
                 break
-              case 'Polygon':
+              case "Polygon":
                 shape = turf.polygon(feature.geometry.coordinates)
                 point = turf.centerOfMass(shape)
                 break
-              case 'MultiPoint':
+              case "MultiPoint":
                 shape = turf.multiPoint(feature.geometry.coordinates)
                 point = turf.centerOfMass(shape)
                 break
-              case 'MultiPolygon':
+              case "MultiPolygon":
                 shape = turf.multiPolygon(feature.geometry.coordinates)
                 point = turf.centerOfMass(shape)
                 break
-              case 'MultiLineString':
+              case "MultiLineString":
                 shape = turf.multiLineString(feature.geometry.coordinates)
                 point = turf.centerOfMass(shape)
                 break
-              case 'GeometryCollection':
+              case "GeometryCollection":
                 // console.log(JSON.stringify(feature, null, 2))
                 shape = turf.geometryCollection(feature.geometry.geometries)
                 point = turf.centerOfMass(shape)
@@ -719,7 +719,7 @@ const featureCollectionRouter = ({ config }) => {
 
         if (!feature.subscribers) feature.subscribers = [req.user._id]
         if (!feature.user) feature.user = req.user._id
-        if (!feature.properties.address) feature.properties.address = 'here'
+        if (!feature.properties.address) feature.properties.address = "here"
         if (!feature.properties.title)
           feature.properties.title = `${feature.geometry.type} around ${feature.properties.center}`
         // console.log(JSON.stringify(feature, null, 2))
@@ -749,16 +749,16 @@ const featureCollectionRouter = ({ config }) => {
         },
         { new: true, upsert: true } // new = return doc as it is after update, upsert = insert new doc if none exists
       )
-        .populate('contributors', ['_id', 'handle'])
-        .populate('features.user', ['_id', 'handle'])
-        .populate('features.properties.comments.user', ['_id', 'handle'])
+        .populate("contributors", ["_id", "handle"])
+        .populate("features.user", ["_id", "handle"])
+        .populate("features.properties.comments.user", ["_id", "handle"])
 
       // save to this user's account
       req.user.featureCollections.push(featureCollection)
       req.user.save()
 
       res.json({
-        status: 'success',
+        status: "success",
         success: true,
         data: featureCollection,
       })
@@ -767,8 +767,8 @@ const featureCollectionRouter = ({ config }) => {
 
   // route for exporting a geojson file
   router.get(
-    '/map/export/:featureCollectionId',
-    [param('featureCollectionId').not().isEmpty()],
+    "/map/export/:featureCollectionId",
+    [param("featureCollectionId").not().isEmpty()],
     async (req, res) => {
       const featureCollectionId = req.params.featureCollectionId
       const sinceDate = req.query.since // optional param to retrieve only features since a given date
@@ -784,19 +784,19 @@ const featureCollectionRouter = ({ config }) => {
           }
           // send back data as geojson file
           res.setHeader(
-            'Content-disposition',
-            'attachment; filename=' + `${data._id}.geojson`
+            "Content-disposition",
+            "attachment; filename=" + `${data._id}.geojson`
           )
-          res.setHeader('Content-type', 'application/geo+json')
+          res.setHeader("Content-type", "application/geo+json")
           res.send(data)
         })
-        .catch((err) => {
+        .catch(err => {
           // catch errors
           return res.status(500).json({
             status: false,
             message:
-              'Sorry... something bad happened on our end!  Please try again.',
-            error: 'Sorry... something bad happened on our end!  ',
+              "Sorry... something bad happened on our end!  Please try again.",
+            error: "Sorry... something bad happened on our end!  ",
           })
         })
     }
@@ -804,15 +804,15 @@ const featureCollectionRouter = ({ config }) => {
 
   // route for HTTP GET requests for a specific map
   router.get(
-    '/map/:featureCollectionId',
-    param('featureCollectionId').not().isEmpty().trim(),
+    "/map/:featureCollectionId",
+    param("featureCollectionId").not().isEmpty().trim(),
     (req, res) => {
-      res.sendFile(path.join(__dirname, '..', `/public/index.html`))
+      res.sendFile(path.join(__dirname, "..", `/public/index.html`))
     }
   )
 
   // redirect requests for a home page to a map with a random identifier
-  router.get(['/', '/map'], (req, res) => {
+  router.get(["/", "/map"], (req, res) => {
     const featureCollectionId = uuidv4() // randomish identifier
     // load map page anew with new id
     res.redirect(`/map/${featureCollectionId}`)
