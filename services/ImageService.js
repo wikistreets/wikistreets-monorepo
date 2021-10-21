@@ -20,11 +20,12 @@ const reorientJpeg = async (buffer, quality = 100) => {
       // )
       // console.log(`Quality: ${quality}`)
       // ...Do whatever you need with the resulting buffer...
-      const data = {
-        buffer: buffer,
-        dimensions: dimensions,
-      }
-      return data
+      // const data = {
+      //   buffer: buffer,
+      //   dimensions: dimensions,
+      // }
+      // return data
+      return buffer
     })
     .catch(error => {
       // console.log('An error occurred when rotating the file: ' + error.message)
@@ -38,9 +39,10 @@ function ImageService({ config }) {
   this.store = async buffer => {
     // store buffer to image file
     // auto-rotate jpegs
-    // reoriented = await reorientJpeg(buffer) // returns false if messed up
-    // if (!reoriented) console.log('no buffer from jpeg-autorotate')
-    // buffer = reoriented ? reoriented : buffer
+
+    reoriented = await reorientJpeg(buffer) // returns false if messed up
+    if (!reoriented) console.log("no buffer from jpeg-autorotate")
+    buffer = reoriented ? reoriented : buffer
 
     // will hold filename and dimensions
     const filename = this.filename()
