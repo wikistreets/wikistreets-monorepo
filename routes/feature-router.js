@@ -72,7 +72,15 @@ const featureRouter = ({ config }) => {
     storage: storage,
     fileFilter: multerFilter,
     limits: {
-      fileSize: config.markers.maxImageFileSize * 1000000, // in bytes
+      fileSize: config.markers.maxImageFileSize * 1024 * 1024, // in bytes
+      fieldSize: config.markers.maxImageFileSize * 1024 * 1024, // in bytes
+    },
+    fileFilter: (req, file, cb) => {
+      // allow images only
+      if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+        return cb(new Error("Only images are allowed."), false)
+      }
+      cb(null, true)
     },
     onError: function (err, next) {
       console.log("error", err)

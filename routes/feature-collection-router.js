@@ -60,7 +60,7 @@ const featureCollectionRouter = ({ config }) => {
     storage: storage,
     fileFilter: multerFilter,
     limits: {
-      fileSize: config.markers.maxImageFileSize * 1000000, // in bytes; currently using same max upload size for all upload types: map underlying images, marker images, and geojson import files
+      fileSize: config.markers.maxImageFileSize * 1024 * 1024, // in bytes; currently using same max upload size for all upload types: map underlying images, marker images, and geojson import files
     },
     onError: function (err, next) {
       console.log("error", err)

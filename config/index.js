@@ -37,7 +37,7 @@ const config = {
   },
   imports: {
     maxFiles: 10, // imported geojson files
-    maxImageFileSize: 100 * 1024 * 1024, // 100MB
+    maxImageFileSize: 500 * 1024 * 1024, // 100MB
   },
   jwt: {
     jwtIssuer: process.env.JWT_ISSUER,

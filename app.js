@@ -22,7 +22,7 @@ const server = ({ config }) => {
   // load general-purpose middleware
   app.use(cors()) // allow cross-origin resource sharing
   const maxFilesize = `${config.markers.maxImageFileSize}mb` // e.g. '50mb'
-  const maxFilesizeInBytes = config.markers.maxImageFileSize * 1000000 // e.g. '50000000'
+  const maxFilesizeInBytes = config.markers.maxImageFileSize * 1024 * 1024 // e.g. '50000000'
   app.use(
     express.json({ limit: maxFilesize, parameterLimit: maxFilesizeInBytes })
   ) // To parse the incoming requests with JSON payloads
