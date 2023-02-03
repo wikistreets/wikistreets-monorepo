@@ -811,6 +811,31 @@ const featureCollectionRouter = ({ config }) => {
     }
   )
 
+  // route for HTTP GET requests to the map KML data
+  router.get(
+    "/map/kml/:featureCollectionId",
+    param("featureCollectionId").not().isEmpty().trim(),
+    (req, res) => {
+      const featureCollectionId = req.params.featureCollectionId
+      // console.log(featureCollectionId)
+      try {
+        const doc = Feature.findOne({ publicId: featureCollectionId })
+        console.log(JSON.stringify(data, null, 2))
+        const kmlGenerator = require("../kml-generator")
+        const kmlDoc = kmlGenerator(
+          doc,
+          `${req.protocol}://${req.headers.host}/static/uploads`
+        ) // generate kml from this data
+        // trigger browser download, if possible
+        res.set("Content-Disposition", 'attachment; filename="wikistreets.kml"')
+        res.set("Content-Type", "text/xml")
+        res.send(kmlDoc)
+      } catch (err) {
+        throw `Error: ${err}`
+      }
+    }
+  )
+
   // redirect requests for a home page to a map with a random identifier
   router.get(["/", "/map"], (req, res) => {
     const featureCollectionId = uuidv4() // randomish identifier

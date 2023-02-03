@@ -116,27 +116,6 @@ const featureRouter = ({ config }) => {
     }
   )
 
-  // route for HTTP GET requests to the map KML data
-  // router.get('/kml', (req, res) => {
-  //   const featureCollectionId = req.query.featureCollectionId // get featureCollectionId from query string
-  //   const data = Feature.find({ featureCollectionId }, (err, docs) => {
-  //     if (!err) {
-  //       //console.log(docs);
-  //       const kmlGenerator = require('../kml-generator')
-  //       const kmlDoc = kmlGenerator(
-  //         docs,
-  //         `${req.protocol}://${req.headers.host}/static/uploads`
-  //       ) // generate kml from this data
-  //       // trigger browser download, if possible
-  //       res.set('Content-Disposition', 'attachment; filename="wikistreets.kml"')
-  //       res.set('Content-Type', 'text/xml')
-  //       res.send(kmlDoc)
-  //     } else {
-  //       console.log(err)
-  //     }
-  //   })
-  // })
-
   // get a given user's markers
   router.get(
     "/user/:userId",

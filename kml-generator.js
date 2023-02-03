@@ -4,20 +4,20 @@
  * Encode content to be embeddable within XML
  * @param {*} unsafe The content to escape
  */
-const escapeXml = (unsafe) => {
+const escapeXml = unsafe => {
   if (!unsafe) return unsafe // return nothing if nothing comes in
   return unsafe.replace(/[<>&'"]/g, function (c) {
     switch (c) {
-      case '<':
-        return '&lt;'
-      case '>':
-        return '&gt;'
-      case '&':
-        return '&amp;'
+      case "<":
+        return "&lt;"
+      case ">":
+        return "&gt;"
+      case "&":
+        return "&amp;"
       case "'":
-        return '&apos;'
+        return "&apos;"
       case '"':
-        return '&quot;'
+        return "&quot;"
     }
   })
 }
@@ -32,7 +32,7 @@ const photosKml = (photos, imageBaseUrl) => {
     <ExtendedData>
         <Data name="gx_media_links">
 `
-  photos.map((photo) => {
+  photos.map(photo => {
     kml += `
             <value><![CDATA[${imageBaseUrl}/${photo.filename}]]></value>
 `
@@ -55,18 +55,18 @@ const placeMarkKml = (place, imageBaseUrl) => {
   const address = escapeXml(place.address)
   const sidewalkIssues = place.sidewalkIssues.length
     ? `sidewalk issues: ${escapeXml(
-        place.sidewalkIssues.join(', ')
+        place.sidewalkIssues.join(", ")
       )}<br /><br />`
-    : ''
+    : ""
   const roadIssues = place.roadIssues.length
-    ? `street issues: ${escapeXml(place.roadIssues.join(', '))}<br /><br />`
-    : ''
+    ? `street issues: ${escapeXml(place.roadIssues.join(", "))}<br /><br />`
+    : ""
   const comments = place.comments
     ? `${escapeXml(place.comments)}<br /><br />`
-    : ''
+    : ""
 
-  let photos = ''
-  let mainPhotoTag = ''
+  let photos = ""
+  let mainPhotoTag = ""
 
   if (place.photos.length) {
     mainPhotoTag = `<img src="${imageBaseUrl}/${place.photos[0].filename}" height="200" width="auto" /><br /><br />`
@@ -93,15 +93,15 @@ const placeMarkKml = (place, imageBaseUrl) => {
  * @param {*} data The marker data
  * @param {*} imageBaseUrl Base URL to prefix to image paths
  */
-const kmlGenerator = (data, imageBaseUrl) => {
+const kmlGenerator = (doc, imageBaseUrl) => {
   let kml = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
     <Document>
     <name>wikistreets</name>
     <description/>
 `
-
-  data.map((point, i, arr) => {
+  console.log(doc.features.length)
+  doc.map((point, i, arr) => {
     kml += placeMarkKml(point, imageBaseUrl)
   })
 

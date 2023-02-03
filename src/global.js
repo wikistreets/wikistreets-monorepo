@@ -849,8 +849,9 @@ app.markers.place = async (features, cluster) => {
       }
 
       // update visible info, if it's currently being viewed open on the page
-      const isBeingViewed = $(`.feature-detail[ws-feature-id="${feature._id}"]`)
-        .length
+      const isBeingViewed = $(
+        `.feature-detail[ws-feature-id="${feature._id}"]`
+      ).length
       if (isBeingViewed) {
         // check for comments not yet on the page
         feature.properties.comments.forEach(comment => {
