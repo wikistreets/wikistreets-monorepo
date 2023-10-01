@@ -7,14 +7,16 @@ There is much work left to do!
 Use [GitHub Issues](https://github.com/wikistreets/wikistreets/issues) to submit feature requests and bug reports.
 
 ## Main tasks (call it a roadmap if you must)
+
 Some priorities at the moment:
-- documentation: 
+
+- documentation:
   - create Markdown tutorials w/ YouTube instructional videos showing current functionality
   - more example maps showing progressively more sophisticated uses
 - port to React
-  - port web app to React.js primarily for the data binding and easy port to React Native
+  - port web app to React.js primarily for the data binding and to follow contemporary conventions
   - separate client and server code into separate repositories to prepare for multiple clients
-  - create iOS and Android native client apps using React Native
+  - create iOS and Android native client apps using React Native or Capactiro
 - notifications
   - allow subscription to specific maps (currently it's all-maps-or-none)
   - support for progressive web app notifications
@@ -22,7 +24,7 @@ Some priorities at the moment:
 - map styles
   - allow map-wide style configs that are inherited by all posts within that map
 - layers
-  - support for layers within the [optional] [YAML front-matter](https://www.npmjs.com/package/gray-matter) config 
+  - support for layers within the [optional] [YAML front-matter](https://www.npmjs.com/package/gray-matter) config
   - there are ideas for how to do this that require some documentation and experimentation
 
 ## Local setup
@@ -57,7 +59,8 @@ The server currently runs by default on port `10520`. Assuming you have installe
 nodemon index.js
 ```
 
-On a production server, conventional wisdom says to use `pm2` rather than `nodemon`.  Install `pm2` (i.e. `npm install -g pm2` or `sudo npm install pm2`) and run the server:
+On a production server, conventional wisdom says to use `pm2` rather than `nodemon`. Install `pm2` (i.e. `npm install -g pm2` or `sudo npm install pm2`) and run the server:
+
 ```
 pm2 node index.js
 ```
