@@ -1,48 +1,48 @@
 // express
-const express = require("express")
-const { body, param, query, validationResult } = require("express-validator")
-const jwt = require("jsonwebtoken")
-const passport = require("passport")
-const passportConfig = require("../passportConfig")
+const express = require("express");
+const { body, param, query, validationResult } = require("express-validator");
+const jwt = require("jsonwebtoken");
+const passport = require("passport");
+const passportConfig = require("../passportConfig");
 
 // middleware
 // const _ = require('lodash') // utility functions for arrays, numbers, objects, strings, etc.
-const multer = require("multer") // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
+const multer = require("multer"); // middleware for uploading files - parses multipart/form-data requests, extracts the files if available, and make them available under req.files property.
 // const path = require('path')
 
 // database schemas and models
-const { FeatureCollection } = require("../models/feature-collection")
-const { Feature } = require("../models/feature")
+const { FeatureCollection } = require("../models/feature-collection");
+const { Feature } = require("../models/feature");
 // const { File } = require('../models/file')
-const { Comment } = require("../models/comment")
-const { User } = require("../models/user")
+const { Comment } = require("../models/comment");
+const { User } = require("../models/user");
 
 // image editing service
-const { ImageService } = require("../services/ImageService")
-const handleImages = require("../middlewares/handle-images.js") // our own image handler
-const user = require("../models/user")
+const { ImageService } = require("../services/ImageService");
+const handleImages = require("../middlewares/handle-images.js"); // our own image handler
+const user = require("../models/user");
 
 // map-related middleware
-const turf = require("@turf/turf")
-const geojsonCrunch = require("../middlewares/geojson-crunch.js") // our own geojson data middleware
+const turf = require("@turf/turf");
+const geojsonCrunch = require("../middlewares/geojson-crunch.js"); // our own geojson data middleware
 
 // email service
-const { EmailService } = require("../services/EmailService")
-const { database } = require("faker")
-const { geometry } = require("@turf/turf")
+const { EmailService } = require("../services/EmailService");
+const { database } = require("faker");
+const { geometry } = require("@turf/turf");
 
 const featureRouter = ({ config }) => {
   // create an express router
-  const router = express.Router()
+  const router = express.Router();
 
   // load up the jwt passport settings
-  passportConfig({ config: config.jwt })
+  passportConfig({ config: config.jwt });
 
   // our passport strategies in action
-  const passportJWT = passport.authenticate("jwt", { session: false })
+  const passportJWT = passport.authenticate("jwt", { session: false });
 
   // set up our image editing service
-  const markerImageService = new ImageService({ config: config.markers })
+  const markerImageService = new ImageService({ config: config.markers });
 
   // enable file uploads... set storage options
 
@@ -57,16 +57,16 @@ const featureRouter = ({ config }) => {
   // });
 
   // memory storage
-  const storage = multer.memoryStorage()
+  const storage = multer.memoryStorage();
 
   // filter out non-images
   const multerFilter = (req, file, cb) => {
     if (file.mimetype.startsWith("image")) {
-      cb(null, true)
+      cb(null, true);
     } else {
-      cb("Please upload only images.", false)
+      cb("Please upload only images.", false);
     }
-  }
+  };
 
   const upload = multer({
     storage: storage,
@@ -77,65 +77,65 @@ const featureRouter = ({ config }) => {
     },
     fileFilter: (req, file, cb) => {
       // allow images only
-      if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-        return cb(new Error("Only images are allowed."), false)
+      if (!file.originalname.match(/\.(jpg|jpeg|png|gif|heic|heif)$/)) {
+        return cb(new Error("Only images are allowed."), false);
       }
-      cb(null, true)
+      cb(null, true);
     },
     onError: function (err, next) {
-      console.log("error", err)
-      next(err)
+      console.log("error", err);
+      next(err);
     },
-  })
+  });
 
   // route for HTTP GET requests to an feature's JSON data
   router.get(
     "/json",
     [query("featureCollectionId").not().isEmpty().trim()],
     (req, res) => {
-      let errors = validationResult(req)
-      const featureCollectionId = req.query.featureCollectionId // get featureCollectionId from query string
+      let errors = validationResult(req);
+      const featureCollectionId = req.query.featureCollectionId; // get featureCollectionId from query string
       if (errors.isEmpty() && featureCollectionId) {
         const data = Feature.find({ featureCollectionId }, (err, docs) => {
           if (!err) {
             //console.log(docs);
-            res.json(docs)
+            res.json(docs);
           } else {
-            throw err
+            throw err;
           }
-        }).populate("user", "handle") // populate each doc with the user's handle
+        }).populate("user", "handle"); // populate each doc with the user's handle
       } else {
         // validation error
-        const err = JSON.stringify(errors)
+        const err = JSON.stringify(errors);
         return res.status(400).json({
           status: false,
           message: err,
           err: err,
-        })
+        });
       }
     }
-  )
+  );
 
   // get a given user's markers
   router.get(
     "/user/:userId",
     [param("userId").not().isEmpty().trim()],
     (req, res) => {
-      let errors = validationResult(req)
-      const userId = req.params.userId
-      if (!errors.isEmpty() || !userId) return
+      let errors = validationResult(req);
+      const userId = req.params.userId;
+      if (!errors.isEmpty() || !userId) return;
 
       // get user's markers
       Feature.find({ user: userId }, (err, docs) => {
         if (!err) {
           // respond with docs
-          res.json(docs)
+          res.json(docs);
         } else {
-          throw err
+          throw err;
         }
-      })
+      });
     }
-  )
+  );
 
   // // route for HTTP GET requests to the map JSON data
   // router.get('/add-user', async (req, res) => {
@@ -152,14 +152,14 @@ const featureRouter = ({ config }) => {
       param("featureId").not().isEmpty().trim(),
     ],
     async (req, res, next) => {
-      let errors = validationResult(req)
+      let errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw "Invalid map or feature identifier"
+        throw "Invalid map or feature identifier";
       }
 
       // extract necessary info
-      const featureCollectionId = req.query.featureCollectionId // get featureCollectionId from query string
-      const featureId = req.params.featureId
+      const featureCollectionId = req.query.featureCollectionId; // get featureCollectionId from query string
+      const featureId = req.params.featureId;
       if (featureCollectionId && featureId) {
         // remove the feature from the map
         const featureCollection = await FeatureCollection.findOneAndUpdate(
@@ -178,7 +178,7 @@ const featureRouter = ({ config }) => {
         )
           .then(featureCollection => {
             if (!featureCollection)
-              throw "You do not have permission to modify this map"
+              throw "You do not have permission to modify this map";
             // console.log(JSON.stringify(map, null, 2))
             // save changes
             // featureCollection.save()
@@ -186,7 +186,7 @@ const featureRouter = ({ config }) => {
             res.json({
               status: true,
               message: "success",
-            })
+            });
           })
           .catch(err => {
             // invalid map or feature id
@@ -194,19 +194,19 @@ const featureRouter = ({ config }) => {
               status: false,
               message: err,
               err: err,
-            })
-          })
+            });
+          });
       } else {
         // invalid map or feature id
-        const err = "Invalid map or feature identifiers."
+        const err = "Invalid map or feature identifiers.";
         return res.status(400).json({
           status: false,
           message: err,
           err: err,
-        })
+        });
       }
     }
-  )
+  );
 
   // route for HTTP POST requests to create a new marker
   router.post(
@@ -227,13 +227,13 @@ const featureRouter = ({ config }) => {
     geojsonCrunch.addCenter(), // add a center point, based on geojson coords
     geojsonCrunch.addBbox(), // add a bounding box, based on geojson coords
     async (req, res, next) => {
-      let errors = validationResult(req)
+      let errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw "Invalid map or feature identifier"
+        throw "Invalid map or feature identifier";
       }
 
-      const featureCollectionId = req.body.featureCollectionId
-      const featureCollectionTitle = req.body.featureCollectionTitle
+      const featureCollectionId = req.body.featureCollectionId;
+      const featureCollectionTitle = req.body.featureCollectionTitle;
       const data = {
         type: "Feature",
         geometry: {
@@ -251,41 +251,41 @@ const featureRouter = ({ config }) => {
         },
         subscribers: [req.user._id],
         user: req.user._id,
-      }
+      };
       // console.log(JSON.stringify(data, null, 2))
 
       // reject posts with no map
       if (!featureCollectionId) {
-        const err = "No map specified."
+        const err = "No map specified.";
         return res.status(400).json({
           status: false,
           message: err,
           err: err,
-        })
+        });
       }
       // reject posts with no useful data
       else if (!data.properties.photos.length && !data.properties.body) {
-        const err = "You submitted an empty post.... please be reasonable."
+        const err = "You submitted an empty post.... please be reasonable.";
         return res.status(400).json({
           status: false,
           message: err,
           err: err,
-        })
+        });
       }
       // reject posts with no address or lat/lng
       else if (!(data.geometry.coordinates && data.geometry.type)) {
-        const err = "Please include an address with your post"
+        const err = "Please include an address with your post";
         return res.status(400).json({
           status: false,
           message: err,
           err: err,
-        })
+        });
       }
 
       // if we've reached here, the marker is valid...
       try {
         // create an Feature object
-        const feature = new Feature(data)
+        const feature = new Feature(data);
         // await feature.save()
 
         // console.log(`FEATURE: ${JSON.stringify(feature, null, 2)}`)
@@ -301,9 +301,9 @@ const featureRouter = ({ config }) => {
             subscribers: req.user,
             contributors: req.user,
           },
-        }
+        };
         if (featureCollectionTitle)
-          updates.featureCollection = featureCollectionTitle // add map title if present
+          updates.featureCollection = featureCollectionTitle; // add map title if present
 
         // save the updated map, if existent, or new map if not
         const featureCollection = await FeatureCollection.findOneAndUpdate(
@@ -324,21 +324,21 @@ const featureRouter = ({ config }) => {
             "notifications.email",
           ])
           .catch(err => {
-            console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
-          })
+            console.log(`ERROR: ${JSON.stringify(err, null, 2)}`);
+          });
 
-        if (!featureCollection) throw "No map found."
+        if (!featureCollection) throw "No map found.";
         // console.log(`MAP: ${JSON.stringify(featureCollection, null, 2)}`)
 
         // tack on the current user to the feature so its sent back to client
-        feature.user = req.user
+        feature.user = req.user;
 
         // tack on the bounding box
         // for some reason we need to make a JSON object with none of the mongoose nonsense for buffering to work
         // console.log('pre-buffer')
         const simpleObject = JSON.parse(
           JSON.stringify(featureCollection, null, 2)
-        )
+        );
         // const buffered = turf.buffer(
         //   simpleObject,
         //   config.map.boundingBoxBuffer,
@@ -347,7 +347,7 @@ const featureRouter = ({ config }) => {
         //   }
         // ) // buffer around the points
         // featureCollection.bbox = turf.bbox(buffered)
-        featureCollection.bbox = turf.bbox(simpleObject)
+        featureCollection.bbox = turf.bbox(simpleObject);
         // console.log('post-buffer')
 
         // add this map to the user's list of maps
@@ -357,33 +357,33 @@ const featureRouter = ({ config }) => {
             featureCollections: featureCollection,
           },
           $inc: { numPosts: 1 },
-        })
+        });
         // console.log('post-userupdate')
 
         // loop through all subscribers to this map and email them
-        const targetFeature = feature
-        const posterId = req.user._id.toString().trim()
+        const targetFeature = feature;
+        const posterId = req.user._id.toString().trim();
         if (featureCollection && featureCollection.subscribers) {
-          const featureCollectionTitle = decodeURI(featureCollection.title)
-          const featureTitle = decodeURI(targetFeature.properties.title)
+          const featureCollectionTitle = decodeURI(featureCollection.title);
+          const featureTitle = decodeURI(targetFeature.properties.title);
           featureCollection.subscribers.forEach(subscriber => {
             // don't send email to the person who commented
             if (subscriber._id != posterId) {
-              const recipient = subscriber
+              const recipient = subscriber;
               // console.log(`sending email to ${recipient.email}`)
               // send email notification, if the recipient has not opted-out of emails
               if (recipient.notifications.email) {
                 const featureCollectionPhrase = featureCollection.title
                   ? `, on the map, '${featureCollectionTitle}'`
-                  : " on an unnamed map"
+                  : " on an unnamed map";
                 const imagesPhrase = data.properties.photos.length
                   ? "[images not displayed]"
-                  : ""
+                  : "";
                 const bodyPhrase = `\n\n"""\n${data.properties.body.substr(
                   0,
                   100
-                )}... ${imagesPhrase}\n"""`
-                const emailService = new EmailService({})
+                )}... ${imagesPhrase}\n"""`;
+                const emailService = new EmailService({});
                 try {
                   emailService.send(
                     recipient.email,
@@ -391,13 +391,13 @@ const featureRouter = ({ config }) => {
                     `Dear ${recipient.handle},\n\n${req.user.handle} just posted '${featureTitle}'${featureCollectionPhrase}!${bodyPhrase}\n\nTo view in full, please visit https://wikistreets.io/map/${featureCollection.publicId}#${targetFeature._id}`,
                     true,
                     recipient._id
-                  )
+                  );
                 } catch (err) {
-                  console.log(err)
+                  console.log(err);
                 }
               } // if the subscriber wants to receive emails
             } // if subscriber is not the commenter
-          }) // foreaach subscriber
+          }); // foreaach subscriber
         } // if there is an feature at hand
 
         // return the response to client
@@ -405,18 +405,18 @@ const featureRouter = ({ config }) => {
           status: true,
           message: "success",
           data: feature,
-        })
+        });
       } catch (err) {
         // failed to save the new feature...
-        console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        console.log(`ERROR: ${JSON.stringify(err, null, 2)}`);
         // delete any uploaded files if the entire route fails for some reason
         if (req.files && req.files.length > 0) {
           req.files.map((file, i) => {
             if (file.path) {
               // if it was stored on disk, delete it
-              markerImageService.delete(file.path)
+              markerImageService.delete(file.path);
             }
-          })
+          });
         }
 
         //return failure response
@@ -424,10 +424,10 @@ const featureRouter = ({ config }) => {
           status: false,
           message: "An error occurred trying to save this feature",
           err: err,
-        })
+        });
       }
     }
-  ) // '/create' route
+  ); // '/create' route
 
   // route for HTTP POST requests to create a new marker
   router.post(
@@ -450,18 +450,18 @@ const featureRouter = ({ config }) => {
     geojsonCrunch.addCenter(), // add a center point, based on geojson coords
     geojsonCrunch.addBbox(), // add a bounding box, based on geojson coords
     async (req, res, next) => {
-      let errors = validationResult(req)
+      let errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw "Invalid map or feature details"
+        throw "Invalid map or feature details";
       }
 
-      const featureCollectionId = req.body.featureCollectionId
-      const featureId = req.body.featureId // the feature to feature
+      const featureCollectionId = req.body.featureCollectionId;
+      const featureId = req.body.featureId; // the feature to feature
 
       // files to delete
       const filesToDelete = req.body.files_to_delete
         ? req.body.files_to_delete.split(",")
-        : []
+        : [];
 
       const data = {
         _id: featureId,
@@ -479,18 +479,18 @@ const featureRouter = ({ config }) => {
           zoom: parseInt(req.body.zoom),
         },
         user: req.user._id,
-      }
+      };
 
       // console.log(JSON.stringify(data, null, 2))
 
       // reject posts with no map
       if (!featureCollectionId || !featureId) {
-        const err = "Map or marker not specified."
+        const err = "Map or marker not specified.";
         return res.status(400).json({
           status: false,
           message: err,
           err: err,
-        })
+        });
       }
 
       // if we've reached here, the marker is valid...
@@ -529,8 +529,8 @@ const featureRouter = ({ config }) => {
           .populate("features.user", ["_id", "handle"])
           .populate("features.properties.comments.user", ["_id", "handle"])
           .catch(err => {
-            console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
-          })
+            console.log(`ERROR: ${JSON.stringify(err, null, 2)}`);
+          });
 
         // pull deleted images
         if (filesToDelete.length) {
@@ -555,12 +555,12 @@ const featureRouter = ({ config }) => {
             .populate("features.user", ["_id", "handle"])
             .populate("features.properties.comments.user", ["_id", "handle"])
             .catch(err => {
-              console.log(`ERROR DELETING: ${err}`)
-            })
+              console.log(`ERROR DELETING: ${err}`);
+            });
         }
 
         // add new images, if any
-        const filesToAdd = req.files
+        const filesToAdd = req.files;
         if (filesToAdd.length) {
           featureCollection = await FeatureCollection.findOneAndUpdate(
             {
@@ -581,14 +581,14 @@ const featureRouter = ({ config }) => {
             .populate("features.user", ["_id", "handle"])
             .populate("features.properties.comments.user", ["_id", "handle"])
             .catch(err => {
-              console.log(`ERROR ADDING: ${err}`)
-            })
+              console.log(`ERROR ADDING: ${err}`);
+            });
         }
         // tack on the bounding box
         // for some reason we need to make a JSON object with none of the mongoose nonsense for buffering to work
         const simpleObject = JSON.parse(
           JSON.stringify(featureCollection, null, 2)
-        )
+        );
         // const buffered = turf.buffer(
         //   simpleObject,
         //   config.map.boundingBoxBuffer,
@@ -597,12 +597,12 @@ const featureRouter = ({ config }) => {
         //   }
         // ) // buffer around the points
         // featureCollection.bbox = turf.bbox(buffered)
-        featureCollection.bbox = turf.bbox(simpleObject)
+        featureCollection.bbox = turf.bbox(simpleObject);
 
         // // add this map to the user's list of maps
-        req.user.featureCollections.pull(featureCollection._id) // first remove from list
-        req.user.featureCollections.push(featureCollection) // re-append to list
-        req.user.save()
+        req.user.featureCollections.pull(featureCollection._id); // first remove from list
+        req.user.featureCollections.push(featureCollection); // re-append to list
+        req.user.save();
 
         // // increment the number of posts this user has created
         // req.user = await User.findOneAndUpdate(
@@ -616,18 +616,18 @@ const featureRouter = ({ config }) => {
           status: true,
           message: "success",
           data: featureCollection, // return full map for now, rather than just the updated feature because it's easier
-        })
+        });
       } catch (err) {
         // failed to save the new feature...
-        console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        console.log(`ERROR: ${JSON.stringify(err, null, 2)}`);
         // delete any uploaded files if the entire route fails for some reason
         if (req.files && req.files.length > 0) {
           req.files.map((file, i) => {
             if (file.path) {
               // if it was stored on disk, delete it
-              markerImageService.delete(file.path)
+              markerImageService.delete(file.path);
             }
-          })
+          });
         }
 
         //return failure response
@@ -635,10 +635,10 @@ const featureRouter = ({ config }) => {
           status: false,
           message: "An error occurred trying to save this feature",
           err: err,
-        })
+        });
       }
     }
-  ) // '/edit' route
+  ); // '/edit' route
 
   // route for HTTP POST requests to create a new comment
   router.post(
@@ -652,35 +652,35 @@ const featureRouter = ({ config }) => {
       body("featureId").not().isEmpty().trim(),
     ],
     async (req, res, next) => {
-      let errors = validationResult(req)
+      let errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw "Invalid map or feature identifier"
+        throw "Invalid map or feature identifier";
       }
 
-      const featureCollectionId = req.body.featureCollectionId
-      const featureId = req.body.featureId
+      const featureCollectionId = req.body.featureCollectionId;
+      const featureId = req.body.featureId;
       const data = {
         photos: req.files,
         body: req.body.body,
         user: req.user._id,
-      }
+      };
 
       // reject posts with no map or no feature
       if (!data.photos.length && !data.body) {
-        console.log(`ERRORS: ${JSON.stringify(errors, null, 2)}`)
-        const err = "Invalid map data.... please be reconsider your choices."
+        console.log(`ERRORS: ${JSON.stringify(errors, null, 2)}`);
+        const err = "Invalid map data.... please be reconsider your choices.";
         return res.status(400).json({
           status: false,
           message: err,
           err: err,
-        })
+        });
       }
 
       // if we've reached here, the data is valid...
-      errors = false
+      errors = false;
       try {
         // create a Comment object
-        const comment = new Comment(data)
+        const comment = new Comment(data);
 
         // console.log(`COMMENT: ${JSON.stringify(comment, null, 2)}`)
 
@@ -718,44 +718,44 @@ const featureRouter = ({ config }) => {
           .populate("features.properties.comments.user", ["_id", "handle"])
           .populate("features.user", ["_id", "handle"])
           .catch(err => {
-            errors = err
-            console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
-          })
+            errors = err;
+            console.log(`ERROR: ${JSON.stringify(err, null, 2)}`);
+          });
 
-        if (!featureCollection) throw "No map found"
+        if (!featureCollection) throw "No map found";
 
         // find the feature that has just been commented on
-        let targetFeature = false
+        let targetFeature = false;
         featureCollection.features.forEach(async feature => {
           // only send emails if it's not the user themselves who commented
           if (feature._id == featureId) {
-            targetFeature = feature
+            targetFeature = feature;
           } // if feature ids match
-        })
+        });
 
         // loop through all subscribers to this feature and email them
-        const commenterId = req.user._id.toString().trim()
+        const commenterId = req.user._id.toString().trim();
         if (targetFeature && targetFeature.subscribers) {
-          const featureCollectionTitle = decodeURI(featureCollection.title)
-          const featureTitle = decodeURI(targetFeature.properties.title)
+          const featureCollectionTitle = decodeURI(featureCollection.title);
+          const featureTitle = decodeURI(targetFeature.properties.title);
           targetFeature.subscribers.forEach(subscriber => {
             // don't send email to the person who commented
             if (subscriber._id != commenterId) {
-              const recipient = subscriber
+              const recipient = subscriber;
               // console.log(`sending email to ${recipient.email}`)
               // send email notification, if the recipient has not opted-out of emails
               if (recipient.notifications.email) {
                 const mapPhrase = featureCollection.title
                   ? `, on the map, '${featureCollectionTitle}'`
-                  : ""
+                  : "";
                 const imagesPhrase = data.photos.length
                   ? "[images not displayed]"
-                  : ""
+                  : "";
                 const bodyPhrase = `\n\n"""\n${data.body.substr(
                   0,
                   100
-                )}... ${imagesPhrase}\n"""`
-                const emailService = new EmailService({})
+                )}... ${imagesPhrase}\n"""`;
+                const emailService = new EmailService({});
                 try {
                   emailService.send(
                     recipient.email,
@@ -763,13 +763,13 @@ const featureRouter = ({ config }) => {
                     `Dear ${recipient.handle},\n\n${req.user.handle} commented on the post, '${featureTitle}'${mapPhrase}!${bodyPhrase}\n\nTo view in full, please visit https://wikistreets.io/map/${featureCollection.publicId}#${targetFeature._id}`,
                     true,
                     recipient._id
-                  )
+                  );
                 } catch (err) {
-                  console.log(err)
+                  console.log(err);
                 }
               } // if the subscriber wants to receive emails
             } // if subscriber is not the commenter
-          }) // foreaach subscriber
+          }); // foreaach subscriber
         } // if there is an feature at hand
 
         // increment the number of posts this user has created
@@ -781,39 +781,39 @@ const featureRouter = ({ config }) => {
           },
           { new: true }
         ).catch(err => {
-          errors = err
-          console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
-        })
+          errors = err;
+          console.log(`ERROR: ${JSON.stringify(err, null, 2)}`);
+        });
 
         // return the comment data to client
-        let foundIt = false
+        let foundIt = false;
         featureCollection.features.forEach(feature => {
           // find the feature at hand
           if (feature._id == featureId) {
-            const targetFeature = feature
-            foundIt = true // match!
-            const lastCommentIndex = feature.properties.comments.length - 1
-            const commentData = feature.properties.comments[lastCommentIndex]
+            const targetFeature = feature;
+            foundIt = true; // match!
+            const lastCommentIndex = feature.properties.comments.length - 1;
+            const commentData = feature.properties.comments[lastCommentIndex];
             return res.json({
               status: true,
               message: "success",
               data: commentData, // return just the comment in question
-            })
+            });
           }
-        })
+        });
         // make sure we found the feature
-        if (!foundIt) throw `Can't comment on a non-existent post.`
+        if (!foundIt) throw `Can't comment on a non-existent post.`;
       } catch (err) {
         // failed to save the new feature...
-        console.log(`ERROR: ${JSON.stringify(err, null, 2)}`)
+        console.log(`ERROR: ${JSON.stringify(err, null, 2)}`);
         // delete any uploaded files if the entire route fails for some reason
         if (req.files && req.files.length > 0) {
           req.files.map((file, i) => {
             if (file.path) {
               // if it was stored on disk, delete it
-              markerImageService.delete(file.path)
+              markerImageService.delete(file.path);
             }
-          })
+          });
         }
 
         //return failure response
@@ -821,10 +821,10 @@ const featureRouter = ({ config }) => {
           status: false,
           message: "An error occurred trying to save this feature",
           err: err,
-        })
+        });
       }
     }
-  ) // '/comments/create' route
+  ); // '/comments/create' route
 
   // route for HTTP POST requests to delete a marker
   router.get(
@@ -836,15 +836,15 @@ const featureRouter = ({ config }) => {
       query("featureId").not().isEmpty().trim(),
     ],
     async (req, res, next) => {
-      let errors = validationResult(req)
+      let errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw "Invalid map, feature, or comment identifier"
+        throw "Invalid map, feature, or comment identifier";
       }
 
       // extract necessary info
-      const featureCollectionId = req.query.featureCollectionId
-      const featureId = req.query.featureId
-      const commentId = req.params.commentId
+      const featureCollectionId = req.query.featureCollectionId;
+      const featureId = req.query.featureId;
+      const commentId = req.params.commentId;
 
       // console.log(`all data: ${featureCollectionId} / ${featureId} / ${commentId}`)
 
@@ -870,7 +870,7 @@ const featureRouter = ({ config }) => {
             res.json({
               status: true,
               message: "success",
-            })
+            });
           })
           .catch(err => {
             // invalid map or feature id
@@ -878,21 +878,21 @@ const featureRouter = ({ config }) => {
               status: false,
               message: err,
               err: err,
-            })
-          })
+            });
+          });
       } else {
         // invalid map or feature id
-        const err = "Invalid map, feature, or comment identifiers."
+        const err = "Invalid map, feature, or comment identifiers.";
         return res.status(400).json({
           status: false,
           message: err,
           err: err,
-        })
+        });
       }
     }
-  ) // /comments/delete route
+  ); // /comments/delete route
 
-  return router
-}
+  return router;
+};
 
-module.exports = featureRouter
+module.exports = featureRouter;

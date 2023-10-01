@@ -12,13 +12,18 @@ const handleImages = imageService => async (req, res, next) => {
   await Promise.all(
     // loop through each file object in req.files
     req.files.map(async file => {
+      const acceptableMimeTypes = [
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/heic",
+        "image/heic-sequence",
+        "image/heif",
+        "image/heif-sequence",
+      ];
       // accept only supported image types
-      if (
-        file.mimetype == "image/png" ||
-        file.mimetype == "image/jpeg" ||
-        file.mimetype === "image/gif" ||
-        file.mimetype == "image/heic"
-      ) {
+      if (acceptableMimeTypes.includes(file.mimetype)) {
+        console.log(`Uploading ${file.mimetype}...`);
         // convert heic image to jpeg using heic-convert before going any further
         if (file.mimetype === "image/heic") {
           const buffer = await convert({
