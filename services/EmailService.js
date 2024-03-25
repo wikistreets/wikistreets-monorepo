@@ -1,3 +1,4 @@
+require("dotenv").config({ silent: true })
 var nodemailer = require("nodemailer")
 
 // a class to handle sending email
@@ -5,12 +6,12 @@ function EmailService({ config }) {
   this.getTransporter = () => {
     // format the transporter object properly
     const transporter = nodemailer.createTransport({
-      host: "smtp.dreamhost.com",
+      host: process.env.SMTP_SERVER,
       secure: true,
-      port: 465,
+      port: process.env.SMTP_PORT,
       auth: {
-        user: "accounts@wikistreets.io",
-        pass: "3n5e!Hcn",
+        user: process.env.SMTP_USERNAME,
+        pass: process.env.SMTP_PASSWORD,
       },
     })
     return transporter
