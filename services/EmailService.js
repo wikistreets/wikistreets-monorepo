@@ -20,7 +20,7 @@ function EmailService({ config }) {
   this.getMailOptions = (to, subject, text) => {
     // format the mail options object properly
     const mailOptions = {
-      from: "Wikistreets <accounts@wikistreets.io>",
+      from: process.env.SMTP_FROM_ADDRESS,
       to: to,
       subject: subject,
       text: text,
