@@ -73,7 +73,8 @@ const userRouter = ({ config }) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
-          error: "Please enter a more reasonable email, handle, and password.",
+          error:
+            "Please enter a more reasonable email, handle, password, and/or math problem solution!",
         });
       }
 
