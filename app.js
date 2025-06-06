@@ -2,7 +2,7 @@ require("dotenv").config({ silent: true });
 const express = require("express"); // CommonJS import style!
 const morgan = require("morgan"); // middleware for logging HTTP requests.
 const cors = require("cors"); // middleware for enabling CORS (Cross-Origin Resource Sharing) requests.
-const slowDown = require("express-slow-down"); // middleware for slowing down requests to prevent abuse
+// const slowDown = require("express-slow-down"); // middleware for slowing down requests to prevent abuse
 
 // pre-rendering or SEO
 const prerender = require("prerender-node");
@@ -21,13 +21,13 @@ const server = ({ config }) => {
   const db = require("./db.js")({ config: config.mongo }).connect();
 
   // limit abuse by slowing down requests that fail too often
-  const speedLimiter = slowDown({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    delayAfter: 5, // Start adding delay after 50 requests
-    delayMs: (used) => (used - 1) * 1000, // 1000ms delay per request after the 5th
-    maxDelayMs: 10000, // Maximum delay of 10 seconds
-  });
-  app.use(speedLimiter);
+  // const speedLimiter = slowDown({
+  //   windowMs: 15 * 60 * 1000, // 15 minutes
+  //   delayAfter: 5, // Start adding delay after 50 requests
+  //   delayMs: (used) => (used - 1) * 1000, // 1000ms delay per request after the 5th
+  //   maxDelayMs: 10000, // Maximum delay of 10 seconds
+  // });
+  // app.use(speedLimiter);
 
   // load general-purpose middleware
   app.use(cors()); // allow cross-origin resource sharing
